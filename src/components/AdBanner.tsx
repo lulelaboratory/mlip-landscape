@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 declare global {
   interface Window {
-    adsbygoogle?: { push: (options?: unknown) => void }[];
+    adsbygoogle?: unknown[];
   }
 }
 
