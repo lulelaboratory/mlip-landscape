@@ -13,6 +13,7 @@ import {
   X,
   Zap,
   Filter,
+  type LucideIcon,
 } from "lucide-react";
 import {
   AnyNode,
@@ -32,7 +33,7 @@ const CATEGORY_STYLES: Record<Category, string> = {
   Descriptor: "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200",
 };
 
-const CATEGORY_ICONS: Record<Category, React.ComponentType<{ size?: number }>> = {
+const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Equivariant: Box,
   Invariant: Layers,
   Transformer: Zap,

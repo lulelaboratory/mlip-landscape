@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { INITIAL_NODES } from "@/data/landscape";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get("secret");
 
@@ -19,6 +15,10 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   const existingNames = INITIAL_NODES
     .filter((n) => n.type === "node")
