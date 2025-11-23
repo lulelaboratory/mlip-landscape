@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import type { ReactNode } from "react";
 import Script from "next/script";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MLIP Landscape – Interatomic Potential Explorer",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
