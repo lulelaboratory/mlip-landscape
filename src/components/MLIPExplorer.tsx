@@ -13,6 +13,7 @@ import {
   X,
   Zap,
   Filter,
+  type LucideIcon,
 } from "lucide-react";
 import {
   AnyNode,
@@ -32,7 +33,7 @@ const CATEGORY_STYLES: Record<Category, string> = {
   Descriptor: "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200",
 };
 
-const CATEGORY_ICONS: Record<Category, React.ComponentType<{ size?: number }>> = {
+const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Equivariant: Box,
   Invariant: Layers,
   Transformer: Zap,
@@ -265,13 +266,14 @@ export default function MLIPExplorer() {
               const Icon = CATEGORY_ICONS[node.category] || Box;
 
               return (
-                <div
+                <button
                   key={node.id}
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNodeClick(node);
                   }}
-                  className={`node-card absolute w-40 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200
+                  className={`node-card absolute w-40 p-3 rounded-xl border-2 text-left transition-all duration-200
                     ${styleClass} ${
                     isSelected
                       ? "ring-4 ring-blue-200 scale-105 z-20"
@@ -281,6 +283,8 @@ export default function MLIPExplorer() {
                     ${node.isNew ? "animate-bounce" : ""}
                   `}
                   style={{ left: node.x, top: node.y }}
+                  aria-pressed={isSelected}
+                  aria-label={`${node.label} (${node.category}, ${node.year})`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={12} className="opacity-70" />
@@ -292,7 +296,7 @@ export default function MLIPExplorer() {
                     {node.label}
                   </div>
                   <div className="text-[10px] opacity-60 font-mono">{node.year}</div>
-                </div>
+                </button>
               );
             })}
           </div>
