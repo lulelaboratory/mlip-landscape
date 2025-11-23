@@ -104,7 +104,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 300,
     y: 300,
     desc: "Uses spherical messages for geometric efficiency. Bridges the gap between invariant and equivariant.",
-    githubUrl: "https://github.com/Open-Catalyst-Project/ocp",
+    githubUrl: "https://github.com/OpenCatalystProject/ocp",
   },
   {
     id: "painn",
@@ -116,7 +116,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 300,
     y: 450,
     desc: "Polarizable Atom Interaction NN. Uses vector features instead of full tensor products for speed.",
-    githubUrl: "https://github.com/atomistic-machine-learning/SchNetPack",
+    githubUrl: "https://github.com/atomistic-machine-learning/schnetpack",
   },
   {
     id: "mace",
@@ -140,7 +140,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 700,
     y: 350,
     desc: "Graph Atomic Cluster Expansion. A foundation-scale implementation of the ACE formalism.",
-    githubUrl: "https://github.com/ACEsuit/grace",
+    githubUrl: "https://github.com/ICAMS/grace",
   },
 
   // --- TRANSFORMER (Green) ---
@@ -154,7 +154,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 400,
     y: 150,
     desc: "Transformer + equivariance. SOTA accuracy on OC20 benchmarks.",
-    githubUrl: "https://github.com/Open-Catalyst-Project/ocp",
+    githubUrl: "https://github.com/FAIR-Chem/fairchem",
   },
   {
     id: "orb",
@@ -166,6 +166,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 150,
     desc: "Wide & shallow GNS. Smoothed attention. Optimized for torch.compile and massive throughput.",
+    githubUrl: "https://github.com/orbital-materials/orb-models",
   },
   {
     id: "orbmol",
@@ -177,6 +178,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 300,
     desc: "Specialized Orb-v3 variant for molecules, electrolytes, and proteins. Adds charge/spin state.",
+    githubUrl: "https://github.com/orbital-materials/orb-models",
   },
   {
     id: "mattersim",
@@ -188,6 +190,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 450,
     desc: "Massive-scale foundation model trained on millions of trajectories.",
+    githubUrl: "https://github.com/microsoft/mattersim",
   },
   {
     id: "gnome",
@@ -199,6 +202,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 600,
     desc: "Discovery model used to identify millions of new crystals. Proprietary architecture.",
+    githubUrl: "https://github.com/google-deepmind/materials_discovery",
   },
   {
     id: "jmp",
@@ -210,6 +214,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 750,
     desc: "JAX-MD foundation model. Designed for large-scale differentiable physics.",
+    githubUrl: "https://github.com/facebookresearch/JMP",
   },
 
   // --- INVARIANT (Blue) ---
@@ -223,7 +228,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 100,
     y: 800,
     desc: "Continuous filter convolution. The baseline for modern GNNs.",
-    githubUrl: "https://github.com/atomistic-machine-learning/SchNetPack",
+    githubUrl: "https://github.com/atomistic-machine-learning/schnetpack",
   },
   {
     id: "dimenet",
@@ -271,7 +276,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 700,
     y: 800,
     desc: "Fast invariant architecture. Stripped-down NequIP-style design for extreme speed.",
-    githubUrl: "https://github.com/kimyechan/SevenNet",
+    githubUrl: "https://github.com/MDIL-SNU/SevenNet",
   },
   {
     id: "m3gnet",
@@ -309,7 +314,7 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 300,
     y: 650,
     desc: "Neural network + AEV. Standard for organic chemistry and drug discovery.",
-    githubUrl: "https://github.com/isayev/ANI",
+    githubUrl: "https://github.com/aiqm/torchani",
   },
   {
     id: "deepmd",
