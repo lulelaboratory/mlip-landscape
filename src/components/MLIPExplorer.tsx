@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Info,
   ExternalLink,
   Github,
   RefreshCw,
@@ -42,29 +41,96 @@ const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 
 type FilterType = "All" | Category;
 
+type DeviceType = "mobile" | "tablet" | "laptop" | "desktop";
+
+const CARD_WIDTH = 160;
+const CARD_HEIGHT = 86;
+const CANVAS_PADDING = 160;
+
 export default function MLIPExplorer() {
   const [nodes, setNodes] = useState<AnyNode[]>(INITIAL_NODES);
   const [edges, setEdges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [scale, setScale] = useState(1);
+  const [viewport, setViewport] = useState({ width: 1200, height: 800 });
+  const [userScale, setUserScale] = useState(1);
+  const [userPan, setUserPan] = useState({ x: 0, y: 0 });
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () =>
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const deviceType: DeviceType = useMemo(() => {
+    if (viewport.width < 640) return "mobile";
+    if (viewport.width < 1024) return "tablet";
+    if (viewport.width < 1440) return "laptop";
+    return "desktop";
+  }, [viewport.width]);
+
+  const bounds = useMemo(() => {
+    const items = nodes.filter((n) => n.type === "node") as ModelNode[];
+    if (items.length === 0) {
+      return { minX: 0, minY: 0, maxX: CARD_WIDTH, maxY: CARD_HEIGHT };
+    }
+
+    const minX = Math.min(...items.map((n) => n.x));
+    const minY = Math.min(...items.map((n) => n.y));
+    const maxX = Math.max(...items.map((n) => n.x + CARD_WIDTH));
+    const maxY = Math.max(...items.map((n) => n.y + CARD_HEIGHT));
+
+    return { minX, minY, maxX, maxY };
+  }, [nodes]);
+
+  const graphWidth = bounds.maxX - bounds.minX;
+  const graphHeight = bounds.maxY - bounds.minY;
+
+  const baseScale = useMemo(() => {
+    const widthScale = viewport.width / (graphWidth + CANVAS_PADDING * 2);
+    const heightScale = viewport.height / (graphHeight + CANVAS_PADDING * 2);
+    return Math.min(widthScale, heightScale, 1.4);
+  }, [graphWidth, graphHeight, viewport.height, viewport.width]);
+
+  const basePan = useMemo(() => {
+    const scaledWidth = graphWidth * baseScale;
+    const scaledHeight = graphHeight * baseScale;
+    const padX = CANVAS_PADDING * baseScale;
+    const padY = CANVAS_PADDING * baseScale;
+
+    const centerX = (viewport.width - scaledWidth) / 2 - bounds.minX * baseScale + padX;
+    const centerY = (viewport.height - scaledHeight) / 2 - bounds.minY * baseScale + padY;
+
+    return { x: centerX, y: centerY };
+  }, [baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth, viewport.height, viewport.width]);
+
+  useEffect(() => {
+    setUserPan({ x: 0, y: 0 });
+  }, [basePan.x, basePan.y]);
+
+  const effectiveScale = baseScale * userScale;
+  const pan = { x: basePan.x + userPan.x, y: basePan.y + userPan.y };
 
   // Canvas panning
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if ((e.target as HTMLElement).closest(".node-card")) return;
     setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
   };
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (!isDragging) return;
-    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -124,28 +190,38 @@ export default function MLIPExplorer() {
       const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
       if (!fromNode || !toNode) return null;
 
-      const startX = fromNode.x + 80;
-      const startY = fromNode.y + 30;
-      const endX = toNode.x + 80;
-      const endY = toNode.y + 30;
+      const startX = fromNode.x + CARD_WIDTH / 2;
+      const startY = fromNode.y + CARD_HEIGHT / 2;
+      const endX = toNode.x + CARD_WIDTH / 2;
+      const endY = toNode.y + CARD_HEIGHT / 2;
 
-      const path = `M ${startX} ${startY} C ${startX} ${startY + 50}, ${endX} ${endY - 50}, ${endX} ${endY}`;
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const offset = 22;
+      const adjustedStartX = startX + (dx / distance) * offset;
+      const adjustedStartY = startY + (dy / distance) * offset;
+      const adjustedEndX = endX - (dx / distance) * offset;
+      const adjustedEndY = endY - (dy / distance) * offset;
+
+      const path = `M ${adjustedStartX} ${adjustedStartY} C ${adjustedStartX} ${adjustedStartY + 50}, ${adjustedEndX} ${adjustedEndY - 50}, ${adjustedEndX} ${adjustedEndY}`;
 
       return (
         <g key={idx} className="transition-opacity duration-500">
           <path
             d={path}
             fill="none"
-            stroke="#94a3b8"
-            strokeWidth={2}
+            stroke="#475569"
+            strokeWidth={deviceType === "mobile" ? 2.4 : 2}
             strokeDasharray={edge.dashed ? "5,5" : undefined}
-            className="opacity-60"
+            className="opacity-70"
+            markerEnd="url(#arrowhead)"
           />
           {edge.label && (
             <text
-              x={(startX + endX) / 2}
-              y={(startY + endY) / 2}
-              fill="#64748b"
+              x={(adjustedStartX + adjustedEndX) / 2}
+              y={(adjustedStartY + adjustedEndY) / 2}
+              fill="#475569"
               fontSize={10}
               textAnchor="middle"
             >
@@ -168,30 +244,127 @@ export default function MLIPExplorer() {
       )}`
     : "#";
 
+  const renderDetailContent = (compact = false) => {
+    if (!selectedNode) return null;
+
+    const titleClass = compact
+      ? "text-xl font-bold text-slate-900 leading-snug"
+      : "text-2xl font-bold text-slate-900 leading-tight";
+    const labelText = compact ? "text-[9px]" : "text-[10px]";
+    const bodyText = compact ? "text-xs" : "text-sm";
+    const spacing = compact ? "space-y-2" : "space-y-3";
+
+    return (
+      <>
+        <div className="flex justify-between items-start gap-4">
+          <div>
+            <div
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide mb-3 border bg-white shadow-sm`}
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              {selectedNode.category}
+            </div>
+            <h2 className={titleClass}>{selectedNode.label}</h2>
+          </div>
+          <button
+            onClick={() => setSelectedNode(null)}
+            className="text-slate-400 hover:text-slate-600 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex gap-4 mb-4 text-sm text-slate-500 border-b border-slate-100 pb-4">
+          <div className="flex-1">
+            <div className={`${labelText} uppercase font-bold text-slate-400 mb-1`}>Year</div>
+            <div className="font-semibold text-slate-700">{selectedNode.year}</div>
+          </div>
+          <div className="flex-1 border-l border-slate-100 pl-4">
+            <div className={`${labelText} uppercase font-bold text-slate-400 mb-1`}>
+              Organization
+            </div>
+            <div className="font-semibold text-slate-700">{selectedNode.author}</div>
+          </div>
+        </div>
+
+        <div className={`${bodyText} text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100`}>
+          {selectedNode.desc}
+        </div>
+
+        <div className={spacing}>
+          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 border p-2 rounded-lg`}>
+            <Database size={14} className="text-blue-500" />
+            <span>
+              Data Scale: <strong>{selectedNode.x > 600 ? "Universal (Foundational)" : "Specialized"}</strong>
+            </span>
+          </div>
+          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 border p-2 rounded-lg`}>
+            <Cpu size={14} className="text-purple-500" />
+            <span>
+              Inference: <strong>{selectedNode.category === "Equivariant" ? "High cost / high accuracy" : "Optimized for speed"}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <a
+            href={selectedNode.githubUrl ?? searchUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold transition shadow-lg shadow-slate-200 active:scale-95"
+          >
+            <Github size={18} /> View Code / GitHub
+          </a>
+
+          <a
+            href={
+              selectedNode.paperUrl ??
+              `https://scholar.google.com/scholar?q=${encodeURIComponent(selectedNode.label)}`
+            }
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 text-xs font-semibold hover:underline"
+          >
+            Read Technical Paper <ExternalLink size={10} />
+          </a>
+
+          <a
+            href={searchUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-slate-700 text-[11px] font-medium hover:underline"
+          >
+            Search on the web
+          </a>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="w-full h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
       {/* HEADER */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
-        <div className="flex justify-between items-center">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
+        <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200">
               <Layers size={20} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-800 leading-tight">
+              <h1 className="text-base sm:text-lg font-bold text-slate-800 leading-tight">
                 MLIP Landscape
               </h1>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
                 Interatomic Potential Explorer
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
             <button
               onClick={handleSimulateUpdate}
               disabled={isUpdating}
-              className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-slate-200 flex items-center gap-2 active:scale-95 disabled:opacity-70"
+              className="bg-slate-900 hover:bg-slate-800 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition shadow-lg shadow-slate-200 flex items-center gap-2 active:scale-95 disabled:opacity-70 w-full sm:w-auto justify-center"
             >
               <RefreshCw size={16} className={isUpdating ? "animate-spin" : ""} />
               <span>{isUpdating ? "Updating..." : "Simulate Live Update"}</span>
@@ -229,7 +402,9 @@ export default function MLIPExplorer() {
 
           <div
             className="absolute origin-top-left transition-transform duration-75 ease-out"
-            style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
+            }}
           >
             {/* Group zones */}
             {processedNodes.groups.map((node) => (
@@ -255,6 +430,19 @@ export default function MLIPExplorer() {
               className="absolute top-0 left-0 w-[2000px] h-[2000px] pointer-events-none"
               style={{ zIndex: 1 }}
             >
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="8"
+                  markerHeight="8"
+                  refX="6"
+                  refY="3.5"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <path d="M0,0 L0,7 L7,3.5 z" fill="#475569" />
+                </marker>
+              </defs>
               {renderEdges()}
             </svg>
 
@@ -303,7 +491,7 @@ export default function MLIPExplorer() {
         </div>
 
         {/* FILTER + ZOOM CONTROL */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200 w-48 z-20">
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200 w-44 sm:w-52 z-20">
           <div className="text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Filter size={12} /> Filter Architecture
           </div>
@@ -332,19 +520,19 @@ export default function MLIPExplorer() {
 
           <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
             <button
-              onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
+              onClick={() => setUserScale((s) => Math.max(0.5, s - 0.1))}
               className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
             >
               -
             </button>
             <button
-              onClick={() => setScale(1)}
+              onClick={() => setUserScale(1)}
               className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
             >
-              {Math.round(scale * 100)}%
+              {Math.round(userScale * baseScale * 100)}%
             </button>
             <button
-              onClick={() => setScale((s) => Math.min(2, s + 0.1))}
+              onClick={() => setUserScale((s) => Math.min(2.5, s + 0.1))}
               className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
             >
               +
@@ -354,131 +542,24 @@ export default function MLIPExplorer() {
 
         {/* DETAILS SIDEBAR */}
         <div
-          className={`
-            absolute right-0 top-0 h-full w-96 bg-white shadow-2xl border-l border-slate-200 z-30 
-            transition-transform duration-300 ease-in-out flex flex-col
-            ${selectedNode ? "translate-x-0" : "translate-x-full"}
-          `}
+          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
-            <>
-              <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide mb-3 border bg-white shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    {selectedNode.category}
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                    {selectedNode.label}
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setSelectedNode(null)}
-                  className="text-slate-400 hover:text-slate-600 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto flex-1">
-                <div className="flex gap-4 mb-6 text-sm text-slate-500 border-b border-slate-100 pb-6">
-                  <div className="flex-1">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Year
-                    </div>
-                    <div className="font-semibold text-slate-700">
-                      {selectedNode.year}
-                    </div>
-                  </div>
-                  <div className="flex-1 border-l border-slate-100 pl-4">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Organization
-                    </div>
-                    <div className="font-semibold text-slate-700">
-                      {selectedNode.author}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="prose prose-sm prose-slate max-w-none">
-                  <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <Info size={14} className="text-blue-500" /> Model Description
-                  </h3>
-                  <p className="text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    {selectedNode.desc}
-                  </p>
-
-                  <h3 className="text-sm font-bold text-slate-900 mt-6 mb-3">
-                    Capabilities
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-xs text-slate-600 border p-2 rounded-lg">
-                      <Database size={14} className="text-blue-500" />
-                      <span>
-                        Data Scale:{" "}
-                        <strong>
-                          {selectedNode.x > 600
-                            ? "Universal (Foundational)"
-                            : "Specialized"}
-                        </strong>
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-600 border p-2 rounded-lg">
-                      <Cpu size={14} className="text-purple-500" />
-                      <span>
-                        Inference:{" "}
-                        <strong>
-                          {selectedNode.category === "Equivariant"
-                            ? "High cost / high accuracy"
-                            : "Optimized for speed"}
-                        </strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 border-t border-slate-100 bg-slate-50 mt-auto space-y-3">
-                <a
-                  href={
-                    selectedNode.githubUrl ??
-                    `https://github.com/search?q=${encodeURIComponent(
-                      selectedNode.label + " interatomic potential",
-                    )}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold transition shadow-lg shadow-slate-200 active:scale-95"
-                >
-                  <Github size={18} /> View Code / GitHub
-                </a>
-
-                <a
-                  href={
-                    selectedNode.paperUrl ??
-                    `https://scholar.google.com/scholar?q=${encodeURIComponent(
-                      selectedNode.label,
-                    )}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 text-xs font-semibold hover:underline"
-                >
-                  Read Technical Paper <ExternalLink size={10} />
-                </a>
-
-                <a
-                  href={searchUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-slate-700 text-[11px] font-medium hover:underline"
-                >
-                  Search on the web
-                </a>
-              </div>
-            </>
+            <div className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
+              {renderDetailContent()}
+            </div>
           )}
         </div>
+
+        {selectedNode && (
+          <div className="md:hidden absolute inset-x-0 bottom-0 p-3 z-30 pointer-events-none">
+            <div className="pointer-events-auto bg-white/95 border border-slate-200 rounded-2xl shadow-2xl backdrop-blur-md">
+              <div className="p-4 flex flex-col gap-3">
+                {renderDetailContent(true)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
