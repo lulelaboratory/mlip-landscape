@@ -28,6 +28,11 @@ const CARD_PADDING = 8;
 const CANVAS_PADDING = 160;
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 1.5;
+const MIN_BASE_SCALE = 0.4;
+const MAX_BASE_SCALE = 1.2;
+const SIDEBAR_WIDTH = 360;
+const TABLET_SIDEBAR_WIDTH = 320;
+const HEADER_HEIGHT = 112;
 
 const CATEGORY_STYLES: Record<Category, string> = {
   Equivariant: "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200",
@@ -56,6 +61,7 @@ export default function MLIPExplorer() {
   const [baseScale, setBaseScale] = useState(0.8);
   const [userScale, setUserScale] = useState(1);
   const [userPan, setUserPan] = useState({ x: 0, y: 0 });
+  const [filterOpen, setFilterOpen] = useState(true);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -78,6 +84,10 @@ export default function MLIPExplorer() {
     return "desktop";
   }, [viewport.width]);
 
+  useEffect(() => {
+    setFilterOpen(deviceType !== "mobile");
+  }, [deviceType]);
+
   const bounds = useMemo(() => {
     const items = nodes.filter((n) => n.type === "node") as ModelNode[];
     if (items.length === 0) {
@@ -95,28 +105,31 @@ export default function MLIPExplorer() {
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
 
+  const sidebarSpace = deviceType === "desktop" ? SIDEBAR_WIDTH : deviceType === "tablet" ? TABLET_SIDEBAR_WIDTH : 0;
+  const availableWidth = Math.max(viewport.width - sidebarSpace - 32, 320);
+  const availableHeight = Math.max(viewport.height - HEADER_HEIGHT, 320);
+
   useEffect(() => {
-    const deviceBase =
-      deviceType === "mobile" ? 0.9 : deviceType === "tablet" ? 0.75 : 0.6;
-    const widthScale = viewport.width / (graphWidth + CANVAS_PADDING * 2);
-    const heightScale = viewport.height / (graphHeight + CANVAS_PADDING * 2);
-    const fitScale = Math.min(widthScale, heightScale, 1);
-    const nextBase = Math.min(deviceBase, fitScale);
+    const preferred = deviceType === "mobile" ? 0.95 : deviceType === "tablet" ? 0.8 : 0.65;
+    const widthScale = availableWidth / (graphWidth + CANVAS_PADDING * 2);
+    const heightScale = availableHeight / (graphHeight + CANVAS_PADDING * 2);
+    const fitScale = Math.min(widthScale, heightScale);
+    const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, Math.min(preferred, fitScale)));
     setBaseScale(nextBase);
     setUserScale(1);
-  }, [deviceType, graphHeight, graphWidth, viewport.height, viewport.width]);
+  }, [availableHeight, availableWidth, deviceType, graphHeight, graphWidth]);
 
   const basePan = useMemo(() => {
-    const scaledWidth = graphWidth * baseScale;
-    const scaledHeight = graphHeight * baseScale;
-    const padX = CANVAS_PADDING * baseScale;
-    const padY = CANVAS_PADDING * baseScale;
+    const paddedWidth = graphWidth + CANVAS_PADDING * 2;
+    const paddedHeight = graphHeight + CANVAS_PADDING * 2;
+    const graphPixelWidth = paddedWidth * baseScale;
+    const graphPixelHeight = paddedHeight * baseScale;
 
-    const centerX = (viewport.width - scaledWidth) / 2 - bounds.minX * baseScale + padX;
-    const centerY = (viewport.height - scaledHeight) / 2 - bounds.minY * baseScale + padY;
+    const centerX = (availableWidth - graphPixelWidth) / 2 - bounds.minX * baseScale + CANVAS_PADDING * baseScale;
+    const centerY = (availableHeight - graphPixelHeight) / 2 - bounds.minY * baseScale + CANVAS_PADDING * baseScale;
 
     return { x: centerX, y: centerY };
-  }, [baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth, viewport.height, viewport.width]);
+  }, [availableHeight, availableWidth, baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth]);
 
   useEffect(() => {
     setUserPan({ x: 0, y: 0 });
@@ -166,23 +179,26 @@ export default function MLIPExplorer() {
 
     const dx = toCenterX - fromCenterX;
     const dy = toCenterY - fromCenterY;
+    const horizontal = Math.abs(dx) >= Math.abs(dy);
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      const direction = Math.sign(dx) || 1;
+    if (horizontal) {
+      const fromSide = dx >= 0 ? 1 : -1;
+      const toSide = dx >= 0 ? -1 : 1;
       return {
-        startX: fromCenterX + direction * (CARD_WIDTH / 2 - CARD_PADDING),
+        startX: fromCenterX + fromSide * (CARD_WIDTH / 2 - CARD_PADDING),
         startY: fromCenterY,
-        endX: toCenterX - direction * (CARD_WIDTH / 2 - CARD_PADDING),
+        endX: toCenterX + toSide * (CARD_WIDTH / 2 - CARD_PADDING),
         endY: toCenterY,
       };
     }
 
-    const direction = Math.sign(dy) || 1;
+    const fromSide = dy >= 0 ? 1 : -1;
+    const toSide = dy >= 0 ? -1 : 1;
     return {
       startX: fromCenterX,
-      startY: fromCenterY + direction * (CARD_HEIGHT / 2 - CARD_PADDING),
+      startY: fromCenterY + fromSide * (CARD_HEIGHT / 2 - CARD_PADDING),
       endX: toCenterX,
-      endY: toCenterY - direction * (CARD_HEIGHT / 2 - CARD_PADDING),
+      endY: toCenterY + toSide * (CARD_HEIGHT / 2 - CARD_PADDING),
     };
   };
 
@@ -194,6 +210,7 @@ export default function MLIPExplorer() {
 
       const { startX, startY, endX, endY } = getEdgePoints(fromNode, toNode);
       const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
       const path = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
 
       return (
@@ -201,18 +218,18 @@ export default function MLIPExplorer() {
           <path
             d={path}
             fill="none"
-            stroke="#475569"
-            strokeWidth={edge.dashed ? 1.8 : deviceType === "mobile" ? 2.6 : 2.2}
+            stroke="#94a3b8"
+            strokeWidth={edge.dashed ? 1.6 : deviceType === "mobile" ? 2.4 : 2}
             strokeDasharray={edge.dashed ? "5,5" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="opacity-80"
+            className="opacity-90"
             markerEnd="url(#edge-arrow)"
           />
           {edge.label && (
             <text
               x={(startX + endX) / 2}
-              y={(startY + endY) / 2}
+              y={midY - 4}
               fill="#475569"
               fontSize={10}
               textAnchor="middle"
@@ -405,19 +422,19 @@ export default function MLIPExplorer() {
             {/* Edges */}
             <svg
               className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 1, width: svgWidth, height: svgHeight }}
+              style={{ zIndex: 10, width: svgWidth, height: svgHeight }}
             >
               <defs>
                 <marker
                   id="edge-arrow"
-                  markerWidth="12"
-                  markerHeight="12"
-                  refX="9"
-                  refY="6"
+                  markerWidth="8"
+                  markerHeight="8"
+                  refX="6"
+                  refY="3"
                   orient="auto"
                   markerUnits="strokeWidth"
                 >
-                  <path d="M0,0 L0,12 L12,6 z" fill="#475569" />
+                  <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8" />
                 </marker>
               </defs>
               {renderEdges()}
@@ -453,14 +470,14 @@ export default function MLIPExplorer() {
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={14} className="opacity-70" />
-                    <span className="text-xs md:text-[10px] font-bold uppercase tracking-wide opacity-70">
+                    <span className="text-sm sm:text-xs md:text-[10px] font-bold uppercase tracking-wide opacity-70">
                       {node.category}
                     </span>
                   </div>
                   <div className="font-bold text-sm md:text-[13px] leading-tight mb-1">
                     {node.label}
                   </div>
-                  <div className="text-[11px] md:text-[10px] opacity-70 font-mono">{node.year}</div>
+                  <div className="text-xs sm:text-[11px] md:text-[10px] opacity-70 font-mono">{node.year}</div>
                 </button>
               );
             })}
@@ -469,57 +486,81 @@ export default function MLIPExplorer() {
 
         {/* FILTER + ZOOM CONTROL */}
         <div
-          className={`bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200 z-20 ${
+          className={`z-20 ${
             deviceType === "mobile"
-              ? "relative mx-auto mt-4 w-[90vw]"
-              : "absolute top-4 left-4 w-44 sm:w-52"
+              ? "absolute left-0 right-0 top-2 flex justify-center"
+              : "absolute top-4 left-4"
           }`}
         >
-          <div className="text-xs md:text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
-            <Filter size={12} /> Filter Architecture
-          </div>
-          <div className="flex flex-col gap-1">
-            {filters.map((cat) => (
+          <div
+            className={`${
+              deviceType === "mobile"
+                ? "w-[92vw]"
+                : "w-48 sm:w-56"
+            }`}
+          >
+            {deviceType === "mobile" && (
               <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`text-left px-3 py-2 rounded-lg text-sm md:text-xs font-semibold transition flex items-center gap-2
-                  ${
-                    filter === cat
-                      ? "bg-slate-100 text-slate-900"
-                      : "hover:bg-slate-50 text-slate-500"
-                  }
-                `}
+                onClick={() => setFilterOpen((open) => !open)}
+                className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
               >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    filter === cat ? "bg-blue-500" : "bg-slate-300"
-                  }`}
-                ></span>
-                {cat}
+                <span className="flex items-center gap-2">
+                  <Filter size={14} /> Filter Architecture
+                </span>
+                <span className="text-xs text-slate-500">{filterOpen ? "Hide" : "Show"}</span>
               </button>
-            ))}
-          </div>
+            )}
 
-          <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
-            <button
-              onClick={() => setUserScale((s) => clampScale(s - 0.1))}
-              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
-            >
-              -
-            </button>
-            <button
-              onClick={() => setUserScale(1)}
-              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
-            >
-              {Math.round(userScale * baseScale * 100)}%
-            </button>
-            <button
-              onClick={() => setUserScale((s) => clampScale(s + 0.1))}
-              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
-            >
-              +
-            </button>
+            {(filterOpen || deviceType !== "mobile") && (
+              <div className="bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200">
+                <div className="text-xs sm:text-[11px] md:text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Filter size={12} /> Filter Architecture
+                </div>
+                <div className="flex flex-col gap-1">
+                  {filters.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setFilter(cat)}
+                      className={`text-left px-3 py-2 rounded-lg text-sm sm:text-xs md:text-[11px] font-semibold transition flex items-center gap-2
+                        ${
+                          filter === cat
+                            ? "bg-slate-100 text-slate-900"
+                            : "hover:bg-slate-50 text-slate-500"
+                        }
+                      `}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          filter === cat ? "bg-blue-500" : "bg-slate-300"
+                        }`}
+                      ></span>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
+                  <button
+                    onClick={() => setUserScale((s) => clampScale(s - 0.1))}
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                  >
+                    -
+                  </button>
+                  <button
+                    onClick={() => setUserScale(1)}
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                  >
+                    {Math.round(userScale * baseScale * 100)}%
+                  </button>
+                  <button
+                    onClick={() => setUserScale((s) => clampScale(s + 0.1))}
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
