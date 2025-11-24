@@ -66,6 +66,7 @@ export default function MLIPExplorer() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragPointerId, setDragPointerId] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -114,7 +115,8 @@ export default function MLIPExplorer() {
     const widthScale = availableWidth / (graphWidth + CANVAS_PADDING * 2);
     const heightScale = availableHeight / (graphHeight + CANVAS_PADDING * 2);
     const fitScale = Math.min(widthScale, heightScale);
-    const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, Math.min(preferred, fitScale)));
+    const scaledFit = Math.min(preferred, fitScale) * 1.08;
+    const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, scaledFit));
     setBaseScale(nextBase);
     setUserScale(1);
   }, [availableHeight, availableWidth, deviceType, graphHeight, graphWidth]);
@@ -140,19 +142,31 @@ export default function MLIPExplorer() {
 
   const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
-  // Canvas panning
-  const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+  // Canvas panning via pointer events (mouse + touch)
+  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     if ((e.target as HTMLElement).closest(".node-card")) return;
     setIsDragging(true);
+    setDragPointerId(e.pointerId);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!isDragging) return;
+  const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (!isDragging || dragPointerId !== e.pointerId) return;
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
-  const handleMouseUp = () => setIsDragging(false);
+  const handlePointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (dragPointerId !== null) {
+      try {
+        e.currentTarget.releasePointerCapture(dragPointerId);
+      } catch {
+        // ignore
+      }
+    }
+    setIsDragging(false);
+    setDragPointerId(null);
+  };
 
   // Filter + layering
   const processedNodes = useMemo(() => {
@@ -189,6 +203,7 @@ export default function MLIPExplorer() {
         startY: fromCenterY,
         endX: toCenterX + toSide * (CARD_WIDTH / 2 - CARD_PADDING),
         endY: toCenterY,
+        horizontal: true,
       };
     }
 
@@ -199,8 +214,17 @@ export default function MLIPExplorer() {
       startY: fromCenterY + fromSide * (CARD_HEIGHT / 2 - CARD_PADDING),
       endX: toCenterX,
       endY: toCenterY + toSide * (CARD_HEIGHT / 2 - CARD_PADDING),
+      horizontal: false,
     };
   };
+
+  const outgoingMap = useMemo(() => {
+    const map: Record<string, Edge[]> = {};
+    edges.forEach((edge) => {
+      map[edge.from] = map[edge.from] ? [...map[edge.from], edge] : [edge];
+    });
+    return map;
+  }, [edges]);
 
   const renderEdges = () =>
     edges.map((edge, idx) => {
@@ -208,10 +232,26 @@ export default function MLIPExplorer() {
       const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
       if (!fromNode || !toNode) return null;
 
-      const { startX, startY, endX, endY } = getEdgePoints(fromNode, toNode);
-      const midX = (startX + endX) / 2;
-      const midY = (startY + endY) / 2;
-      const path = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+      const { startX, startY, endX, endY, horizontal } = getEdgePoints(fromNode, toNode);
+      const siblings = outgoingMap[fromNode.id] ?? [];
+      const order = siblings.indexOf(edge);
+      const spread = (order - (siblings.length - 1) / 2) * 10;
+
+      const offsetX = horizontal ? 0 : spread;
+      const offsetY = horizontal ? spread : 0;
+
+      const ctrl1 = {
+        x: startX + (horizontal ? (endX - startX) / 3 : offsetX),
+        y: startY + (horizontal ? offsetY : (endY - startY) / 3),
+      };
+      const ctrl2 = {
+        x: endX - (horizontal ? (endX - startX) / 3 : offsetX),
+        y: endY - (horizontal ? offsetY : (endY - startY) / 3),
+      };
+
+      const path = `M ${startX} ${startY} C ${ctrl1.x} ${ctrl1.y}, ${ctrl2.x} ${ctrl2.y}, ${endX} ${endY}`;
+      const labelX = (startX + endX) / 2 + offsetX * 0.3;
+      const labelY = (startY + endY) / 2 + offsetY * 0.3;
 
       return (
         <g key={idx} className="transition-opacity duration-500">
@@ -228,8 +268,8 @@ export default function MLIPExplorer() {
           />
           {edge.label && (
             <text
-              x={(startX + endX) / 2}
-              y={midY - 4}
+              x={labelX}
+              y={labelY - 4}
               fill="#475569"
               fontSize={10}
               textAnchor="middle"
@@ -377,12 +417,12 @@ export default function MLIPExplorer() {
       <div className="flex-1 relative flex overflow-hidden">
         {/* MAIN CANVAS */}
         <div
-          className="flex-1 relative bg-slate-100 cursor-grab active:cursor-grabbing"
+          className="flex-1 relative bg-slate-100 cursor-grab active:cursor-grabbing touch-none"
           ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
         >
           {/* Background dots */}
           <div
@@ -413,7 +453,7 @@ export default function MLIPExplorer() {
                   zIndex: 0,
                 }}
               >
-                <div className="absolute -top-4 left-4 bg-slate-100 px-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <div className="absolute -top-4 left-4 bg-slate-100 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   {node.label}
                 </div>
               </div>
@@ -469,15 +509,15 @@ export default function MLIPExplorer() {
                   aria-label={`${node.label} (${node.category}, ${node.year})`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon size={14} className="opacity-70" />
-                    <span className="text-sm sm:text-xs md:text-[10px] font-bold uppercase tracking-wide opacity-70">
+                    <Icon size={16} className="opacity-70" />
+                    <span className="text-xs sm:text-[11px] md:text-[10px] lg:text-xs font-bold uppercase tracking-wide opacity-70">
                       {node.category}
                     </span>
                   </div>
-                  <div className="font-bold text-sm md:text-[13px] leading-tight mb-1">
+                  <div className="font-bold text-base sm:text-sm lg:text-base leading-tight mb-1">
                     {node.label}
                   </div>
-                  <div className="text-xs sm:text-[11px] md:text-[10px] opacity-70 font-mono">{node.year}</div>
+                  <div className="text-[11px] sm:text-xs md:text-[10px] opacity-70 font-mono">{node.year}</div>
                 </button>
               );
             })}

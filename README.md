@@ -19,6 +19,8 @@ The app visualizes descriptor-based, invariant, equivariant, and transformer-sty
 - **Backend:** Static data served by Next.js App Router (no external API dependencies)
 - **Deployment (recommended):** Vercel
 
+Contact: [support@mliphub.com](mailto:support@mliphub.com)
+
 ---
 
 ## Getting started
