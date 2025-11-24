@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ExternalLink,
   Github,
@@ -12,7 +11,6 @@ import {
   X,
   Zap,
   Filter,
-  type LucideIcon,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -38,7 +36,6 @@ const CATEGORY_STYLES: Record<Category, string> = {
   Descriptor: "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200",
 };
 
-const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Equivariant: Box,
   Invariant: Layers,
@@ -135,12 +132,10 @@ export default function MLIPExplorer() {
     if ((e.target as HTMLElement).closest(".node-card")) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
-    setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
   };
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (!isDragging) return;
-    setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
@@ -214,15 +209,15 @@ export default function MLIPExplorer() {
             className="opacity-80"
             markerEnd="url(#edge-arrow)"
           />
-            {edge.label && (
-              <text
-                x={(startX + endX) / 2}
-                y={(startY + endY) / 2}
-                fill="#475569"
-                fontSize={10}
-                textAnchor="middle"
-              >
-                {edge.label}
+          {edge.label && (
+            <text
+              x={(startX + endX) / 2}
+              y={(startY + endY) / 2}
+              fill="#475569"
+              fontSize={10}
+              textAnchor="middle"
+            >
+              {edge.label}
             </text>
           )}
         </g>
@@ -346,8 +341,6 @@ export default function MLIPExplorer() {
       {/* HEADER */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
         <div className="flex justify-between items-center flex-wrap gap-3">
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
-        <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200">
               <Layers size={20} />
@@ -356,7 +349,6 @@ export default function MLIPExplorer() {
               <h1 className="text-base sm:text-lg font-bold text-slate-800 leading-tight">
                 MLIP Hub
               </h1>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
                 Interatomic Potential Explorer
               </p>
@@ -387,9 +379,6 @@ export default function MLIPExplorer() {
 
           <div
             className="absolute origin-top-left transition-transform duration-75 ease-out"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
-            }}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
             }}
@@ -443,9 +432,7 @@ export default function MLIPExplorer() {
 
               return (
                 <button
-                <button
                   key={node.id}
-                  type="button"
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -461,8 +448,6 @@ export default function MLIPExplorer() {
                     ${node.isNew ? "animate-bounce" : ""}
                   `}
                   style={{ left: node.x, top: node.y }}
-                  aria-pressed={isSelected}
-                  aria-label={`${node.label} (${node.category}, ${node.year})`}
                   aria-pressed={isSelected}
                   aria-label={`${node.label} (${node.category}, ${node.year})`}
                 >
@@ -528,7 +513,6 @@ export default function MLIPExplorer() {
               className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
             >
               {Math.round(userScale * baseScale * 100)}%
-              {Math.round(userScale * baseScale * 100)}%
             </button>
             <button
               onClick={() => setUserScale((s) => clampScale(s + 0.1))}
@@ -541,7 +525,6 @@ export default function MLIPExplorer() {
 
         {/* DETAILS SIDEBAR */}
         <div
-          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
           className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
