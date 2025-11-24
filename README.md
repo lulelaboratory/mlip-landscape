@@ -1,4 +1,4 @@
-# MLIP Landscape – Interatomic Potential Explorer
+# MLIP Hub – Interatomic Potential Explorer
 
 Interactive map of machine-learning interatomic potentials (MLIPs), built with Next.js and Tailwind CSS.
 
@@ -10,15 +10,13 @@ The app visualizes descriptor-based, invariant, equivariant, and transformer-sty
 - **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, etc.)
 - **Edges** to show conceptual or architectural relationships
 - A **detail sidebar** linking to code, papers, and web search
-- Optional **Google AdSense** banner placement
-
+  
 ## Tech stack
 
 - **Framework:** Next.js (App Router, TypeScript)
 - **Styling:** Tailwind CSS
 - **Icons:** lucide-react
-- **Backend:** Static data served by Next.js App Router
-- **Auth/Secrets:** Environment variables (`.env.local`)
+- **Backend:** Static data served by Next.js App Router (no external API dependencies)
 - **Deployment (recommended):** Vercel
 
 ---
@@ -48,13 +46,7 @@ Install packages:
 
 ### 3. Environment variables
 
-Create a file named `.env.local` in the project root:
-
-    NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-xxxxxxxxxxxxxxxx
-
-- `NEXT_PUBLIC_ADSENSE_CLIENT_ID` – your AdSense publisher ID (optional in development).
-
-You can also use the provided `.env.local.example` as a template (see below).
+No environment variables are required for the static site. If you add new integrations later, copy `.env.local.example` and fill in whatever values you need.
 
 ### 4. Run in development
 
@@ -64,7 +56,7 @@ Then open:
 
     http://localhost:3000
 
-You should see the MLIP landscape with zones and colored nodes.
+You should see the MLIP Hub map with zones and colored nodes.
 Click a node to open the detail sidebar and see links to GitHub, papers, and web search.
 
 ---
@@ -73,12 +65,11 @@ Click a node to open the detail sidebar and see links to GitHub, papers, and web
 
     src/
       app/
-        layout.tsx              # Root layout with Tailwind import + AdSense script
+        layout.tsx              # Root layout with Tailwind import
         page.tsx                # Renders the MLIPExplorer component
         globals.css             # Global styles (Tailwind 4 style)
       components/
         MLIPExplorer.tsx        # Main interactive canvas (nodes, edges, filters, sidebar)
-        AdBanner.tsx            # Reusable Google AdSense banner component
       data/
         landscape.ts            # Node + edge definitions for MLIP models and zones
 
@@ -88,12 +79,9 @@ Click a node to open the detail sidebar and see links to GitHub, papers, and web
 
 1. Push this repo to GitHub.
 2. Connect it to Vercel.
-3. Add environment variables in the Vercel dashboard:
-   - `NEXT_PUBLIC_ADSENSE_CLIENT_ID` (optional)
-
 Your production URL will look like:
 
-    https://mlip-landscape-yourname.vercel.app
+    https://mlip-hub-yourname.vercel.app
 
 Later, you can add a custom domain if you want.
 

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ExternalLink,
   Github,
-  RefreshCw,
   Layers,
   Box,
   Cpu,
@@ -12,6 +12,7 @@ import {
   X,
   Zap,
   Filter,
+  type LucideIcon,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -23,7 +24,12 @@ import {
   Edge,
   Category,
 } from "@/data/landscape";
-import { AdBanner } from "./AdBanner";
+const CARD_WIDTH = 176;
+const CARD_HEIGHT = 72;
+const CARD_PADDING = 8;
+const CANVAS_PADDING = 160;
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 1.5;
 
 const CATEGORY_STYLES: Record<Category, string> = {
   Equivariant: "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200",
@@ -33,6 +39,7 @@ const CATEGORY_STYLES: Record<Category, string> = {
 };
 
 const CATEGORY_ICONS: Record<Category, LucideIcon> = {
+const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Equivariant: Box,
   Invariant: Layers,
   Transformer: Zap,
@@ -41,19 +48,15 @@ const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 
 type FilterType = "All" | Category;
 
-type DeviceType = "mobile" | "tablet" | "laptop" | "desktop";
-
-const CARD_WIDTH = 160;
-const CARD_HEIGHT = 86;
-const CANVAS_PADDING = 160;
+type DeviceType = "mobile" | "tablet" | "desktop";
 
 export default function MLIPExplorer() {
-  const [nodes, setNodes] = useState<AnyNode[]>(INITIAL_NODES);
-  const [edges, setEdges] = useState<Edge[]>(INITIAL_EDGES);
+  const [nodes] = useState<AnyNode[]>(INITIAL_NODES);
+  const [edges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
-  const [isUpdating, setIsUpdating] = useState(false);
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
+  const [baseScale, setBaseScale] = useState(0.8);
   const [userScale, setUserScale] = useState(1);
   const [userPan, setUserPan] = useState({ x: 0, y: 0 });
 
@@ -75,7 +78,6 @@ export default function MLIPExplorer() {
   const deviceType: DeviceType = useMemo(() => {
     if (viewport.width < 640) return "mobile";
     if (viewport.width < 1024) return "tablet";
-    if (viewport.width < 1440) return "laptop";
     return "desktop";
   }, [viewport.width]);
 
@@ -96,11 +98,16 @@ export default function MLIPExplorer() {
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
 
-  const baseScale = useMemo(() => {
+  useEffect(() => {
+    const deviceBase =
+      deviceType === "mobile" ? 0.9 : deviceType === "tablet" ? 0.75 : 0.6;
     const widthScale = viewport.width / (graphWidth + CANVAS_PADDING * 2);
     const heightScale = viewport.height / (graphHeight + CANVAS_PADDING * 2);
-    return Math.min(widthScale, heightScale, 1.4);
-  }, [graphWidth, graphHeight, viewport.height, viewport.width]);
+    const fitScale = Math.min(widthScale, heightScale, 1);
+    const nextBase = Math.min(deviceBase, fitScale);
+    setBaseScale(nextBase);
+    setUserScale(1);
+  }, [deviceType, graphHeight, graphWidth, viewport.height, viewport.width]);
 
   const basePan = useMemo(() => {
     const scaledWidth = graphWidth * baseScale;
@@ -121,51 +128,23 @@ export default function MLIPExplorer() {
   const effectiveScale = baseScale * userScale;
   const pan = { x: basePan.x + userPan.x, y: basePan.y + userPan.y };
 
+  const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+
   // Canvas panning
   const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if ((e.target as HTMLElement).closest(".node-card")) return;
     setIsDragging(true);
+    setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
   };
 
   const handleMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (!isDragging) return;
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
   const handleMouseUp = () => setIsDragging(false);
-
-  // Simulated "new model" update (purely front-end)
-  const handleSimulateUpdate = () => {
-    setIsUpdating(true);
-    setTimeout(() => {
-      const id = `new_model_${Date.now()}`;
-      const newNode: ModelNode = {
-        id,
-        type: "node",
-        category: "Transformer",
-        label: "New SOTA 2026",
-        year: 2026,
-        author: "Open Science Collab",
-        x: 950,
-        y: 880,
-        desc: "A simulated new foundation model automatically detected from a new arXiv paper or GitHub repo.",
-        isNew: true,
-      };
-
-      const newEdge: Edge = {
-        from: "orb",
-        to: id,
-        label: "Next Gen",
-        dashed: true,
-      };
-
-      setNodes((prev) => [...prev, newNode]);
-      setEdges((prev) => [...prev, newEdge]);
-      setSelectedNode(newNode);
-      setIsUpdating(false);
-    }, 1000);
-  };
 
   // Filter + layering
   const processedNodes = useMemo(() => {
@@ -184,27 +163,43 @@ export default function MLIPExplorer() {
     return { groups, items };
   }, [nodes, filter]);
 
+  const getEdgePoints = (fromNode: ModelNode, toNode: ModelNode) => {
+    const fromCenterX = fromNode.x + CARD_WIDTH / 2;
+    const fromCenterY = fromNode.y + CARD_HEIGHT / 2;
+    const toCenterX = toNode.x + CARD_WIDTH / 2;
+    const toCenterY = toNode.y + CARD_HEIGHT / 2;
+
+    const dx = toCenterX - fromCenterX;
+    const dy = toCenterY - fromCenterY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      const direction = Math.sign(dx) || 1;
+      return {
+        startX: fromCenterX + direction * (CARD_WIDTH / 2 - CARD_PADDING),
+        startY: fromCenterY,
+        endX: toCenterX - direction * (CARD_WIDTH / 2 - CARD_PADDING),
+        endY: toCenterY,
+      };
+    }
+
+    const direction = Math.sign(dy) || 1;
+    return {
+      startX: fromCenterX,
+      startY: fromCenterY + direction * (CARD_HEIGHT / 2 - CARD_PADDING),
+      endX: toCenterX,
+      endY: toCenterY - direction * (CARD_HEIGHT / 2 - CARD_PADDING),
+    };
+  };
+
   const renderEdges = () =>
     edges.map((edge, idx) => {
       const fromNode = nodes.find((n) => n.id === edge.from) as ModelNode | undefined;
       const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
       if (!fromNode || !toNode) return null;
 
-      const startX = fromNode.x + CARD_WIDTH / 2;
-      const startY = fromNode.y + CARD_HEIGHT / 2;
-      const endX = toNode.x + CARD_WIDTH / 2;
-      const endY = toNode.y + CARD_HEIGHT / 2;
-
-      const dx = endX - startX;
-      const dy = endY - startY;
-      const distance = Math.max(1, Math.hypot(dx, dy));
-      const offset = 22;
-      const adjustedStartX = startX + (dx / distance) * offset;
-      const adjustedStartY = startY + (dy / distance) * offset;
-      const adjustedEndX = endX - (dx / distance) * offset;
-      const adjustedEndY = endY - (dy / distance) * offset;
-
-      const path = `M ${adjustedStartX} ${adjustedStartY} C ${adjustedStartX} ${adjustedStartY + 50}, ${adjustedEndX} ${adjustedEndY - 50}, ${adjustedEndX} ${adjustedEndY}`;
+      const { startX, startY, endX, endY } = getEdgePoints(fromNode, toNode);
+      const midX = (startX + endX) / 2;
+      const path = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
 
       return (
         <g key={idx} className="transition-opacity duration-500">
@@ -212,20 +207,22 @@ export default function MLIPExplorer() {
             d={path}
             fill="none"
             stroke="#475569"
-            strokeWidth={deviceType === "mobile" ? 2.4 : 2}
+            strokeWidth={edge.dashed ? 1.8 : deviceType === "mobile" ? 2.6 : 2.2}
             strokeDasharray={edge.dashed ? "5,5" : undefined}
-            className="opacity-70"
-            markerEnd="url(#arrowhead)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="opacity-80"
+            markerEnd="url(#edge-arrow)"
           />
-          {edge.label && (
-            <text
-              x={(adjustedStartX + adjustedEndX) / 2}
-              y={(adjustedStartY + adjustedEndY) / 2}
-              fill="#475569"
-              fontSize={10}
-              textAnchor="middle"
-            >
-              {edge.label}
+            {edge.label && (
+              <text
+                x={(startX + endX) / 2}
+                y={(startY + endY) / 2}
+                fill="#475569"
+                fontSize={10}
+                textAnchor="middle"
+              >
+                {edge.label}
             </text>
           )}
         </g>
@@ -244,14 +241,17 @@ export default function MLIPExplorer() {
       )}`
     : "#";
 
+  const svgWidth = Math.max(graphWidth + CANVAS_PADDING * 4, 1400);
+  const svgHeight = Math.max(graphHeight + CANVAS_PADDING * 4, 1100);
+
   const renderDetailContent = (compact = false) => {
     if (!selectedNode) return null;
 
     const titleClass = compact
-      ? "text-xl font-bold text-slate-900 leading-snug"
-      : "text-2xl font-bold text-slate-900 leading-tight";
-    const labelText = compact ? "text-[9px]" : "text-[10px]";
-    const bodyText = compact ? "text-xs" : "text-sm";
+      ? "text-xl md:text-2xl font-bold text-slate-900 leading-snug"
+      : "text-2xl md:text-3xl font-bold text-slate-900 leading-tight";
+    const labelText = compact ? "text-xs" : "text-xs sm:text-[11px]";
+    const bodyText = compact ? "text-sm" : "text-sm md:text-base";
     const spacing = compact ? "space-y-2" : "space-y-3";
 
     return (
@@ -346,36 +346,21 @@ export default function MLIPExplorer() {
       {/* HEADER */}
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
         <div className="flex justify-between items-center flex-wrap gap-3">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
+        <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200">
               <Layers size={20} />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-slate-800 leading-tight">
-                MLIP Landscape
+                MLIP Hub
               </h1>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
                 Interatomic Potential Explorer
               </p>
             </div>
-          </div>
-
-          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-            <button
-              onClick={handleSimulateUpdate}
-              disabled={isUpdating}
-              className="bg-slate-900 hover:bg-slate-800 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition shadow-lg shadow-slate-200 flex items-center gap-2 active:scale-95 disabled:opacity-70 w-full sm:w-auto justify-center"
-            >
-              <RefreshCw size={16} className={isUpdating ? "animate-spin" : ""} />
-              <span>{isUpdating ? "Updating..." : "Simulate Live Update"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Ad banner under header */}
-        <div className="w-full flex justify-center">
-          <div className="w-full max-w-4xl">
-            <AdBanner slotId="1234567890" />
           </div>
         </div>
       </div>
@@ -405,6 +390,9 @@ export default function MLIPExplorer() {
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
             }}
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
+            }}
           >
             {/* Group zones */}
             {processedNodes.groups.map((node) => (
@@ -427,20 +415,20 @@ export default function MLIPExplorer() {
 
             {/* Edges */}
             <svg
-              className="absolute top-0 left-0 w-[2000px] h-[2000px] pointer-events-none"
-              style={{ zIndex: 1 }}
+              className="absolute top-0 left-0 pointer-events-none"
+              style={{ zIndex: 1, width: svgWidth, height: svgHeight }}
             >
               <defs>
                 <marker
-                  id="arrowhead"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="6"
-                  refY="3.5"
+                  id="edge-arrow"
+                  markerWidth="12"
+                  markerHeight="12"
+                  refX="9"
+                  refY="6"
                   orient="auto"
                   markerUnits="strokeWidth"
                 >
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#475569" />
+                  <path d="M0,0 L0,12 L12,6 z" fill="#475569" />
                 </marker>
               </defs>
               {renderEdges()}
@@ -455,13 +443,15 @@ export default function MLIPExplorer() {
 
               return (
                 <button
+                <button
                   key={node.id}
+                  type="button"
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNodeClick(node);
                   }}
-                  className={`node-card absolute w-40 p-3 rounded-xl border-2 text-left transition-all duration-200
+                  className={`node-card absolute w-[176px] p-3 rounded-xl border-2 text-left transition-all duration-200
                     ${styleClass} ${
                     isSelected
                       ? "ring-4 ring-blue-200 scale-105 z-20"
@@ -473,17 +463,19 @@ export default function MLIPExplorer() {
                   style={{ left: node.x, top: node.y }}
                   aria-pressed={isSelected}
                   aria-label={`${node.label} (${node.category}, ${node.year})`}
+                  aria-pressed={isSelected}
+                  aria-label={`${node.label} (${node.category}, ${node.year})`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon size={12} className="opacity-70" />
-                    <span className="text-[10px] font-bold uppercase tracking-wide opacity-70">
+                    <Icon size={14} className="opacity-70" />
+                    <span className="text-xs md:text-[10px] font-bold uppercase tracking-wide opacity-70">
                       {node.category}
                     </span>
                   </div>
-                  <div className="font-bold text-sm leading-tight mb-1">
+                  <div className="font-bold text-sm md:text-[13px] leading-tight mb-1">
                     {node.label}
                   </div>
-                  <div className="text-[10px] opacity-60 font-mono">{node.year}</div>
+                  <div className="text-[11px] md:text-[10px] opacity-70 font-mono">{node.year}</div>
                 </button>
               );
             })}
@@ -491,8 +483,14 @@ export default function MLIPExplorer() {
         </div>
 
         {/* FILTER + ZOOM CONTROL */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200 w-44 sm:w-52 z-20">
-          <div className="text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <div
+          className={`bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200 z-20 ${
+            deviceType === "mobile"
+              ? "relative mx-auto mt-4 w-[90vw]"
+              : "absolute top-4 left-4 w-44 sm:w-52"
+          }`}
+        >
+          <div className="text-xs md:text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Filter size={12} /> Filter Architecture
           </div>
           <div className="flex flex-col gap-1">
@@ -500,7 +498,7 @@ export default function MLIPExplorer() {
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`text-left px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 
+                className={`text-left px-3 py-2 rounded-lg text-sm md:text-xs font-semibold transition flex items-center gap-2
                   ${
                     filter === cat
                       ? "bg-slate-100 text-slate-900"
@@ -520,20 +518,21 @@ export default function MLIPExplorer() {
 
           <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
             <button
-              onClick={() => setUserScale((s) => Math.max(0.5, s - 0.1))}
-              className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
+              onClick={() => setUserScale((s) => clampScale(s - 0.1))}
+              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
             >
               -
             </button>
             <button
               onClick={() => setUserScale(1)}
-              className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
+              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
             >
+              {Math.round(userScale * baseScale * 100)}%
               {Math.round(userScale * baseScale * 100)}%
             </button>
             <button
-              onClick={() => setUserScale((s) => Math.min(2.5, s + 0.1))}
-              className="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs border w-full"
+              onClick={() => setUserScale((s) => clampScale(s + 0.1))}
+              className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
             >
               +
             </button>
@@ -543,6 +542,7 @@ export default function MLIPExplorer() {
         {/* DETAILS SIDEBAR */}
         <div
           className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
+          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
             <div className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
@@ -551,15 +551,25 @@ export default function MLIPExplorer() {
           )}
         </div>
 
-        {selectedNode && (
-          <div className="md:hidden absolute inset-x-0 bottom-0 p-3 z-30 pointer-events-none">
-            <div className="pointer-events-auto bg-white/95 border border-slate-200 rounded-2xl shadow-2xl backdrop-blur-md">
-              <div className="p-4 flex flex-col gap-3">
-                {renderDetailContent(true)}
-              </div>
+        <div
+          className={`md:hidden fixed inset-0 z-30 transform transition-transform duration-300 ease-in-out ${
+            selectedNode ? "translate-y-0" : "translate-y-full pointer-events-none"
+          }`}
+        >
+          <div className="absolute inset-0 bg-white shadow-2xl overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+              <div className="text-sm font-semibold text-slate-700">Details</div>
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"
+                aria-label="Close details"
+              >
+                <X size={18} />
+              </button>
             </div>
+            {selectedNode && <div className="p-4 space-y-4">{renderDetailContent()}</div>}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
