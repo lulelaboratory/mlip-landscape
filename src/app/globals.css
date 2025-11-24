@@ -1,18 +1,17 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Basic theming (no @apply needed) */
 :root {
   color-scheme: light;
 }
 
 body {
-  /* These roughly match bg-slate-50 and text-slate-900 */
   background-color: #f8fafc;
   color: #020617;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Scrollbar styling (optional) */
 * {
   scrollbar-width: thin;
   scrollbar-color: #cbd5f5 transparent;
