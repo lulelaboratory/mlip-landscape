@@ -232,46 +232,97 @@ export default function MLIPExplorer() {
     return { groups, items };
   }, [nodes, filter]);
 
-  const getEdgePoints = (fromNode: ModelNode, toNode: ModelNode) => {
-    const fromCenterX = fromNode.x + CARD_WIDTH / 2;
-    const fromCenterY = fromNode.y + CARD_HEIGHT / 2;
-    const toCenterX = toNode.x + CARD_WIDTH / 2;
-    const toCenterY = toNode.y + CARD_HEIGHT / 2;
+  // Orthogonal edge router. Returns an SVG path string that:
+  // - exits the source card from the side nearest the target
+  // - enters the target card from the corresponding opposite side
+  // - for long runs, detours above/below rows so the line never cuts
+  //   through an unrelated card
+  // Also returns a label anchor placed on a clear stretch of the path.
+  const COLUMN_GAP = 280; // approx horizontal spacing between node columns
+  const ROW_GAP_Y = 430; // y coordinate of the gap between zone_eq and zone_inv
+  const DETOUR = 48; // vertical detour distance for same-row skips
+  const COL_DETOUR = 60; // horizontal detour distance for same-col skips
 
-    const dx = toCenterX - fromCenterX;
-    const dy = toCenterY - fromCenterY;
-    const horizontal = Math.abs(dx) >= Math.abs(dy);
+  const buildEdgePath = (fromNode: ModelNode, toNode: ModelNode) => {
+    const fx = fromNode.x;
+    const fy = fromNode.y;
+    const tx = toNode.x;
+    const ty = toNode.y;
+    const fcx = fx + CARD_WIDTH / 2;
+    const fcy = fy + CARD_HEIGHT / 2;
+    const tcx = tx + CARD_WIDTH / 2;
+    const tcy = ty + CARD_HEIGHT / 2;
+    const dx = tcx - fcx;
+    const dy = tcy - fcy;
 
-    if (horizontal) {
-      const fromSide = dx >= 0 ? 1 : -1;
-      const toSide = dx >= 0 ? -1 : 1;
+    const sameRow = Math.abs(dy) < 20;
+    const sameCol = Math.abs(dx) < 20;
+
+    // Case 1: same row, adjacent columns -> straight horizontal side-to-side
+    if (sameRow && Math.abs(dx) <= COLUMN_GAP + CARD_WIDTH) {
+      const sx = dx > 0 ? fx + CARD_WIDTH : fx;
+      const ex = dx > 0 ? tx : tx + CARD_WIDTH;
       return {
-        startX: fromCenterX + fromSide * (CARD_WIDTH / 2 - CARD_PADDING),
-        startY: fromCenterY,
-        endX: toCenterX + toSide * (CARD_WIDTH / 2 - CARD_PADDING),
-        endY: toCenterY,
-        horizontal: true,
+        path: `M ${sx} ${fcy} L ${ex} ${fcy}`,
+        labelX: (sx + ex) / 2,
+        labelY: fcy - 8,
       };
     }
 
-    const fromSide = dy >= 0 ? 1 : -1;
-    const toSide = dy >= 0 ? -1 : 1;
+    // Case 2: same row, skipping columns -> U-bow above the row (or below for top row)
+    if (sameRow) {
+      const bowAbove = fy > 200; // keep top row from bowing off canvas
+      const bowY = bowAbove ? fy - DETOUR : fy + CARD_HEIGHT + DETOUR;
+      const sy = bowAbove ? fy : fy + CARD_HEIGHT;
+      const ey = bowAbove ? ty : ty + CARD_HEIGHT;
+      return {
+        path: `M ${fcx} ${sy} L ${fcx} ${bowY} L ${tcx} ${bowY} L ${tcx} ${ey}`,
+        labelX: (fcx + tcx) / 2,
+        labelY: bowY - 6,
+      };
+    }
+
+    // Case 3: same column, adjacent rows -> straight vertical
+    if (sameCol && Math.abs(dy) <= 200) {
+      const sy = dy > 0 ? fy + CARD_HEIGHT : fy;
+      const ey = dy > 0 ? ty : ty + CARD_HEIGHT;
+      return {
+        path: `M ${fcx} ${sy} L ${fcx} ${ey}`,
+        labelX: fcx + 10,
+        labelY: (sy + ey) / 2,
+      };
+    }
+
+    // Case 4: same column, skipping rows -> detour right
+    if (sameCol) {
+      const bowX = fx + CARD_WIDTH + COL_DETOUR;
+      const sx = fx + CARD_WIDTH;
+      const ex = tx + CARD_WIDTH;
+      const sy = fcy;
+      const ey = tcy;
+      return {
+        path: `M ${sx} ${sy} L ${bowX} ${sy} L ${bowX} ${ey} L ${ex} ${ey}`,
+        labelX: bowX + 6,
+        labelY: (sy + ey) / 2,
+      };
+    }
+
+    // Case 5: diagonal -> L-shape through row-gap area.
+    // Exit bottom/top of source, run horizontally in the gap between rows,
+    // then enter top/bottom of target.
+    const goingDown = dy > 0;
+    const sy = goingDown ? fy + CARD_HEIGHT : fy;
+    const ey = goingDown ? ty : ty + CARD_HEIGHT;
+    // Choose a horizontal corridor: halfway between source and target rows.
+    // If the edge crosses zones (fy < zone_eq bottom, ty > zone_inv top), prefer ROW_GAP_Y.
+    const crossZone = (fy < 450 && ty > 480) || (fy > 480 && ty < 450);
+    const bendY = crossZone ? ROW_GAP_Y : (sy + ey) / 2;
     return {
-      startX: fromCenterX,
-      startY: fromCenterY + fromSide * (CARD_HEIGHT / 2 - CARD_PADDING),
-      endX: toCenterX,
-      endY: toCenterY + toSide * (CARD_HEIGHT / 2 - CARD_PADDING),
-      horizontal: false,
+      path: `M ${fcx} ${sy} L ${fcx} ${bendY} L ${tcx} ${bendY} L ${tcx} ${ey}`,
+      labelX: (fcx + tcx) / 2,
+      labelY: bendY - 6,
     };
   };
-
-  const outgoingMap = useMemo(() => {
-    const map: Record<string, Edge[]> = {};
-    edges.forEach((edge) => {
-      map[edge.from] = map[edge.from] ? [...map[edge.from], edge] : [edge];
-    });
-    return map;
-  }, [edges]);
 
   const renderEdges = () =>
     edges.map((edge, idx) => {
@@ -279,26 +330,7 @@ export default function MLIPExplorer() {
       const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
       if (!fromNode || !toNode) return null;
 
-      const { startX, startY, endX, endY, horizontal } = getEdgePoints(fromNode, toNode);
-      const siblings = outgoingMap[fromNode.id] ?? [];
-      const order = siblings.indexOf(edge);
-      const spread = (order - (siblings.length - 1) / 2) * 10;
-
-      const offsetX = horizontal ? 0 : spread;
-      const offsetY = horizontal ? spread : 0;
-
-      const ctrl1 = {
-        x: startX + (horizontal ? (endX - startX) / 3 : offsetX),
-        y: startY + (horizontal ? offsetY : (endY - startY) / 3),
-      };
-      const ctrl2 = {
-        x: endX - (horizontal ? (endX - startX) / 3 : offsetX),
-        y: endY - (horizontal ? offsetY : (endY - startY) / 3),
-      };
-
-      const path = `M ${startX} ${startY} C ${ctrl1.x} ${ctrl1.y}, ${ctrl2.x} ${ctrl2.y}, ${endX} ${endY}`;
-      const labelX = (startX + endX) / 2 + offsetX * 0.3;
-      const labelY = (startY + endY) / 2 + offsetY * 0.3;
+      const { path, labelX, labelY } = buildEdgePath(fromNode, toNode);
 
       return (
         <g key={idx} className="transition-opacity duration-500">
@@ -306,17 +338,17 @@ export default function MLIPExplorer() {
             d={path}
             fill="none"
             style={{ stroke: "var(--edge-stroke)" }}
-            strokeWidth={edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.5}
+            strokeWidth={edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25}
             strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="opacity-95"
+            className="opacity-90"
             markerEnd="url(#edge-arrow)"
           />
           {edge.label && (
             <text
               x={labelX}
-              y={labelY - 4}
+              y={labelY}
               style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
               fontSize={11}
               fontWeight={600}
@@ -521,7 +553,7 @@ export default function MLIPExplorer() {
             {/* Edges */}
             <svg
               className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 15, width: svgWidth, height: svgHeight }}
+              style={{ zIndex: 5, width: svgWidth, height: svgHeight }}
             >
               <defs>
                 <marker
