@@ -22,6 +22,7 @@ import {
   Edge,
   Category,
 } from "@/data/landscape";
+import ThemeToggle from "@/components/ThemeToggle";
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -39,10 +40,14 @@ const DEFAULT_FONT_SCALE: number = 1;
 const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 
 const CATEGORY_STYLES: Record<Category, string> = {
-  Equivariant: "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200",
-  Invariant: "bg-blue-50 border-blue-400 text-blue-900 hover:shadow-blue-200",
-  Transformer: "bg-green-50 border-green-400 text-green-900 hover:shadow-green-200",
-  Descriptor: "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200",
+  Equivariant:
+    "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200 dark:bg-red-950/50 dark:border-red-500 dark:text-red-100 dark:hover:shadow-red-900/40",
+  Invariant:
+    "bg-blue-50 border-blue-400 text-blue-900 hover:shadow-blue-200 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-100 dark:hover:shadow-blue-900/40",
+  Transformer:
+    "bg-green-50 border-green-400 text-green-900 hover:shadow-green-200 dark:bg-green-950/50 dark:border-green-500 dark:text-green-100 dark:hover:shadow-green-900/40",
+  Descriptor:
+    "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200 dark:bg-orange-950/50 dark:border-orange-500 dark:text-orange-100 dark:hover:shadow-orange-900/40",
 };
 
 const CATEGORY_ICONS: Record<Category, LucideIcon> = {
@@ -300,7 +305,7 @@ export default function MLIPExplorer() {
           <path
             d={path}
             fill="none"
-            stroke="#475569"
+            style={{ stroke: "var(--edge-stroke)" }}
             strokeWidth={edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.5}
             strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
@@ -312,12 +317,11 @@ export default function MLIPExplorer() {
             <text
               x={labelX}
               y={labelY - 4}
-              fill="#1e293b"
+              style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
               fontSize={11}
               fontWeight={600}
               textAnchor="middle"
               paintOrder="stroke"
-              stroke="#f1f5f9"
               strokeWidth={3}
               strokeLinejoin="round"
             >
@@ -347,8 +351,8 @@ export default function MLIPExplorer() {
     if (!selectedNode) return null;
 
     const titleClass = compact
-      ? "text-[1.25em] md:text-[1.5em] font-bold text-slate-900 leading-snug"
-      : "text-[1.5em] md:text-[1.875em] font-bold text-slate-900 leading-tight";
+      ? "text-[1.25em] md:text-[1.5em] font-bold text-slate-900 dark:text-slate-100 leading-snug"
+      : "text-[1.5em] md:text-[1.875em] font-bold text-slate-900 dark:text-slate-100 leading-tight";
     const labelText = compact ? "text-[0.75em]" : "text-[0.75em] sm:text-[0.6875em]";
     const bodyText = compact ? "text-[0.875em]" : "text-[0.875em] md:text-[1em]";
     const spacing = compact ? "space-y-2" : "space-y-3";
@@ -358,7 +362,7 @@ export default function MLIPExplorer() {
         <div className="flex justify-between items-start gap-4">
           <div>
             <div
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide mb-3 border bg-white shadow-sm`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide mb-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm`}
             >
               <span className="w-2 h-2 rounded-full bg-blue-500" />
               {selectedNode.category}
@@ -367,40 +371,40 @@ export default function MLIPExplorer() {
           </div>
           <button
             onClick={() => setSelectedNode(null)}
-            className="text-slate-400 hover:text-slate-600 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex gap-4 mb-4 text-[0.875em] text-slate-500 border-b border-slate-100 pb-4">
+        <div className="flex gap-4 mb-4 text-[0.875em] text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex-1">
-            <div className={`${labelText} uppercase font-bold text-slate-400 mb-1`}>Year</div>
-            <div className="font-semibold text-slate-700">{selectedNode.year}</div>
+            <div className={`${labelText} uppercase font-bold text-slate-400 dark:text-slate-500 mb-1`}>Year</div>
+            <div className="font-semibold text-slate-700 dark:text-slate-200">{selectedNode.year}</div>
           </div>
-          <div className="flex-1 border-l border-slate-100 pl-4">
-            <div className={`${labelText} uppercase font-bold text-slate-400 mb-1`}>
+          <div className="flex-1 border-l border-slate-100 dark:border-slate-800 pl-4">
+            <div className={`${labelText} uppercase font-bold text-slate-400 dark:text-slate-500 mb-1`}>
               Organization
             </div>
-            <div className="font-semibold text-slate-700">{selectedNode.author}</div>
+            <div className="font-semibold text-slate-700 dark:text-slate-200">{selectedNode.author}</div>
           </div>
         </div>
 
-        <div className={`${bodyText} text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100`}>
+        <div className={`${bodyText} text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-100 dark:border-slate-700`}>
           {selectedNode.desc}
         </div>
 
         <div className={spacing}>
-          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 border p-2 rounded-lg`}>
+          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
             <Database size={14} className="text-blue-500" />
             <span>
-              Data Scale: <strong>{selectedNode.x > 600 ? "Universal (Foundational)" : "Specialized"}</strong>
+              Data Scale: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.x > 600 ? "Universal (Foundational)" : "Specialized"}</strong>
             </span>
           </div>
-          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 border p-2 rounded-lg`}>
-            <Cpu size={14} className="text-purple-500" />
+          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
+            <Cpu size={14} className="text-purple-500 dark:text-purple-400" />
             <span>
-              Inference: <strong>{selectedNode.category === "Equivariant" ? "High cost / high accuracy" : "Optimized for speed"}</strong>
+              Inference: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.category === "Equivariant" ? "High cost / high accuracy" : "Optimized for speed"}</strong>
             </span>
           </div>
         </div>
@@ -410,7 +414,7 @@ export default function MLIPExplorer() {
             href={selectedNode.githubUrl ?? searchUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold transition shadow-lg shadow-slate-200 active:scale-95"
+            className="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-semibold transition shadow-lg shadow-slate-200 dark:shadow-slate-950/60 active:scale-95"
           >
             <Github size={18} /> View Code / GitHub
           </a>
@@ -422,7 +426,7 @@ export default function MLIPExplorer() {
             }
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 text-[0.75em] font-semibold hover:underline"
+            className="flex items-center justify-center gap-2 w-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-[0.75em] font-semibold hover:underline"
           >
             Read Technical Paper <ExternalLink size={10} />
           </a>
@@ -431,7 +435,7 @@ export default function MLIPExplorer() {
             href={searchUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-slate-700 text-[0.6875em] font-medium hover:underline"
+            className="flex items-center justify-center gap-2 w-full text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-[0.6875em] font-medium hover:underline"
           >
             Search on the web
           </a>
@@ -441,25 +445,28 @@ export default function MLIPExplorer() {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="w-full h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
       {/* HEADER */}
       <div
-        className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative"
+        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 shadow-sm dark:shadow-slate-950/50 z-20 flex flex-col gap-3 relative"
         style={fontScaleStyle}
       >
         <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200">
+            <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200 dark:shadow-blue-900/40">
               <Layers size={20} />
             </div>
             <div>
-              <h1 className="text-[1em] sm:text-[1.125em] font-bold text-slate-800 leading-tight">
+              <h1 className="text-[1em] sm:text-[1.125em] font-bold text-slate-800 dark:text-slate-100 leading-tight">
                 MLIP Hub
               </h1>
-              <p className="text-[0.6875em] sm:text-[0.75em] text-slate-500 font-medium">
+              <p className="text-[0.6875em] sm:text-[0.75em] text-slate-500 dark:text-slate-400 font-medium">
                 Interatomic Potential Explorer
               </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -467,7 +474,7 @@ export default function MLIPExplorer() {
       <div className="flex-1 relative flex overflow-hidden">
         {/* MAIN CANVAS */}
         <div
-          className="flex-1 relative bg-slate-100 cursor-grab active:cursor-grabbing touch-none"
+          className="flex-1 relative bg-slate-100 dark:bg-slate-900 cursor-grab active:cursor-grabbing touch-none"
           ref={canvasRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -476,7 +483,7 @@ export default function MLIPExplorer() {
         >
           {/* Background dots */}
           <div
-            className="absolute inset-0 opacity-5 pointer-events-none"
+            className="absolute inset-0 opacity-5 dark:opacity-[0.08] pointer-events-none"
             style={{
               backgroundImage: "radial-gradient(#64748b 1px, transparent 1px)",
               backgroundSize: "20px 20px",
@@ -496,7 +503,7 @@ export default function MLIPExplorer() {
             {processedNodes.groups.map((node) => (
               <div
                 key={node.id}
-                className="absolute border-2 border-dashed border-slate-300 rounded-xl bg-slate-200/30 backdrop-blur-sm pointer-events-none"
+                className="absolute border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-200/30 dark:bg-slate-800/40 backdrop-blur-sm pointer-events-none"
                 style={{
                   left: node.x,
                   top: node.y,
@@ -505,7 +512,7 @@ export default function MLIPExplorer() {
                   zIndex: 0,
                 }}
               >
-                <div className="absolute -top-4 left-4 bg-slate-100 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="absolute -top-4 left-4 bg-slate-100 dark:bg-slate-900 px-2 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   {node.label}
                 </div>
               </div>
@@ -526,7 +533,7 @@ export default function MLIPExplorer() {
                   orient="auto"
                   markerUnits="strokeWidth"
                 >
-                  <path d="M0,0 L0,6 L6,3 z" fill="#475569" />
+                  <path d="M0,0 L0,6 L6,3 z" style={{ fill: "var(--edge-stroke)" }} />
                 </marker>
               </defs>
               {renderEdges()}
@@ -550,8 +557,8 @@ export default function MLIPExplorer() {
                   className={`node-card absolute w-[176px] p-3 rounded-xl border-2 text-left transition-all duration-200
                     ${styleClass} ${
                     isSelected
-                      ? "ring-4 ring-blue-200 scale-105 z-20"
-                      : "hover:scale-105 z-10 shadow-md"
+                      ? "ring-4 ring-blue-200 dark:ring-blue-700 scale-105 z-20"
+                      : "hover:scale-105 z-10 shadow-md dark:shadow-slate-950/40"
                   }
                     ${node.dimmed ? "opacity-20 grayscale" : "opacity-100"}
                     ${node.isNew ? "animate-bounce" : ""}
@@ -594,22 +601,22 @@ export default function MLIPExplorer() {
             {deviceType === "mobile" && (
               <button
                 onClick={() => setFilterOpen((open) => !open)}
-                className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-[0.875em] font-semibold text-slate-700 shadow-sm"
+                className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-[0.875em] font-semibold text-slate-700 dark:text-slate-200 shadow-sm"
                 style={fontScaleStyle}
               >
                 <span className="flex items-center gap-2">
                   <Filter size={14} /> Filter Architecture
                 </span>
-                <span className="text-[0.75em] text-slate-500">{filterOpen ? "Hide" : "Show"}</span>
+                <span className="text-[0.75em] text-slate-500 dark:text-slate-400">{filterOpen ? "Hide" : "Show"}</span>
               </button>
             )}
 
             {(filterOpen || deviceType !== "mobile") && (
               <div
-                className="bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200"
+                className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800"
                 style={fontScaleStyle}
               >
-                <div className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <div className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] font-bold mb-3 text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter size={12} /> Filter Architecture
                 </div>
                 <div className="flex flex-col gap-1">
@@ -620,14 +627,14 @@ export default function MLIPExplorer() {
                       className={`text-left px-3 py-2 rounded-lg text-[0.875em] sm:text-[0.75em] md:text-[0.6875em] font-semibold transition flex items-center gap-2
                         ${
                           filter === cat
-                            ? "bg-slate-100 text-slate-900"
-                            : "hover:bg-slate-50 text-slate-500"
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                            : "hover:bg-slate-50 text-slate-500 dark:text-slate-400 dark:hover:bg-slate-800/60"
                         }
                       `}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          filter === cat ? "bg-blue-500" : "bg-slate-300"
+                          filter === cat ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-600"
                         }`}
                       ></span>
                       {cat}
@@ -635,45 +642,45 @@ export default function MLIPExplorer() {
                   ))}
                 </div>
 
-                <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2">
                   <button
                     onClick={() => setUserScale((s) => clampScale(s - 0.1))}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Zoom out"
                   >
                     -
                   </button>
                   <button
                     onClick={() => setUserScale(1)}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Reset zoom"
                   >
                     {Math.round(userScale * baseScale * 100)}%
                   </button>
                   <button
                     onClick={() => setUserScale((s) => clampScale(s + 0.1))}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Zoom in"
                   >
                     +
                   </button>
                 </div>
 
-                <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2 items-center">
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2 items-center">
                   <button
                     onClick={() => {
                       const next = FONT_SCALES[Math.max(0, fontScaleIndex - 1)];
                       updateFontScale(next);
                     }}
                     disabled={!canShrinkFont}
-                    className="p-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 text-[0.75em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Decrease UI font size"
                   >
                     A−
                   </button>
                   <button
                     onClick={() => updateFontScale(DEFAULT_FONT_SCALE)}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Reset UI font size"
                     title={`UI text size ${Math.round(fontScale * 100)}%`}
                   >
@@ -685,7 +692,7 @@ export default function MLIPExplorer() {
                       updateFontScale(next);
                     }}
                     disabled={!canGrowFont}
-                    className="p-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 text-[1em] border w-full"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[1em] border border-slate-200 dark:border-slate-700 w-full"
                     aria-label="Increase UI font size"
                   >
                     A+
@@ -698,7 +705,7 @@ export default function MLIPExplorer() {
 
         {/* DETAILS SIDEBAR */}
         <div
-          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 backdrop-blur-sm shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
+          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-2xl dark:shadow-slate-950/70 border-l border-slate-200 dark:border-slate-800 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
             <div
@@ -715,12 +722,12 @@ export default function MLIPExplorer() {
             selectedNode ? "translate-y-0" : "translate-y-full pointer-events-none"
           }`}
         >
-          <div className="absolute inset-0 bg-white shadow-2xl overflow-y-auto" style={fontScaleStyle}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-              <div className="text-[0.875em] font-semibold text-slate-700">Details</div>
+          <div className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto" style={fontScaleStyle}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <div className="text-[0.875em] font-semibold text-slate-700 dark:text-slate-200">Details</div>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"
+                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
                 aria-label="Close details"
               >
                 <X size={18} />

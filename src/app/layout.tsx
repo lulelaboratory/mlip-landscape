@@ -69,14 +69,26 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const THEME_INIT_SCRIPT = `(() => {
+  try {
+    const stored = window.localStorage.getItem('mliphub.theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const useDark = stored === 'dark' || (!stored && sysDark);
+    if (useDark) document.documentElement.classList.add('dark');
+  } catch (_) {}
+})();`;
+
 export default function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-50 text-slate-900">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         {children}
       </body>
     </html>
