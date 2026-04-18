@@ -50,7 +50,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 1380,
+    width: 1660,
     height: 400,
   },
   {
@@ -107,7 +107,7 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Improved equivariant transformer with higher-degree tensor representations; achieves state-of-the-art OC20/OC22 performance with strong data-efficiency.",
     githubUrl: "https://github.com/atomicarchitects/equiformer_v2",
-    paperUrl: "https://openreview.net/forum?id=f75b873e67d",
+    paperUrl: "https://arxiv.org/abs/2306.12059",
   },
   {
     id: "mace",
@@ -134,7 +134,7 @@ export const INITIAL_NODES: AnyNode[] = [
     y: 320,
     desc:
       "Graph Atomic Cluster Expansion: a foundation-scale implementation of ACE with explicit multi-body basis functions for wide-coverage materials modelling.",
-    githubUrl: "https://github.com/ICAMS/grace",
+    githubUrl: "https://github.com/ICAMS/grace-tensorpotential",
   },
   {
     id: "orb",
@@ -159,8 +159,51 @@ export const INITIAL_NODES: AnyNode[] = [
     x: 950,
     y: 320,
     desc:
-      "Orb-v3 variant for molecules, electrolytes and biomolecules with explicit charge/spin channels and chemistry-aware output heads.",
-    githubUrl: "https://github.com/orbital-materials/orb-models",
+      "Orb-v3 variant for molecules, electrolytes, metal complexes, and biomolecules, trained on the ~100M-structure OMol25 dataset with explicit total-charge and spin-multiplicity conditioning.",
+    githubUrl: "https://huggingface.co/Orbital-Materials/OrbMol",
+    paperUrl: "https://www.orbitalindustries.com/posts/orbmol-extending-orb-to-molecular-systems",
+  },
+  {
+    id: "tfn",
+    type: "node",
+    category: "Equivariant",
+    label: "Tensor Field Networks",
+    year: 2018,
+    author: "Thomas et al.",
+    x: 380,
+    y: 320,
+    desc:
+      "First E(3)-equivariant convolutional architecture for point clouds, introducing spherical-harmonic tensor products that underlie nearly all modern equivariant MLIPs (NequIP, MACE, Equiformer).",
+    githubUrl: "https://github.com/tensorfieldnetworks/tensorfieldnetworks",
+    paperUrl: "https://arxiv.org/abs/1802.08219",
+  },
+  {
+    id: "se3t",
+    type: "node",
+    category: "Transformer",
+    label: "SE(3)-Transformer",
+    year: 2020,
+    author: "Fuchs et al.",
+    x: 1510,
+    y: 150,
+    desc:
+      "Self-attention generalized to SE(3)-equivariant inputs via tensor field attention; an early blueprint for equivariant transformer architectures like Equiformer.",
+    githubUrl: "https://github.com/FabianFuchsML/se3-transformer-public",
+    paperUrl: "https://arxiv.org/abs/2006.10503",
+  },
+  {
+    id: "jmp",
+    type: "node",
+    category: "Transformer",
+    label: "JMP",
+    year: 2024,
+    author: "Shoghi et al. (CMU / Meta)",
+    x: 1510,
+    y: 320,
+    desc:
+      "Joint Multi-task Pretraining: trains one backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x, demonstrating that multi-dataset pretraining yields strong transferable potentials — a precursor to UMA-style universal models.",
+    githubUrl: "https://github.com/facebookresearch/JMP",
+    paperUrl: "https://arxiv.org/abs/2310.16802",
   },
   {
     id: "esen",
@@ -187,7 +230,7 @@ export const INITIAL_NODES: AnyNode[] = [
     y: 320,
     desc:
       "Universal Model for Atoms: a Mixture of Linear Experts (MoLE) foundation model built on the eSEN backbone, trained on ~500M structures spanning OC20, ODAC23, OMat24, OMC25, and OMol25. NeurIPS 2025 spotlight.",
-    githubUrl: "https://github.com/facebookresearch/fairchem",
+    githubUrl: "https://huggingface.co/facebook/UMA",
     paperUrl: "https://arxiv.org/abs/2506.23971",
   },
 
@@ -195,6 +238,34 @@ export const INITIAL_NODES: AnyNode[] = [
   // LANE 2: DESCRIPTORS & INDUSTRIAL WORKHORSES  (Middle band, y ≈ 550)
   // ---------------------------------------------------------------------------
 
+  {
+    id: "bpnn",
+    type: "node",
+    category: "Descriptor",
+    label: "BPNN",
+    year: 2007,
+    author: "Behler & Parrinello",
+    x: 100,
+    y: 650,
+    desc:
+      "The Behler–Parrinello high-dimensional neural network potential — the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
+    githubUrl: "https://github.com/CompPhysVienna/n2p2",
+    paperUrl: "https://doi.org/10.1103/PhysRevLett.98.146401",
+  },
+  {
+    id: "ace",
+    type: "node",
+    category: "Descriptor",
+    label: "ACE",
+    year: 2019,
+    author: "Drautz (ICAMS)",
+    x: 380,
+    y: 650,
+    desc:
+      "Atomic Cluster Expansion: a complete, systematically improvable many-body basis for the local atomic environment; the mathematical backbone of PACE/GRACE and a strong influence on MACE.",
+    githubUrl: "https://github.com/ICAMS/lammps-user-pace",
+    paperUrl: "https://arxiv.org/abs/1810.06640",
+  },
   {
     id: "gap",
     type: "node",
@@ -385,17 +456,24 @@ export const INITIAL_NODES: AnyNode[] = [
 
 export const INITIAL_EDGES: Edge[] = [
   // Lane 1 (Equivariant + Transformers)
+  { from: "tfn", to: "nequip", label: "E(3)" },
+  { from: "tfn", to: "se3t", label: "+Attention" },
   { from: "nequip", to: "allegro", label: "Locality" },
   { from: "nequip", to: "mace", label: "Higher Order" },
   { from: "nequip", to: "eqv2", label: "Attention" },
+  { from: "se3t", to: "eqv2", label: "Refined", dashed: true },
   { from: "mace", to: "grace", label: "Scale" },
   { from: "eqv2", to: "orb", label: "Simplify", dashed: true },
-  { from: "orb", to: "orbmol", label: "+State" },
+  { from: "orb", to: "orbmol", label: "+OMol25" },
   { from: "eqv2", to: "esen", label: "Smooth PES" },
   { from: "esen", to: "uma", label: "Backbone" },
+  { from: "jmp", to: "uma", label: "Multi-task", dashed: true },
   { from: "uma", to: "mattersim", label: "Foundation", dashed: true },
 
   // Lane 2 (Descriptors) – keep edges purely horizontal to avoid messy crossings
+  { from: "bpnn", to: "gap", label: "Kernels" },
+  { from: "bpnn", to: "ani", label: "Neural Nets", dashed: true },
+  { from: "ace", to: "grace", label: "Graph", dashed: true },
   { from: "gap", to: "deepmd", label: "Neural Nets" },
   { from: "deepmd", to: "dpa2", label: "Universal Data" },
 
