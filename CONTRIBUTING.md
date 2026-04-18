@@ -1,6 +1,10 @@
-# Contributing
+# Contributing to MLIP Hub
 
-Thanks for your interest in contributing to **MLIP Landscape**!
+Thanks for your interest in contributing to **[MLIP Hub](https://www.mliphub.com)**! The most valuable contributions are **new model entries, corrected links, better descriptions, and new conceptual edges** — all driven by the data in `src/data/landscape.ts`.
+
+This guide walks through the local workflow, the data schema, the coordinate system, and the review bar.
+
+---
 
 ## Local development
 
@@ -9,22 +13,165 @@ Thanks for your interest in contributing to **MLIP Landscape**!
 
        npm install
 
-3. Create a `.env.local` (see `.env.local.example`).
-4. Run the dev server:
+3. Run the dev server:
 
        npm run dev
 
-5. Open `http://localhost:3000` and make your changes.
+4. Open `http://localhost:3000` and make your changes.
 
-Before opening a PR:
+Before opening a PR, all three of these must pass:
 
-- Run `npm run lint`
-- Run `npm run build` to ensure it compiles
+    npm run lint
+    npm run check:landscape
+    npm run build
 
-## Pull requests
-
-- 1 feature or bugfix per PR when possible.
-- Include screenshots or a short video for UI changes.
-- Keep descriptions clear and concise.
+The same checks run in CI.
 
 ---
+
+## The data schema (`src/data/landscape.ts`)
+
+Everything on the canvas is defined in this one file. There are three shapes:
+
+### `ModelNode` — a card on the canvas
+
+```ts
+{
+  id: string;                       // unique, lowercase, no spaces (e.g. "mace", "orb_v3")
+  type: "node";
+  category: "Equivariant" | "Invariant" | "Transformer" | "Descriptor";
+  label: string;                    // display name (e.g. "MACE", "Orb-v3")
+  year: number;                     // publication year
+  author: string;                   // lab / org (e.g. "Cambridge (Csányi group)")
+  x: number;                        // canvas x coordinate (top-left of card)
+  y: number;                        // canvas y coordinate
+  desc: string;                     // 1-2 sentence technical description
+  githubUrl?: string;               // required for new models
+  paperUrl?: string;                // strongly preferred (arXiv > journal > preprint)
+  isNew?: boolean;                  // optional: animates the card briefly
+  dimmed?: boolean;                 // computed at render-time; don't set manually
+}
+```
+
+### `GroupNode` — a zone (background band)
+
+```ts
+{
+  id: string;
+  type: "group";
+  label: string;                    // zone title
+  x: number;                        // top-left
+  y: number;
+  width: number;
+  height: number;
+}
+```
+
+There are currently two zones: `zone_eq` (Equivariant & Transformers) and `zone_inv` (Invariant & Descriptors). Usually you won't touch these.
+
+### `Edge` — a conceptual relationship
+
+```ts
+{
+  from: string;                     // ModelNode.id
+  to: string;                       // ModelNode.id
+  label?: string;                   // short label drawn along the curve
+  dashed?: boolean;                 // dashed line for weaker / speculative links
+}
+```
+
+---
+
+## Adding a model — step by step
+
+1. **Pick a category** (`Equivariant`, `Invariant`, `Transformer`, or `Descriptor`).
+2. **Find an empty slot** on the canvas. See the **Coordinate system** section below.
+3. **Add the node object** in the appropriate lane section of `INITIAL_NODES`.
+4. **Add 1–3 conceptual edges** tying it into the existing lineage (its predecessor, a concurrent peer, or a successor).
+5. **Run the checks:**
+
+       npm run check:landscape
+       npm run dev
+
+6. Visit `http://localhost:3000`, verify the card appears, click it, confirm the sidebar links work, and toggle filters.
+7. Commit and open a PR.
+
+---
+
+## Coordinate system
+
+The canvas uses absolute positioning. Key constants:
+
+- **Card size:** `CARD_WIDTH = 176`, `CARD_HEIGHT = 72`
+- **Zones:**
+  - `zone_eq`: `x=50, y=50, width=1660, height=400` (top band)
+  - `zone_inv`: `x=50, y=480, width=1100, height=500` (bottom band)
+
+### Current lane layout
+
+| Lane | Purpose | y | Typical x's (column grid) |
+|------|---------|---|----------------------------|
+| Lane 1a | Equivariant + foundation models (top row of `zone_eq`) | 150 | 100, 380, 660, 950, 1230, 1510 |
+| Lane 1b | Equivariant + foundation models (second row) | 320 | same as 1a |
+| Lane 2 | Descriptors & industrial workhorses | 550 | 100, 380, 660, 950 |
+| Lane 2b | Descriptor mid-row | 650 | 100, 380, 660, 950 |
+| Lane 3 | Invariant GNNs | 750 | 100, 380, 660, 950 |
+| Lane 3b | Speed-optimized / derived | 900 | 100, 380, 660, 950, 1230 |
+
+Horizontal spacing is **~280 units** between column centres. Keep it consistent so the layout stays readable.
+
+### Rules
+
+- Cards must not overlap each other. `npm run check:landscape` will fail if they do.
+- If all existing slots are full, either:
+  - widen `zone_eq`/`zone_inv` (update `width` and add a new column), **or**
+  - open an issue first to discuss whether a layout redesign is warranted.
+- Don't re-position existing nodes without explaining why — the current placement encodes intentional historical/architectural ordering.
+
+---
+
+## URL & description conventions
+
+- **`githubUrl`** is **required** for new models. Point at the canonical implementation (not a fork).
+- **`paperUrl`** is **strongly preferred**, in this order: arXiv > published journal > preprint server > blog post. Avoid marketing pages.
+- **Descriptions** must be:
+  - 1–2 sentences, ≤ ~280 characters
+  - Technical, not promotional ("achieves SOTA on X" ✅; "revolutionary new model" ❌)
+  - Specific to what the architecture does, not generic MLIP language
+- **`label`** should be the canonical name users will search for. Don't embed version numbers in the label unless the version is the commonly-used identifier (e.g., `"Orb-v3"` ✅, `"MACE v0.3.8"` ❌).
+
+---
+
+## Review bar
+
+MLIP Hub is **open and curator-reviewed**. Any published MLIP with a public code repository is eligible. A curator (currently the Lule Laboratory team) makes the final call based on:
+
+- **Relevance** — does this add a genuinely distinct architecture, training dataset, or use case?
+- **Maintained status** — is the code repo archived, or actively maintained?
+- **Distinctiveness** — does this belong as its own node, or is it a minor variant better folded into an existing entry's description?
+
+We don't require a citation threshold, but we reserve the right to decline models that aren't yet distinct enough to justify a node on the map. If in doubt, open an **Add a model** issue first to discuss placement before spending time on a PR.
+
+---
+
+## Pull request checklist
+
+When you open a PR the template will ask you to confirm:
+
+- [ ] `npm run lint` passes
+- [ ] `npm run check:landscape` passes
+- [ ] `npm run build` passes
+- [ ] For UI changes: screenshots or a short video (mobile + desktop where relevant)
+- [ ] For new models: rationale — why this model deserves its own node, what its lineage is, why this placement
+
+One feature or bugfix per PR when possible. Keep PR descriptions short and specific.
+
+---
+
+## Code of conduct
+
+Participation in this project is subject to our [Code of Conduct](./CODE_OF_CONDUCT.md). Contact `support@mliphub.com` to report concerns.
+
+---
+
+Thanks — every contribution makes the MLIP landscape a little easier to navigate for the next person.
