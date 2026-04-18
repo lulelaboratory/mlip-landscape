@@ -133,12 +133,27 @@ export default function MLIPExplorer() {
     return { x: centerX, y: centerY };
   }, [availableHeight, availableWidth, baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth]);
 
-  useEffect(() => {
-    setUserPan({ x: 0, y: 0 });
-  }, [basePan.x, basePan.y]);
-
   const effectiveScale = baseScale * userScale;
   const pan = { x: basePan.x + userPan.x, y: basePan.y + userPan.y };
+
+  // Auto-pan the canvas so the selected node sits in the visible (non-sidebar)
+  // region. Skipped on mobile because the mobile detail drawer is a separate
+  // full-height overlay rather than a right-side column.
+  useEffect(() => {
+    if (!selectedNode) {
+      setUserPan({ x: 0, y: 0 });
+      return;
+    }
+    if (deviceType === "mobile") return;
+
+    const nodeCenterGraphX = selectedNode.x + CARD_WIDTH / 2;
+    const nodeCenterGraphY = selectedNode.y + CARD_HEIGHT / 2;
+    const targetScreenX = availableWidth / 2;
+    const targetScreenY = availableHeight / 2;
+    const targetUserPanX = targetScreenX - basePan.x - nodeCenterGraphX * effectiveScale;
+    const targetUserPanY = targetScreenY - basePan.y - nodeCenterGraphY * effectiveScale;
+    setUserPan({ x: targetUserPanX, y: targetUserPanY });
+  }, [selectedNode, deviceType, availableWidth, availableHeight, basePan.x, basePan.y, effectiveScale]);
 
   const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -435,7 +450,9 @@ export default function MLIPExplorer() {
           />
 
           <div
-            className="absolute origin-top-left transition-transform duration-75 ease-out"
+            className={`absolute origin-top-left ease-out ${
+              isDragging ? "transition-transform duration-75" : "transition-transform duration-500"
+            }`}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
             }}
@@ -606,7 +623,7 @@ export default function MLIPExplorer() {
 
         {/* DETAILS SIDEBAR */}
         <div
-          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
+          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 backdrop-blur-sm shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
             <div className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
