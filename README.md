@@ -2,6 +2,8 @@
 
 Interactive map of machine-learning interatomic potentials (MLIPs), built with Next.js and Tailwind CSS.
 
+**Live:** [https://www.mliphub.com](https://www.mliphub.com)
+
 The site ships as a static, curated dataset from `src/data/landscape.ts` so it can be hosted anywhere without a backend.
 
 The app visualizes descriptor-based, invariant, equivariant, and transformer-style models as an explorable landscape with:
@@ -103,6 +105,24 @@ See `.github/workflows/ci.yml` below for a ready-to-use GitHub Actions workflow.
 ## License
 
 See [LICENSE](./LICENSE) for details (MIT recommended if you want this to be open source).
+
+---
+
+## Contributing
+
+We welcome contributions — especially new model entries, corrected links, and improved descriptions. See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for:
+
+- The node / edge data schema (`src/data/landscape.ts`)
+- Step-by-step "How to add a model" walkthrough
+- Coordinate and zone placement rules
+- URL and description style conventions
+- The curator review bar and PR checklist
+
+Before opening a PR:
+
+    npm run lint
+    npm run check:landscape
+    npm run build
 
 ---
 
