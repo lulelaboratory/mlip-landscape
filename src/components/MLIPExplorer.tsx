@@ -300,21 +300,26 @@ export default function MLIPExplorer() {
           <path
             d={path}
             fill="none"
-            stroke="#94a3b8"
-            strokeWidth={edge.dashed ? 1.6 : deviceType === "mobile" ? 2.4 : 2}
-            strokeDasharray={edge.dashed ? "5,5" : undefined}
+            stroke="#475569"
+            strokeWidth={edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.5}
+            strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="opacity-90"
+            className="opacity-95"
             markerEnd="url(#edge-arrow)"
           />
           {edge.label && (
             <text
               x={labelX}
               y={labelY - 4}
-              fill="#475569"
-              fontSize={10}
+              fill="#1e293b"
+              fontSize={11}
+              fontWeight={600}
               textAnchor="middle"
+              paintOrder="stroke"
+              stroke="#f1f5f9"
+              strokeWidth={3}
+              strokeLinejoin="round"
             >
               {edge.label}
             </text>
@@ -509,7 +514,7 @@ export default function MLIPExplorer() {
             {/* Edges */}
             <svg
               className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 10, width: svgWidth, height: svgHeight }}
+              style={{ zIndex: 15, width: svgWidth, height: svgHeight }}
             >
               <defs>
                 <marker
@@ -521,7 +526,7 @@ export default function MLIPExplorer() {
                   orient="auto"
                   markerUnits="strokeWidth"
                 >
-                  <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8" />
+                  <path d="M0,0 L0,6 L6,3 z" fill="#475569" />
                 </marker>
               </defs>
               {renderEdges()}

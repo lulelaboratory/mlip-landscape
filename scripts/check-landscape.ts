@@ -27,13 +27,16 @@ const push = (kind: string, detail: string) => issues.push({ kind, detail });
 const modelNodes: ModelNode[] = [];
 const groupNodes: GroupNode[] = [];
 
-for (const node of INITIAL_NODES as AnyNode[]) {
+type LooseNode = Partial<ModelNode> & Partial<GroupNode> & { id?: string; type?: string };
+
+for (const rawNode of INITIAL_NODES as AnyNode[]) {
+  const node = rawNode as LooseNode;
   if (!node.id || typeof node.id !== "string") {
-    push("missing-id", `Node has no id: ${JSON.stringify(node)}`);
+    push("missing-id", `Node has no id: ${JSON.stringify(rawNode)}`);
     continue;
   }
   if (node.type === "node") {
-    const n = node as ModelNode;
+    const n = rawNode as ModelNode;
     const required: Array<keyof ModelNode> = [
       "id",
       "type",
@@ -53,7 +56,7 @@ for (const node of INITIAL_NODES as AnyNode[]) {
     }
     modelNodes.push(n);
   } else if (node.type === "group") {
-    const g = node as GroupNode;
+    const g = rawNode as GroupNode;
     const required: Array<keyof GroupNode> = [
       "id",
       "type",
@@ -71,7 +74,7 @@ for (const node of INITIAL_NODES as AnyNode[]) {
     }
     groupNodes.push(g);
   } else {
-    push("unknown-type", `Node ${node.id} has unknown type`);
+    push("unknown-type", `Node ${node.id} has unknown type: ${String(node.type)}`);
   }
 }
 
