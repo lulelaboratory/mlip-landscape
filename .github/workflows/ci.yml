@@ -26,5 +26,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check landscape data integrity
+        run: npm run check:landscape
+
       - name: Build
         run: npm run build
