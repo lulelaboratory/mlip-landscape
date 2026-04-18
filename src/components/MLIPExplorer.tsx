@@ -242,8 +242,105 @@ export default function MLIPExplorer() {
   const ROW_GAP_Y = 430; // y coordinate of the gap between zone_eq and zone_inv
   const DETOUR = 48; // vertical detour distance for same-row skips
   const COL_DETOUR = 60; // horizontal detour distance for same-col skips
+  const CORRIDOR_SPACING = 14; // spacing between parallel detour tracks
+  const LATERAL_STAGGER = 10; // spacing between parallel vertical drops at a shared card edge
 
-  const buildEdgePath = (fromNode: ModelNode, toNode: ModelNode) => {
+  // Precompute per-edge corridor offset + lateral stagger so parallel edges
+  // don't pile up on the same detour line. Edges are grouped by (detour
+  // corridor) and (source/target card edge); within each group they fan out
+  // symmetrically and are ordered by span so short edges sit closest to the
+  // row and long edges route furthest out.
+  const edgeRouting = useMemo(() => {
+    type Group = { key: string; idx: number; magnitude: number };
+    const corridorGroups: Record<string, Group[]> = {};
+    const sourceGroups: Record<string, Group[]> = {};
+    const targetGroups: Record<string, Group[]> = {};
+
+    const classify = (
+      from: ModelNode,
+      to: ModelNode,
+    ): { corridor: string | null; source: string | null; target: string | null; magnitude: number } => {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const sameRow = Math.abs(dy) < 20;
+      const sameCol = Math.abs(dx) < 20;
+
+      if (sameRow && Math.abs(dx) > COLUMN_GAP + CARD_WIDTH) {
+        const bowAbove = from.y > 200;
+        return {
+          corridor: `row-${bowAbove ? "up" : "down"}-${from.y}`,
+          source: `${from.id}:${bowAbove ? "top" : "bot"}`,
+          target: `${to.id}:${bowAbove ? "top" : "bot"}`,
+          magnitude: Math.abs(dx),
+        };
+      }
+      if (sameCol && Math.abs(dy) > 200) {
+        return {
+          corridor: `col-right-${from.x}`,
+          source: `${from.id}:right`,
+          target: `${to.id}:right`,
+          magnitude: Math.abs(dy),
+        };
+      }
+      if (!sameRow && !sameCol) {
+        const goingDown = dy > 0;
+        const crossZone = (from.y < 450 && to.y > 480) || (from.y > 480 && to.y < 450);
+        return {
+          corridor: crossZone ? `diag-zone-gap` : `diag-${from.y}-${to.y}`,
+          source: `${from.id}:${goingDown ? "bot" : "top"}`,
+          target: `${to.id}:${goingDown ? "top" : "bot"}`,
+          magnitude: Math.abs(dx),
+        };
+      }
+      return { corridor: null, source: null, target: null, magnitude: 0 };
+    };
+
+    edges.forEach((edge, idx) => {
+      const from = nodes.find((n) => n.id === edge.from && n.type === "node") as ModelNode | undefined;
+      const to = nodes.find((n) => n.id === edge.to && n.type === "node") as ModelNode | undefined;
+      if (!from || !to) return;
+      const { corridor, source, target, magnitude } = classify(from, to);
+      const record = { key: "", idx, magnitude };
+      if (corridor) {
+        (corridorGroups[corridor] ||= []).push({ ...record, key: corridor });
+      }
+      if (source) {
+        (sourceGroups[source] ||= []).push({ ...record, key: source });
+      }
+      if (target) {
+        (targetGroups[target] ||= []).push({ ...record, key: target });
+      }
+    });
+
+    const corridorOffset = new Map<number, number>();
+    const sourceStagger = new Map<number, number>();
+    const targetStagger = new Map<number, number>();
+
+    Object.values(corridorGroups).forEach((group) => {
+      group.sort((a, b) => a.magnitude - b.magnitude);
+      group.forEach((g, i) => corridorOffset.set(g.idx, i * CORRIDOR_SPACING));
+    });
+    Object.values(sourceGroups).forEach((group) => {
+      group.sort((a, b) => a.magnitude - b.magnitude);
+      const count = group.length;
+      group.forEach((g, i) => sourceStagger.set(g.idx, (i - (count - 1) / 2) * LATERAL_STAGGER));
+    });
+    Object.values(targetGroups).forEach((group) => {
+      group.sort((a, b) => a.magnitude - b.magnitude);
+      const count = group.length;
+      group.forEach((g, i) => targetStagger.set(g.idx, (i - (count - 1) / 2) * LATERAL_STAGGER));
+    });
+
+    return { corridorOffset, sourceStagger, targetStagger };
+  }, [edges, nodes]);
+
+  const buildEdgePath = (
+    fromNode: ModelNode,
+    toNode: ModelNode,
+    corridorOffset: number,
+    sourceStagger: number,
+    targetStagger: number,
+  ) => {
     const fx = fromNode.x;
     const fy = fromNode.y;
     const tx = toNode.x;
@@ -271,13 +368,17 @@ export default function MLIPExplorer() {
 
     // Case 2: same row, skipping columns -> U-bow above the row (or below for top row)
     if (sameRow) {
-      const bowAbove = fy > 200; // keep top row from bowing off canvas
-      const bowY = bowAbove ? fy - DETOUR : fy + CARD_HEIGHT + DETOUR;
+      const bowAbove = fy > 200;
+      const bowY = bowAbove
+        ? fy - DETOUR - corridorOffset
+        : fy + CARD_HEIGHT + DETOUR + corridorOffset;
       const sy = bowAbove ? fy : fy + CARD_HEIGHT;
       const ey = bowAbove ? ty : ty + CARD_HEIGHT;
+      const sxMid = fcx + sourceStagger;
+      const exMid = tcx + targetStagger;
       return {
-        path: `M ${fcx} ${sy} L ${fcx} ${bowY} L ${tcx} ${bowY} L ${tcx} ${ey}`,
-        labelX: (fcx + tcx) / 2,
+        path: `M ${sxMid} ${sy} L ${sxMid} ${bowY} L ${exMid} ${bowY} L ${exMid} ${ey}`,
+        labelX: (sxMid + exMid) / 2,
         labelY: bowY - 6,
       };
     }
@@ -295,11 +396,11 @@ export default function MLIPExplorer() {
 
     // Case 4: same column, skipping rows -> detour right
     if (sameCol) {
-      const bowX = fx + CARD_WIDTH + COL_DETOUR;
+      const bowX = fx + CARD_WIDTH + COL_DETOUR + corridorOffset;
       const sx = fx + CARD_WIDTH;
       const ex = tx + CARD_WIDTH;
-      const sy = fcy;
-      const ey = tcy;
+      const sy = fcy + sourceStagger;
+      const ey = tcy + targetStagger;
       return {
         path: `M ${sx} ${sy} L ${bowX} ${sy} L ${bowX} ${ey} L ${ex} ${ey}`,
         labelX: bowX + 6,
@@ -308,18 +409,17 @@ export default function MLIPExplorer() {
     }
 
     // Case 5: diagonal -> L-shape through row-gap area.
-    // Exit bottom/top of source, run horizontally in the gap between rows,
-    // then enter top/bottom of target.
     const goingDown = dy > 0;
     const sy = goingDown ? fy + CARD_HEIGHT : fy;
     const ey = goingDown ? ty : ty + CARD_HEIGHT;
-    // Choose a horizontal corridor: halfway between source and target rows.
-    // If the edge crosses zones (fy < zone_eq bottom, ty > zone_inv top), prefer ROW_GAP_Y.
     const crossZone = (fy < 450 && ty > 480) || (fy > 480 && ty < 450);
-    const bendY = crossZone ? ROW_GAP_Y : (sy + ey) / 2;
+    const baseBendY = crossZone ? ROW_GAP_Y : (sy + ey) / 2;
+    const bendY = baseBendY + corridorOffset;
+    const sxMid = fcx + sourceStagger;
+    const exMid = tcx + targetStagger;
     return {
-      path: `M ${fcx} ${sy} L ${fcx} ${bendY} L ${tcx} ${bendY} L ${tcx} ${ey}`,
-      labelX: (fcx + tcx) / 2,
+      path: `M ${sxMid} ${sy} L ${sxMid} ${bendY} L ${exMid} ${bendY} L ${exMid} ${ey}`,
+      labelX: (sxMid + exMid) / 2,
       labelY: bendY - 6,
     };
   };
@@ -330,7 +430,16 @@ export default function MLIPExplorer() {
       const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
       if (!fromNode || !toNode) return null;
 
-      const { path, labelX, labelY } = buildEdgePath(fromNode, toNode);
+      const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
+      const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
+      const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
+      const { path, labelX, labelY } = buildEdgePath(
+        fromNode,
+        toNode,
+        corridorOffset,
+        sourceStagger,
+        targetStagger,
+      );
 
       return (
         <g key={idx} className="transition-opacity duration-500">
