@@ -50,7 +50,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 1100,
+    width: 1380,
     height: 400,
   },
   {
@@ -161,6 +161,34 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Orb-v3 variant for molecules, electrolytes and biomolecules with explicit charge/spin channels and chemistry-aware output heads.",
     githubUrl: "https://github.com/orbital-materials/orb-models",
+  },
+  {
+    id: "esen",
+    type: "node",
+    category: "Equivariant",
+    label: "eSEN",
+    year: 2025,
+    author: "Meta FAIR",
+    x: 1230,
+    y: 150,
+    desc:
+      "Equivariant Smooth Energy Network: conservative-force equivariant GNN with a smooth potential energy surface designed for stable long-horizon MD. Serves as the backbone underneath Meta's UMA foundation model.",
+    githubUrl: "https://github.com/facebookresearch/fairchem",
+    paperUrl: "https://arxiv.org/abs/2502.12147",
+  },
+  {
+    id: "uma",
+    type: "node",
+    category: "Transformer",
+    label: "UMA",
+    year: 2025,
+    author: "Meta FAIR",
+    x: 1230,
+    y: 320,
+    desc:
+      "Universal Model for Atoms: a Mixture of Linear Experts (MoLE) foundation model built on the eSEN backbone, trained on ~500M structures spanning OC20, ODAC23, OMat24, OMC25, and OMol25. NeurIPS 2025 spotlight.",
+    githubUrl: "https://github.com/facebookresearch/fairchem",
+    paperUrl: "https://arxiv.org/abs/2506.23971",
   },
 
   // ---------------------------------------------------------------------------
@@ -363,6 +391,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "grace", label: "Scale" },
   { from: "eqv2", to: "orb", label: "Simplify", dashed: true },
   { from: "orb", to: "orbmol", label: "+State" },
+  { from: "eqv2", to: "esen", label: "Smooth PES" },
+  { from: "esen", to: "uma", label: "Backbone" },
+  { from: "uma", to: "mattersim", label: "Foundation", dashed: true },
 
   // Lane 2 (Descriptors) – keep edges purely horizontal to avoid messy crossings
   { from: "gap", to: "deepmd", label: "Neural Nets" },
