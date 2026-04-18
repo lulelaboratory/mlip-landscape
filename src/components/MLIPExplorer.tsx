@@ -34,6 +34,10 @@ const SIDEBAR_WIDTH = 360;
 const TABLET_SIDEBAR_WIDTH = 320;
 const HEADER_HEIGHT = 112;
 
+const FONT_SCALES = [0.85, 1, 1.15, 1.3] as const;
+const DEFAULT_FONT_SCALE: number = 1;
+const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
+
 const CATEGORY_STYLES: Record<Category, string> = {
   Equivariant: "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200",
   Invariant: "bg-blue-50 border-blue-400 text-blue-900 hover:shadow-blue-200",
@@ -62,6 +66,7 @@ export default function MLIPExplorer() {
   const [userScale, setUserScale] = useState(1);
   const [userPan, setUserPan] = useState({ x: 0, y: 0 });
   const [filterOpen, setFilterOpen] = useState(true);
+  const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -88,6 +93,28 @@ export default function MLIPExplorer() {
   useEffect(() => {
     setFilterOpen(deviceType !== "mobile");
   }, [deviceType]);
+
+  // Load persisted font preference after mount to avoid SSR hydration mismatch.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(FONT_SCALE_STORAGE_KEY);
+    const parsed = stored ? Number(stored) : NaN;
+    if (FONT_SCALES.includes(parsed as (typeof FONT_SCALES)[number])) {
+      setFontScale(parsed);
+    }
+  }, []);
+
+  const updateFontScale = (next: number) => {
+    setFontScale(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(FONT_SCALE_STORAGE_KEY, String(next));
+    }
+  };
+
+  const fontScaleStyle = { fontSize: `${fontScale}rem` };
+  const fontScaleIndex = FONT_SCALES.indexOf(fontScale as (typeof FONT_SCALES)[number]);
+  const canShrinkFont = fontScaleIndex > 0;
+  const canGrowFont = fontScaleIndex >= 0 && fontScaleIndex < FONT_SCALES.length - 1;
 
   const bounds = useMemo(() => {
     const items = nodes.filter((n) => n.type === "node") as ModelNode[];
@@ -315,10 +342,10 @@ export default function MLIPExplorer() {
     if (!selectedNode) return null;
 
     const titleClass = compact
-      ? "text-xl md:text-2xl font-bold text-slate-900 leading-snug"
-      : "text-2xl md:text-3xl font-bold text-slate-900 leading-tight";
-    const labelText = compact ? "text-xs" : "text-xs sm:text-[11px]";
-    const bodyText = compact ? "text-sm" : "text-sm md:text-base";
+      ? "text-[1.25em] md:text-[1.5em] font-bold text-slate-900 leading-snug"
+      : "text-[1.5em] md:text-[1.875em] font-bold text-slate-900 leading-tight";
+    const labelText = compact ? "text-[0.75em]" : "text-[0.75em] sm:text-[0.6875em]";
+    const bodyText = compact ? "text-[0.875em]" : "text-[0.875em] md:text-[1em]";
     const spacing = compact ? "space-y-2" : "space-y-3";
 
     return (
@@ -341,7 +368,7 @@ export default function MLIPExplorer() {
           </button>
         </div>
 
-        <div className="flex gap-4 mb-4 text-sm text-slate-500 border-b border-slate-100 pb-4">
+        <div className="flex gap-4 mb-4 text-[0.875em] text-slate-500 border-b border-slate-100 pb-4">
           <div className="flex-1">
             <div className={`${labelText} uppercase font-bold text-slate-400 mb-1`}>Year</div>
             <div className="font-semibold text-slate-700">{selectedNode.year}</div>
@@ -390,7 +417,7 @@ export default function MLIPExplorer() {
             }
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 text-xs font-semibold hover:underline"
+            className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 text-[0.75em] font-semibold hover:underline"
           >
             Read Technical Paper <ExternalLink size={10} />
           </a>
@@ -399,7 +426,7 @@ export default function MLIPExplorer() {
             href={searchUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-slate-700 text-[11px] font-medium hover:underline"
+            className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-slate-700 text-[0.6875em] font-medium hover:underline"
           >
             Search on the web
           </a>
@@ -411,17 +438,20 @@ export default function MLIPExplorer() {
   return (
     <div className="w-full h-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden">
       {/* HEADER */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative">
+      <div
+        className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm z-20 flex flex-col gap-3 relative"
+        style={fontScaleStyle}
+      >
         <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200">
               <Layers size={20} />
             </div>
             <div>
-              <h1 className="text-base sm:text-lg font-bold text-slate-800 leading-tight">
+              <h1 className="text-[1em] sm:text-[1.125em] font-bold text-slate-800 leading-tight">
                 MLIP Hub
               </h1>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+              <p className="text-[0.6875em] sm:text-[0.75em] text-slate-500 font-medium">
                 Interatomic Potential Explorer
               </p>
             </div>
@@ -559,18 +589,22 @@ export default function MLIPExplorer() {
             {deviceType === "mobile" && (
               <button
                 onClick={() => setFilterOpen((open) => !open)}
-                className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-[0.875em] font-semibold text-slate-700 shadow-sm"
+                style={fontScaleStyle}
               >
                 <span className="flex items-center gap-2">
                   <Filter size={14} /> Filter Architecture
                 </span>
-                <span className="text-xs text-slate-500">{filterOpen ? "Hide" : "Show"}</span>
+                <span className="text-[0.75em] text-slate-500">{filterOpen ? "Hide" : "Show"}</span>
               </button>
             )}
 
             {(filterOpen || deviceType !== "mobile") && (
-              <div className="bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200">
-                <div className="text-xs sm:text-[11px] md:text-[10px] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <div
+                className="bg-white/90 backdrop-blur p-3 rounded-xl shadow-xl border border-slate-200"
+                style={fontScaleStyle}
+              >
+                <div className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] font-bold mb-3 text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Filter size={12} /> Filter Architecture
                 </div>
                 <div className="flex flex-col gap-1">
@@ -578,7 +612,7 @@ export default function MLIPExplorer() {
                     <button
                       key={cat}
                       onClick={() => setFilter(cat)}
-                      className={`text-left px-3 py-2 rounded-lg text-sm sm:text-xs md:text-[11px] font-semibold transition flex items-center gap-2
+                      className={`text-left px-3 py-2 rounded-lg text-[0.875em] sm:text-[0.75em] md:text-[0.6875em] font-semibold transition flex items-center gap-2
                         ${
                           filter === cat
                             ? "bg-slate-100 text-slate-900"
@@ -599,21 +633,57 @@ export default function MLIPExplorer() {
                 <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2">
                   <button
                     onClick={() => setUserScale((s) => clampScale(s - 0.1))}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    aria-label="Zoom out"
                   >
                     -
                   </button>
                   <button
                     onClick={() => setUserScale(1)}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    aria-label="Reset zoom"
                   >
                     {Math.round(userScale * baseScale * 100)}%
                   </button>
                   <button
                     onClick={() => setUserScale((s) => clampScale(s + 0.1))}
-                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-sm md:text-xs border w-full"
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] md:text-[0.75em] border w-full"
+                    aria-label="Zoom in"
                   >
                     +
+                  </button>
+                </div>
+
+                <div className="border-t border-slate-100 mt-3 pt-3 flex gap-2 items-center">
+                  <button
+                    onClick={() => {
+                      const next = FONT_SCALES[Math.max(0, fontScaleIndex - 1)];
+                      updateFontScale(next);
+                    }}
+                    disabled={!canShrinkFont}
+                    className="p-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 text-[0.75em] border w-full"
+                    aria-label="Decrease UI font size"
+                  >
+                    A−
+                  </button>
+                  <button
+                    onClick={() => updateFontScale(DEFAULT_FONT_SCALE)}
+                    className="p-2 hover:bg-slate-100 rounded text-slate-600 text-[0.875em] border w-full"
+                    aria-label="Reset UI font size"
+                    title={`UI text size ${Math.round(fontScale * 100)}%`}
+                  >
+                    A
+                  </button>
+                  <button
+                    onClick={() => {
+                      const next = FONT_SCALES[Math.min(FONT_SCALES.length - 1, fontScaleIndex + 1)];
+                      updateFontScale(next);
+                    }}
+                    disabled={!canGrowFont}
+                    className="p-2 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 text-[1em] border w-full"
+                    aria-label="Increase UI font size"
+                  >
+                    A+
                   </button>
                 </div>
               </div>
@@ -626,7 +696,10 @@ export default function MLIPExplorer() {
           className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 backdrop-blur-sm shadow-2xl border-l border-slate-200 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
         >
           {selectedNode && (
-            <div className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto">
+            <div
+              className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto"
+              style={fontScaleStyle}
+            >
               {renderDetailContent()}
             </div>
           )}
@@ -637,9 +710,9 @@ export default function MLIPExplorer() {
             selectedNode ? "translate-y-0" : "translate-y-full pointer-events-none"
           }`}
         >
-          <div className="absolute inset-0 bg-white shadow-2xl overflow-y-auto">
+          <div className="absolute inset-0 bg-white shadow-2xl overflow-y-auto" style={fontScaleStyle}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-              <div className="text-sm font-semibold text-slate-700">Details</div>
+              <div className="text-[0.875em] font-semibold text-slate-700">Details</div>
               <button
                 onClick={() => setSelectedNode(null)}
                 className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"
