@@ -1,13 +1,15 @@
 {
   "name": "mlip-landscape",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check:landscape": "tsx scripts/check-landscape.ts"
+    "check:landscape": "tsx scripts/check-landscape.ts",
+    "export:landscape": "tsx scripts/export-landscape.ts",
+    "prebuild": "npm run check:landscape && npm run export:landscape"
   },
   "dependencies": {
     "lucide-react": "0.473.0",

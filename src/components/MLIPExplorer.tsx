@@ -22,7 +22,6 @@ import {
   Edge,
   Category,
 } from "@/data/landscape";
-import ThemeToggle from "@/components/ThemeToggle";
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -586,32 +585,10 @@ export default function MLIPExplorer() {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden">
-      {/* HEADER */}
-      <div
-        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 shadow-sm dark:shadow-slate-950/50 z-20 flex flex-col gap-3 relative"
-        style={fontScaleStyle}
-      >
-        <div className="flex justify-between items-center flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200 dark:shadow-blue-900/40">
-              <Layers size={20} />
-            </div>
-            <div>
-              <h1 className="text-[1em] sm:text-[1.125em] font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                MLIP Hub
-              </h1>
-              <p className="text-[0.6875em] sm:text-[0.75em] text-slate-500 dark:text-slate-400 font-medium">
-                Interatomic Potential Explorer
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-          </div>
-        </div>
-      </div>
-
+    <div
+      className="w-full h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden"
+      style={fontScaleStyle}
+    >
       <div className="flex-1 relative flex overflow-hidden">
         {/* MAIN CANVAS */}
         <div

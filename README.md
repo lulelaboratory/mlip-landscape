@@ -1,8 +1,18 @@
 # MLIP Hub – Interatomic Potential Explorer
 
+[![CI](https://github.com/lulelaboratory/mlip-landscape/actions/workflows/ci.yml/badge.svg)](https://github.com/lulelaboratory/mlip-landscape/actions/workflows/ci.yml)
+<!-- DOI badge: replace <ZENODO_RECORD_ID> after the first Zenodo release mints a concept DOI.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.<ZENODO_RECORD_ID>.svg)](https://doi.org/10.5281/zenodo.<ZENODO_RECORD_ID>)
+-->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 Interactive map of machine-learning interatomic potentials (MLIPs), built with Next.js and Tailwind CSS.
 
 **Live:** [https://www.mliphub.com](https://www.mliphub.com)
+· [Cite](https://www.mliphub.com/cite)
+· [Editorial policy](https://www.mliphub.com/policy)
+· [Contributors](https://www.mliphub.com/contributors)
+· [Contribute](https://www.mliphub.com/contribute)
 
 The site ships as a static, curated dataset from `src/data/landscape.ts` so it can be hosted anywhere without a backend.
 
@@ -99,6 +109,31 @@ For now, a basic CI can simply run:
     npm run build
 
 See `.github/workflows/ci.yml` below for a ready-to-use GitHub Actions workflow.
+
+---
+
+## Citing MLIP Hub
+
+MLIP Hub is a **curated scientific software + data product**. We recommend a
+two-level citation:
+
+- **Cite MLIP Hub** when you use our map, taxonomy, curation decisions, or
+  metadata organization.
+- **Also cite the original model papers/software** when you rely on a specific
+  model scientifically — follow each model card's `paperUrl` and `githubUrl`.
+
+The repository ships [`CITATION.cff`](./CITATION.cff) (read by GitHub's "Cite
+this repository" widget) and [`.zenodo.json`](./.zenodo.json) (authoritative
+for Zenodo). Starting with `v0.2.0`, each tagged release is archived on Zenodo
+with its own DOI plus a concept DOI pointing at the latest version.
+
+Versioned data snapshots are published under `public/data/` and served at
+`/data/landscape-v<version>.json`, `/data/landscape-latest.json`, and a sibling
+CSV — so users can cite the exact dataset they used.
+
+See [`/cite`](https://www.mliphub.com/cite) for the preferred citation text
+and BibTeX, and [`CONTRIBUTORS.md`](./CONTRIBUTORS.md) for the separation
+between citation authors and the broader contributor community.
 
 ---
 

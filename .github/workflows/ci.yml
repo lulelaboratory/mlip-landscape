@@ -29,5 +29,14 @@ jobs:
       - name: Check landscape data integrity
         run: npm run check:landscape
 
+      - name: Export landscape snapshot
+        run: npm run export:landscape
+
       - name: Build
         run: npm run build
+
+      - name: Upload landscape snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: landscape-snapshot
+          path: public/data/
