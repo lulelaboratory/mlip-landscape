@@ -3,6 +3,40 @@
 export type Category = "Equivariant" | "Invariant" | "Transformer" | "Descriptor";
 export type NodeType = "node" | "group";
 
+export type MaintenanceStatus =
+  | "active"
+  | "maintained"
+  | "archived"
+  | "experimental";
+
+export type FrameworkTag =
+  | "ASE"
+  | "LAMMPS"
+  | "OpenKIM"
+  | "JAX-MD"
+  | "PyTorch";
+
+export type PropertyTag =
+  | "energy"
+  | "forces"
+  | "stress"
+  | "dipole"
+  | "magnetic_moment"
+  | "polarizability";
+
+export interface ModelMeta {
+  coverage?: string[];
+  useCases?: string[];
+  properties?: PropertyTag[];
+  frameworks?: FrameworkTag[];
+  license?: string;
+  maintenance?: MaintenanceStatus;
+  lastReviewed?: string | "unknown";
+  lastUpdated?: string;
+  trainingData?: string[];
+  tags?: string[];
+}
+
 export interface BaseNode {
   id: string;
   type: NodeType;
@@ -17,7 +51,7 @@ export interface GroupNode extends BaseNode {
   height: number;
 }
 
-export interface ModelNode extends BaseNode {
+export interface ModelNode extends BaseNode, ModelMeta {
   type: "node";
   category: Category;
   label: string;
@@ -31,6 +65,43 @@ export interface ModelNode extends BaseNode {
   githubUrl?: string;
   paperUrl?: string;
 }
+
+export const MAINTENANCE_STATUSES: readonly MaintenanceStatus[] = [
+  "active",
+  "maintained",
+  "archived",
+  "experimental",
+] as const;
+
+export const FRAMEWORK_TAGS: readonly FrameworkTag[] = [
+  "ASE",
+  "LAMMPS",
+  "OpenKIM",
+  "JAX-MD",
+  "PyTorch",
+] as const;
+
+export const PROPERTY_TAGS: readonly PropertyTag[] = [
+  "energy",
+  "forces",
+  "stress",
+  "dipole",
+  "magnetic_moment",
+  "polarizability",
+] as const;
+
+export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
+  "coverage",
+  "useCases",
+  "properties",
+  "frameworks",
+  "license",
+  "maintenance",
+  "lastReviewed",
+  "lastUpdated",
+  "trainingData",
+  "tags",
+] as const;
 
 export type AnyNode = GroupNode | ModelNode;
 
@@ -80,6 +151,15 @@ export const INITIAL_NODES: AnyNode[] = [
       "E(3)-equivariant message-passing potential that set the template for data-efficient, high-accuracy force fields across molecules and materials.",
     githubUrl: "https://github.com/mir-group/nequip",
     paperUrl: "https://arxiv.org/abs/2101.03164",
+    coverage: ["organic molecules", "small-molecule reactions", "materials"],
+    useCases: ["data-efficient fitting", "ab-initio MD surrogate"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "LAMMPS"],
+    license: "MIT",
+    maintenance: "maintained",
+    lastReviewed: "2026-04-19",
+    trainingData: ["custom DFT"],
+    tags: ["equivariant", "message-passing", "E(3)"],
   },
   {
     id: "allegro",
@@ -122,6 +202,15 @@ export const INITIAL_NODES: AnyNode[] = [
       "Higher-order equivariant message passing (4-body messages) that reaches or surpasses SOTA accuracy with only 1–2 layers and powers universal MACE-MP models.",
     githubUrl: "https://github.com/ACEsuit/mace",
     paperUrl: "https://arxiv.org/abs/2206.07697",
+    coverage: ["general materials", "organic molecules", "oxides"],
+    useCases: ["universal MLIP", "MD at scale", "high-throughput screening"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "LAMMPS"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-04-19",
+    trainingData: ["MPTrj", "Alexandria"],
+    tags: ["equivariant", "higher-order", "foundation model"],
   },
   {
     id: "grace",
@@ -148,6 +237,15 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Wide & shallow graph neural simulator with smoothed attention, heavily optimized for torch.compile and extreme throughput on large periodic systems.",
     githubUrl: "https://github.com/orbital-materials/orb-models",
+    coverage: ["general materials", "periodic crystals"],
+    useCases: ["large-cell MD", "high-throughput screening"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE"],
+    license: "Apache-2.0",
+    maintenance: "active",
+    lastReviewed: "2026-04-19",
+    trainingData: ["MPTrj", "Alexandria"],
+    tags: ["transformer", "throughput", "torch.compile"],
   },
   {
     id: "orbmol",
@@ -451,6 +549,15 @@ export const INITIAL_NODES: AnyNode[] = [
       "Charge-aware graph neural network that extends M3GNet with oxidation state and local charge features; particularly strong for battery and redox-active materials.",
     githubUrl: "https://github.com/CederGroupHub/chgnet",
     paperUrl: "https://arxiv.org/abs/2210.13995",
+    coverage: ["battery materials", "oxides", "redox-active systems"],
+    useCases: ["battery cathode screening", "charge-aware MD"],
+    properties: ["energy", "forces", "stress", "magnetic_moment"],
+    frameworks: ["ASE"],
+    license: "BSD-3-Clause",
+    maintenance: "maintained",
+    lastReviewed: "2026-04-19",
+    trainingData: ["MPTrj"],
+    tags: ["invariant", "charge-aware", "foundation model"],
   },
 ];
 

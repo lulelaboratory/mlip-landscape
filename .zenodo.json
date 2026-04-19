@@ -1,0 +1,35 @@
+{
+  "title": "MLIP Hub: Interatomic Potential Explorer",
+  "description": "MLIP Hub is a curated, interactive map of machine-learning interatomic potentials — equivariant, invariant, descriptor, and transformer-style foundation models — with their lineage, papers, code, and normalized metadata for decision support.",
+  "upload_type": "software",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Lu, Le",
+      "affiliation": "Lule Laboratory"
+    }
+  ],
+  "keywords": [
+    "machine learning interatomic potentials",
+    "MLIP",
+    "neural network potential",
+    "materials science",
+    "computational chemistry",
+    "molecular dynamics",
+    "equivariant",
+    "foundation model"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/lulelaboratory/mlip-landscape",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "https://www.mliphub.com",
+      "relation": "isIdenticalTo",
+      "resource_type": "software"
+    }
+  ]
+}

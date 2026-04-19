@@ -168,6 +168,65 @@ One feature or bugfix per PR when possible. Keep PR descriptions short and speci
 
 ---
 
+## Optional model metadata (ModelMeta)
+
+`ModelNode` also accepts a set of **optional** fields used by the compare
+view, permalinks, and the editorial-policy coverage report. New entries are
+not required to fill these, but filling them makes the entry much more useful.
+
+| Field          | Type                                       | Example                              |
+| -------------- | ------------------------------------------ | ------------------------------------ |
+| `coverage`     | `string[]`                                 | `["oxides","organic molecules"]`     |
+| `useCases`     | `string[]`                                 | `["MD at scale","reaction sampling"]`|
+| `properties`   | `PropertyTag[]`                            | `["energy","forces","stress"]`       |
+| `frameworks`   | `FrameworkTag[]`                           | `["ASE","LAMMPS"]`                   |
+| `license`      | SPDX id                                    | `"MIT"`, `"Apache-2.0"`              |
+| `maintenance`  | `"active"`/`"maintained"`/`"archived"`/`"experimental"` | `"active"` |
+| `lastReviewed` | ISO date (`YYYY-MM-DD`) or `"unknown"`     | `"2026-04-19"`                       |
+| `lastUpdated`  | ISO date                                   | `"2026-03-01"`                       |
+| `trainingData` | `string[]`                                 | `["MPTrj","OC20"]`                   |
+| `tags`         | `string[]`                                 | `["foundation model","transformer"]` |
+
+`npm run check:landscape` enum-validates `maintenance`, `frameworks`,
+`properties`; validates date formats; warns on unknown SPDX licenses; and
+prints a per-field metadata coverage report.
+
+---
+
+## Schema stability (data snapshots)
+
+`npm run export:landscape` writes versioned snapshots to
+`public/data/landscape-v<version>.json` (and a `-latest.json` + CSV). Once a
+snapshot is published, external citers may rely on the field names. Therefore:
+
+- **Additive changes only** (new optional fields): safe.
+- **Renames or removals**: bump `SCHEMA_VERSION` in
+  [`scripts/export-landscape.ts`](./scripts/export-landscape.ts) and coordinate
+  with a major version bump.
+
+---
+
+## Citation metadata: `CITATION.cff` vs `.zenodo.json`
+
+The repo ships both, on purpose:
+
+- **`CITATION.cff`** — read by GitHub's "Cite this repository" widget.
+- **`.zenodo.json`** — read by Zenodo. If both are present, Zenodo prioritizes
+  `.zenodo.json`.
+
+Treat `.zenodo.json` as the authoritative source for Zenodo metadata and keep
+`authors` / `version` / `date-released` in sync across both files for each
+tagged release. Add this to the pre-release checklist:
+
+- [ ] `CITATION.cff`: bump `version` + `date-released`; update `authors` if
+      the citation author list changed.
+- [ ] `.zenodo.json`: mirror `creators` / keywords / related_identifiers.
+- [ ] `package.json`: bump `version`.
+- [ ] `npm run check:landscape && npm run export:landscape` — confirms
+      `public/data/landscape-v<new>.json` is emitted.
+
+---
+
 ## Code of conduct
 
 Participation in this project is subject to our [Code of Conduct](./CODE_OF_CONDUCT.md). Contact `support@mliphub.com` to report concerns.

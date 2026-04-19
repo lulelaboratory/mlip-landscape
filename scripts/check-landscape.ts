@@ -1,10 +1,15 @@
 import {
   INITIAL_NODES,
   INITIAL_EDGES,
+  MAINTENANCE_STATUSES,
+  FRAMEWORK_TAGS,
+  PROPERTY_TAGS,
+  MODEL_META_FIELDS,
   type AnyNode,
   type ModelNode,
   type GroupNode,
   type Edge,
+  type ModelMeta,
 } from "../src/data/landscape";
 
 const CARD_WIDTH = 176;
@@ -15,13 +20,34 @@ const VALID_CATEGORIES = new Set([
   "Transformer",
   "Descriptor",
 ]);
+const VALID_MAINTENANCE = new Set<string>(MAINTENANCE_STATUSES);
+const VALID_FRAMEWORKS = new Set<string>(FRAMEWORK_TAGS);
+const VALID_PROPERTIES = new Set<string>(PROPERTY_TAGS);
+const SPDX_ALLOWLIST = new Set([
+  "MIT",
+  "Apache-2.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "GPL-3.0",
+  "GPL-3.0-only",
+  "GPL-3.0-or-later",
+  "LGPL-3.0",
+  "MPL-2.0",
+  "CC-BY-4.0",
+  "CC-BY-SA-4.0",
+  "Unlicense",
+  "proprietary",
+]);
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MIN_YEAR = 1990;
 const MAX_YEAR = new Date().getFullYear() + 1;
 
 type Issue = { kind: string; detail: string };
 const issues: Issue[] = [];
+const warnings: Issue[] = [];
 
 const push = (kind: string, detail: string) => issues.push({ kind, detail });
+const warn = (kind: string, detail: string) => warnings.push({ kind, detail });
 
 // --- 1. Required fields ---
 const modelNodes: ModelNode[] = [];
@@ -170,17 +196,96 @@ for (const n of modelNodes) {
   }
 }
 
+// --- 8. Optional ModelMeta enums, dates, license ---
+for (const n of modelNodes) {
+  if (n.maintenance !== undefined && !VALID_MAINTENANCE.has(n.maintenance)) {
+    push(
+      "invalid-maintenance",
+      `Model ${n.id} has maintenance "${n.maintenance}" (valid: ${[...VALID_MAINTENANCE].join(", ")})`,
+    );
+  }
+  if (n.frameworks) {
+    for (const f of n.frameworks) {
+      if (!VALID_FRAMEWORKS.has(f)) {
+        push(
+          "invalid-framework",
+          `Model ${n.id} has framework "${f}" (valid: ${[...VALID_FRAMEWORKS].join(", ")})`,
+        );
+      }
+    }
+  }
+  if (n.properties) {
+    for (const p of n.properties) {
+      if (!VALID_PROPERTIES.has(p)) {
+        push(
+          "invalid-property",
+          `Model ${n.id} has property "${p}" (valid: ${[...VALID_PROPERTIES].join(", ")})`,
+        );
+      }
+    }
+  }
+  if (n.lastReviewed !== undefined) {
+    if (n.lastReviewed !== "unknown" && !ISO_DATE_RE.test(n.lastReviewed)) {
+      push(
+        "bad-date",
+        `Model ${n.id} lastReviewed "${n.lastReviewed}" is not YYYY-MM-DD (or "unknown")`,
+      );
+    }
+  }
+  if (n.lastUpdated !== undefined && !ISO_DATE_RE.test(n.lastUpdated)) {
+    push(
+      "bad-date",
+      `Model ${n.id} lastUpdated "${n.lastUpdated}" is not YYYY-MM-DD`,
+    );
+  }
+  if (n.license !== undefined && !SPDX_ALLOWLIST.has(n.license)) {
+    warn(
+      "unknown-license",
+      `Model ${n.id} license "${n.license}" is not in the SPDX allowlist (still accepted)`,
+    );
+  }
+}
+
+// --- 9. Metadata coverage report (non-blocking) ---
+const coverage: Record<string, number> = {};
+for (const field of MODEL_META_FIELDS) coverage[field] = 0;
+for (const n of modelNodes) {
+  for (const field of MODEL_META_FIELDS) {
+    const v = (n as ModelMeta)[field];
+    const present = Array.isArray(v) ? v.length > 0 : v !== undefined && v !== "";
+    if (present) coverage[field] += 1;
+  }
+}
+
 // --- Report ---
 const modelCount = modelNodes.length;
 const groupCount = groupNodes.length;
 const edgeCount = (INITIAL_EDGES as Edge[]).length;
 
-if (issues.length === 0) {
+const coverageLines = MODEL_META_FIELDS.map((field) => {
+  const n = coverage[field];
+  const pct = modelCount === 0 ? 0 : Math.round((n / modelCount) * 100);
+  return `    ${field.padEnd(14)} ${String(n).padStart(3)}/${modelCount}  ${String(pct).padStart(3)}%`;
+}).join("\n");
+
+const printSummary = () => {
   console.log(
-    `landscape check: OK (${modelCount} models, ${groupCount} zones, ${edgeCount} edges)`,
+    `landscape check: ${modelCount} models, ${groupCount} zones, ${edgeCount} edges`,
   );
+  console.log(`\n  metadata coverage (optional ModelMeta fields):`);
+  console.log(coverageLines);
+  if (warnings.length > 0) {
+    console.log(`\n  warnings (${warnings.length}):`);
+    for (const w of warnings) console.log(`    - [${w.kind}] ${w.detail}`);
+  }
+};
+
+if (issues.length === 0) {
+  printSummary();
+  console.log(`\nlandscape check: OK`);
   process.exit(0);
 }
+printSummary();
 
 const grouped = new Map<string, string[]>();
 for (const { kind, detail } of issues) {

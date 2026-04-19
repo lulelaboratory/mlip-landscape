@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use MLIP Hub, please cite it using this metadata."
+title: "MLIP Hub: Interatomic Potential Explorer"
+abstract: >-
+  MLIP Hub is a curated, interactive map of machine-learning interatomic
+  potentials — equivariant, invariant, descriptor, and transformer-style
+  foundation models — with their lineage, papers, code, and normalized
+  metadata for decision support.
+type: software
+version: "0.2.0"
+date-released: "2026-04-19"
+url: "https://www.mliphub.com"
+repository-code: "https://github.com/lulelaboratory/mlip-landscape"
+license: MIT
+keywords:
+  - machine learning interatomic potentials
+  - MLIP
+  - neural network potential
+  - materials science
+  - computational chemistry
+  - molecular dynamics
+  - equivariant
+  - foundation model
+authors:
+  - family-names: "Lu"
+    given-names: "Le"
+    affiliation: "Lule Laboratory"
+# Once a companion paper exists, uncomment and fill `preferred-citation` so
+# GitHub's "Cite this repository" widget points people to the paper.
+# preferred-citation:
+#   type: article
+#   authors:
+#     - family-names: "Lu"
+#       given-names: "Le"
+#   title: "MLIP Hub: a curated landscape of machine-learning interatomic potentials"
+#   year: 2026
+#   journal: ""
+#   doi: ""

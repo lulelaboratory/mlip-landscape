@@ -1,0 +1,622 @@
+{
+  "schemaVersion": "1",
+  "generatedAt": "2026-04-19T03:56:18.373Z",
+  "version": "0.2.0",
+  "models": [
+    {
+      "id": "nequip",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "NequIP",
+      "year": 2021,
+      "author": "Harvard (Kozinsky lab)",
+      "x": 100,
+      "y": 150,
+      "desc": "E(3)-equivariant message-passing potential that set the template for data-efficient, high-accuracy force fields across molecules and materials.",
+      "githubUrl": "https://github.com/mir-group/nequip",
+      "paperUrl": "https://arxiv.org/abs/2101.03164",
+      "coverage": [
+        "organic molecules",
+        "small-molecule reactions",
+        "materials"
+      ],
+      "useCases": [
+        "data-efficient fitting",
+        "ab-initio MD surrogate"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-04-19",
+      "trainingData": [
+        "custom DFT"
+      ],
+      "tags": [
+        "equivariant",
+        "message-passing",
+        "E(3)"
+      ]
+    },
+    {
+      "id": "allegro",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "Allegro",
+      "year": 2023,
+      "author": "Harvard (Kozinsky lab)",
+      "x": 100,
+      "y": 320,
+      "desc": "Strictly local equivariant architecture designed for massive parallel MD (100M+ atoms) while retaining NequIP-level accuracy.",
+      "githubUrl": "https://github.com/mir-group/allegro",
+      "paperUrl": "https://www.nature.com/articles/s41467-023-36329-y"
+    },
+    {
+      "id": "eqv2",
+      "type": "node",
+      "category": "Transformer",
+      "label": "Equiformer V2",
+      "year": 2024,
+      "author": "Meta FAIR / MIT",
+      "x": 380,
+      "y": 150,
+      "desc": "Improved equivariant transformer with higher-degree tensor representations; achieves state-of-the-art OC20/OC22 performance with strong data-efficiency.",
+      "githubUrl": "https://github.com/atomicarchitects/equiformer_v2",
+      "paperUrl": "https://arxiv.org/abs/2306.12059"
+    },
+    {
+      "id": "mace",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "MACE",
+      "year": 2022,
+      "author": "Cambridge / Csányi group",
+      "x": 660,
+      "y": 150,
+      "desc": "Higher-order equivariant message passing (4-body messages) that reaches or surpasses SOTA accuracy with only 1–2 layers and powers universal MACE-MP models.",
+      "githubUrl": "https://github.com/ACEsuit/mace",
+      "paperUrl": "https://arxiv.org/abs/2206.07697",
+      "coverage": [
+        "general materials",
+        "organic molecules",
+        "oxides"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "MD at scale",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-04-19",
+      "trainingData": [
+        "MPTrj",
+        "Alexandria"
+      ],
+      "tags": [
+        "equivariant",
+        "higher-order",
+        "foundation model"
+      ]
+    },
+    {
+      "id": "grace",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "GRACE",
+      "year": 2024,
+      "author": "ICAMS",
+      "x": 660,
+      "y": 320,
+      "desc": "Graph Atomic Cluster Expansion: a foundation-scale implementation of ACE with explicit multi-body basis functions for wide-coverage materials modelling.",
+      "githubUrl": "https://github.com/ICAMS/grace-tensorpotential"
+    },
+    {
+      "id": "orb",
+      "type": "node",
+      "category": "Transformer",
+      "label": "Orb-v3",
+      "year": 2025,
+      "author": "Orbital Materials",
+      "x": 950,
+      "y": 150,
+      "desc": "Wide & shallow graph neural simulator with smoothed attention, heavily optimized for torch.compile and extreme throughput on large periodic systems.",
+      "githubUrl": "https://github.com/orbital-materials/orb-models",
+      "coverage": [
+        "general materials",
+        "periodic crystals"
+      ],
+      "useCases": [
+        "large-cell MD",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "Apache-2.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-04-19",
+      "trainingData": [
+        "MPTrj",
+        "Alexandria"
+      ],
+      "tags": [
+        "transformer",
+        "throughput",
+        "torch.compile"
+      ]
+    },
+    {
+      "id": "orbmol",
+      "type": "node",
+      "category": "Transformer",
+      "label": "OrbMol",
+      "year": 2025,
+      "author": "Orbital Materials",
+      "x": 950,
+      "y": 320,
+      "desc": "Orb-v3 variant for molecules, electrolytes, metal complexes, and biomolecules, trained on the ~100M-structure OMol25 dataset with explicit total-charge and spin-multiplicity conditioning.",
+      "githubUrl": "https://huggingface.co/Orbital-Materials/OrbMol",
+      "paperUrl": "https://www.orbitalindustries.com/posts/orbmol-extending-orb-to-molecular-systems"
+    },
+    {
+      "id": "tfn",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "Tensor Field Networks",
+      "year": 2018,
+      "author": "Thomas et al.",
+      "x": 380,
+      "y": 320,
+      "desc": "First E(3)-equivariant convolutional architecture for point clouds, introducing spherical-harmonic tensor products that underlie nearly all modern equivariant MLIPs (NequIP, MACE, Equiformer).",
+      "githubUrl": "https://github.com/tensorfieldnetworks/tensorfieldnetworks",
+      "paperUrl": "https://arxiv.org/abs/1802.08219"
+    },
+    {
+      "id": "se3t",
+      "type": "node",
+      "category": "Transformer",
+      "label": "SE(3)-Transformer",
+      "year": 2020,
+      "author": "Fuchs et al.",
+      "x": 1510,
+      "y": 150,
+      "desc": "Self-attention generalized to SE(3)-equivariant inputs via tensor field attention; an early blueprint for equivariant transformer architectures like Equiformer.",
+      "githubUrl": "https://github.com/FabianFuchsML/se3-transformer-public",
+      "paperUrl": "https://arxiv.org/abs/2006.10503"
+    },
+    {
+      "id": "jmp",
+      "type": "node",
+      "category": "Transformer",
+      "label": "JMP",
+      "year": 2024,
+      "author": "Shoghi et al. (CMU / Meta)",
+      "x": 1510,
+      "y": 320,
+      "desc": "Joint Multi-task Pretraining: trains one backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x, demonstrating that multi-dataset pretraining yields strong transferable potentials — a precursor to UMA-style universal models.",
+      "githubUrl": "https://github.com/facebookresearch/JMP",
+      "paperUrl": "https://arxiv.org/abs/2310.16802"
+    },
+    {
+      "id": "esen",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "eSEN",
+      "year": 2025,
+      "author": "Meta FAIR",
+      "x": 1230,
+      "y": 150,
+      "desc": "Equivariant Smooth Energy Network: conservative-force equivariant GNN with a smooth potential energy surface designed for stable long-horizon MD. Serves as the backbone underneath Meta's UMA foundation model.",
+      "githubUrl": "https://github.com/facebookresearch/fairchem",
+      "paperUrl": "https://arxiv.org/abs/2502.12147"
+    },
+    {
+      "id": "uma",
+      "type": "node",
+      "category": "Transformer",
+      "label": "UMA",
+      "year": 2025,
+      "author": "Meta FAIR",
+      "x": 1230,
+      "y": 320,
+      "desc": "Universal Model for Atoms: a Mixture of Linear Experts (MoLE) foundation model built on the eSEN backbone, trained on ~500M structures spanning OC20, ODAC23, OMat24, OMC25, and OMol25. NeurIPS 2025 spotlight.",
+      "githubUrl": "https://huggingface.co/facebook/UMA",
+      "paperUrl": "https://arxiv.org/abs/2506.23971"
+    },
+    {
+      "id": "bpnn",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "BPNN",
+      "year": 2007,
+      "author": "Behler & Parrinello",
+      "x": 100,
+      "y": 650,
+      "desc": "The Behler–Parrinello high-dimensional neural network potential — the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
+      "githubUrl": "https://github.com/CompPhysVienna/n2p2",
+      "paperUrl": "https://doi.org/10.1103/PhysRevLett.98.146401"
+    },
+    {
+      "id": "ace",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "ACE",
+      "year": 2019,
+      "author": "Drautz (ICAMS)",
+      "x": 380,
+      "y": 650,
+      "desc": "Atomic Cluster Expansion: a complete, systematically improvable many-body basis for the local atomic environment; the mathematical backbone of PACE/GRACE and a strong influence on MACE.",
+      "githubUrl": "https://github.com/ICAMS/lammps-user-pace",
+      "paperUrl": "https://arxiv.org/abs/1810.06640"
+    },
+    {
+      "id": "gap",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "GAP / SNAP",
+      "year": 2010,
+      "author": "Cambridge / Sandia",
+      "x": 100,
+      "y": 550,
+      "desc": "Gaussian Approximation Potentials and SNAP: kernel and descriptor-based MLIPs with rigorous many-body expansions, accurate but relatively expensive.",
+      "githubUrl": "https://github.com/libAtoms/QUIP"
+    },
+    {
+      "id": "deepmd",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "DeepMD",
+      "year": 2018,
+      "author": "DeepModeling",
+      "x": 380,
+      "y": 550,
+      "desc": "Deep Potential Molecular Dynamics: local frame descriptors + deep networks giving ab-initio-level accuracy with linear scaling, widely used for large MD.",
+      "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
+      "paperUrl": "https://doi.org/10.1016/j.cpc.2018.02.017"
+    },
+    {
+      "id": "dpa2",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "DPA-2",
+      "year": 2024,
+      "author": "DeepModeling",
+      "x": 660,
+      "y": 550,
+      "desc": "Second-generation Deep Potential architecture with attention and multi-task heads, targeting a universal deep potential for diverse chemistries.",
+      "githubUrl": "https://github.com/deepmodeling/deepmd-kit"
+    },
+    {
+      "id": "mattersim",
+      "type": "node",
+      "category": "Transformer",
+      "label": "MatterSim",
+      "year": 2024,
+      "author": "Microsoft",
+      "x": 950,
+      "y": 550,
+      "desc": "Large-scale foundation model trained on millions of ab-initio trajectories, designed as a reusable simulator for materials discovery workflows.",
+      "githubUrl": "https://github.com/microsoft/mattersim"
+    },
+    {
+      "id": "ani",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "ANI-2x",
+      "year": 2019,
+      "author": "Isayev / Roitberg",
+      "x": 100,
+      "y": 750,
+      "desc": "Accurate NeurAl networK engINe potential for organic molecules (C,H,N,O,S,F,Cl); widely used in drug discovery for fast geometry and energy scans.",
+      "githubUrl": "https://github.com/aiqm/torchani",
+      "paperUrl": "https://arxiv.org/abs/1909.08565"
+    },
+    {
+      "id": "schnet",
+      "type": "node",
+      "category": "Invariant",
+      "label": "SchNet",
+      "year": 2017,
+      "author": "Schütt et al.",
+      "x": 380,
+      "y": 750,
+      "desc": "Continuous-filter convolutional network that introduced smooth, translation-invariant filters for molecules and crystals; the baseline for many later GNN MLIPs.",
+      "githubUrl": "https://github.com/atomistic-machine-learning/schnetpack",
+      "paperUrl": "https://arxiv.org/abs/1706.08566"
+    },
+    {
+      "id": "dimenet",
+      "type": "node",
+      "category": "Invariant",
+      "label": "DimeNet++",
+      "year": 2020,
+      "author": "Gasteiger et al.",
+      "x": 660,
+      "y": 750,
+      "desc": "Directional message passing network with spherical basis functions that explicitly encode bond angles, improving data efficiency over SchNet-style models.",
+      "githubUrl": "https://github.com/gasteigerjo/dimenet",
+      "paperUrl": "https://arxiv.org/abs/2011.14115"
+    },
+    {
+      "id": "gemnet",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "GemNet-OC",
+      "year": 2021,
+      "author": "TUM / OC20",
+      "x": 950,
+      "y": 750,
+      "desc": "High-capacity spherical message-passing architecture used in the OC20/OC22 benchmarks; very strong for catalyst adsorption and surface chemistry.",
+      "githubUrl": "https://github.com/OpenCatalystProject/ocp"
+    },
+    {
+      "id": "painn",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "PaiNN",
+      "year": 2021,
+      "author": "Schütt et al.",
+      "x": 380,
+      "y": 900,
+      "desc": "Polarizable Atom Interaction Neural Network: uses coupled scalar/vector features to capture forces and dipoles with E(3) equivariance at lower cost than full tensors.",
+      "githubUrl": "https://github.com/atomistic-machine-learning/schnetpack",
+      "paperUrl": "https://arxiv.org/abs/2102.03150"
+    },
+    {
+      "id": "sevennet",
+      "type": "node",
+      "category": "Invariant",
+      "label": "SevenNet",
+      "year": 2024,
+      "author": "Seoul Nat. Univ.",
+      "x": 660,
+      "y": 900,
+      "desc": "Speed-optimized invariant network inspired by NequIP-style features, designed for very large simulations where throughput is more critical than strict equivariance.",
+      "githubUrl": "https://github.com/MDIL-SNU/SevenNet"
+    },
+    {
+      "id": "alignn",
+      "type": "node",
+      "category": "Invariant",
+      "label": "ALIGNN",
+      "year": 2021,
+      "author": "NIST",
+      "x": 660,
+      "y": 650,
+      "desc": "Atomistic Line Graph Neural Network: augments the atomic graph with a line graph so bond angles and higher-order interactions are encoded explicitly.",
+      "githubUrl": "https://github.com/usnistgov/alignn",
+      "paperUrl": "https://arxiv.org/abs/2102.05013"
+    },
+    {
+      "id": "m3gnet",
+      "type": "node",
+      "category": "Invariant",
+      "label": "M3GNet",
+      "year": 2022,
+      "author": "Materials Virtual Lab",
+      "x": 950,
+      "y": 650,
+      "desc": "Materials Graph Network with 3-body interactions; trained on Materials Project relaxations to give a universal potential over most of the periodic table.",
+      "githubUrl": "https://github.com/materialsvirtuallab/m3gnet",
+      "paperUrl": "https://arxiv.org/abs/2202.02450"
+    },
+    {
+      "id": "chgnet",
+      "type": "node",
+      "category": "Invariant",
+      "label": "CHGNet",
+      "year": 2023,
+      "author": "Berkeley (Ceder group)",
+      "x": 950,
+      "y": 900,
+      "desc": "Charge-aware graph neural network that extends M3GNet with oxidation state and local charge features; particularly strong for battery and redox-active materials.",
+      "githubUrl": "https://github.com/CederGroupHub/chgnet",
+      "paperUrl": "https://arxiv.org/abs/2210.13995",
+      "coverage": [
+        "battery materials",
+        "oxides",
+        "redox-active systems"
+      ],
+      "useCases": [
+        "battery cathode screening",
+        "charge-aware MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress",
+        "magnetic_moment"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-04-19",
+      "trainingData": [
+        "MPTrj"
+      ],
+      "tags": [
+        "invariant",
+        "charge-aware",
+        "foundation model"
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "zone_eq",
+      "type": "group",
+      "label": "Equivariant & Transformers (Accuracy / Foundations)",
+      "x": 50,
+      "y": 50,
+      "width": 1660,
+      "height": 400
+    },
+    {
+      "id": "zone_inv",
+      "type": "group",
+      "label": "Invariant & Descriptors (Speed / Scale)",
+      "x": 50,
+      "y": 480,
+      "width": 1100,
+      "height": 500
+    }
+  ],
+  "edges": [
+    {
+      "from": "tfn",
+      "to": "nequip",
+      "label": "E(3)"
+    },
+    {
+      "from": "tfn",
+      "to": "se3t",
+      "label": "+Attention"
+    },
+    {
+      "from": "nequip",
+      "to": "allegro",
+      "label": "Locality"
+    },
+    {
+      "from": "nequip",
+      "to": "mace",
+      "label": "Higher Order"
+    },
+    {
+      "from": "nequip",
+      "to": "eqv2",
+      "label": "Attention"
+    },
+    {
+      "from": "se3t",
+      "to": "eqv2",
+      "label": "Refined",
+      "dashed": true
+    },
+    {
+      "from": "mace",
+      "to": "grace",
+      "label": "Scale"
+    },
+    {
+      "from": "eqv2",
+      "to": "orb",
+      "label": "Simplify",
+      "dashed": true
+    },
+    {
+      "from": "orb",
+      "to": "orbmol",
+      "label": "+OMol25"
+    },
+    {
+      "from": "eqv2",
+      "to": "esen",
+      "label": "Smooth PES"
+    },
+    {
+      "from": "esen",
+      "to": "uma",
+      "label": "Backbone"
+    },
+    {
+      "from": "jmp",
+      "to": "uma",
+      "label": "Multi-task",
+      "dashed": true
+    },
+    {
+      "from": "uma",
+      "to": "mattersim",
+      "label": "Foundation",
+      "dashed": true
+    },
+    {
+      "from": "bpnn",
+      "to": "gap",
+      "label": "Kernels"
+    },
+    {
+      "from": "bpnn",
+      "to": "ani",
+      "label": "Neural Nets",
+      "dashed": true
+    },
+    {
+      "from": "ace",
+      "to": "grace",
+      "label": "Graph",
+      "dashed": true
+    },
+    {
+      "from": "gap",
+      "to": "deepmd",
+      "label": "Neural Nets"
+    },
+    {
+      "from": "deepmd",
+      "to": "dpa2",
+      "label": "Universal Data"
+    },
+    {
+      "from": "ani",
+      "to": "schnet",
+      "label": "Graph Concept"
+    },
+    {
+      "from": "schnet",
+      "to": "dimenet",
+      "label": "+Angles"
+    },
+    {
+      "from": "dimenet",
+      "to": "gemnet",
+      "label": "Spherical"
+    },
+    {
+      "from": "dimenet",
+      "to": "alignn",
+      "label": "Line Graph"
+    },
+    {
+      "from": "painn",
+      "to": "sevennet",
+      "label": "Speed Opt"
+    },
+    {
+      "from": "m3gnet",
+      "to": "chgnet",
+      "label": "+Charge"
+    },
+    {
+      "from": "orb",
+      "to": "mattersim",
+      "label": "Scale",
+      "dashed": true
+    }
+  ]
+}

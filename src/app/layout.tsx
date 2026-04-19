@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import TopNav from "@/components/TopNav";
+import SiteFooter from "@/components/SiteFooter";
 
 const SITE_URL = "https://www.mliphub.com";
 const SITE_NAME = "MLIP Hub";
@@ -88,8 +90,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        {children}
+      <body className="h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <TopNav />
+        <main className="flex-1 min-h-0 flex flex-col">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );
