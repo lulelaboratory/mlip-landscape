@@ -130,7 +130,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Invariant & Descriptors (Speed / Scale)",
     x: 50,
     y: 480,
-    width: 1100,
+    width: 1400,
     height: 500,
   },
 
@@ -559,6 +559,86 @@ export const INITIAL_NODES: AnyNode[] = [
     trainingData: ["MPTrj"],
     tags: ["invariant", "charge-aware", "foundation model"],
   },
+  {
+    id: "nep",
+    type: "node",
+    category: "Descriptor",
+    label: "NEP",
+    year: 2021,
+    author: "Fan et al. (GPUMD)",
+    x: 1230,
+    y: 550,
+    desc:
+      "Neuroevolution Potential: descriptor-based neural network fit with a derivative-free evolution strategy and implemented natively on GPU via GPUMD; NEP89 (2025) extends it to a universal model across 89 elements at empirical-potential speed.",
+    githubUrl: "https://github.com/brucefan1983/GPUMD",
+    paperUrl: "https://arxiv.org/abs/2504.21286",
+    lastReviewed: "2026-04-21",
+    tags: ["descriptor", "GPU-native", "foundation model"],
+  },
+  {
+    id: "maceoff",
+    type: "node",
+    category: "Equivariant",
+    label: "MACE-OFF",
+    year: 2024,
+    author: "Cambridge (Csányi group)",
+    x: 1230,
+    y: 650,
+    desc:
+      "Short-range transferable equivariant force field specializing MACE to organic chemistry (H, C, N, O, F, P, S, Cl, Br, I) for accurate gas-phase, liquid, and molecular-crystal simulations in drug-discovery workflows.",
+    githubUrl: "https://github.com/ACEsuit/mace-foundations",
+    paperUrl: "https://arxiv.org/abs/2312.15211",
+    lastReviewed: "2026-04-21",
+    tags: ["equivariant", "organic molecules", "foundation model"],
+  },
+  {
+    id: "petmad",
+    type: "node",
+    category: "Transformer",
+    label: "PET-MAD",
+    year: 2025,
+    author: "EPFL (COSMO Lab)",
+    x: 1230,
+    y: 750,
+    desc:
+      "Point Edge Transformer trained on the Massive Atomistic Diversity dataset; a lightweight universal potential that learns rotational equivariance from data augmentation and generalizes across inorganic solids, molecules, and surfaces.",
+    githubUrl: "https://github.com/lab-cosmo/pet-mad",
+    paperUrl: "https://arxiv.org/abs/2503.14118",
+    lastReviewed: "2026-04-21",
+    tags: ["transformer", "universal", "foundation model"],
+  },
+  {
+    id: "escaip",
+    type: "node",
+    category: "Transformer",
+    label: "EScAIP",
+    year: 2024,
+    author: "UC Berkeley",
+    x: 100,
+    y: 900,
+    desc:
+      "Efficiently Scaled Attention Interatomic Potential: a non-strictly-equivariant graph attention network that attends over neighbor-level representations, delivering ~10x faster inference and ~5x lower memory than comparable NNIPs (NeurIPS 2024).",
+    githubUrl: "https://github.com/ASK-Berkeley/EScAIP",
+    paperUrl: "https://arxiv.org/abs/2410.24169",
+    lastReviewed: "2026-04-21",
+    tags: ["transformer", "attention", "scalable"],
+  },
+  {
+    id: "visnet",
+    type: "node",
+    category: "Equivariant",
+    label: "ViSNet",
+    year: 2023,
+    author: "Microsoft Research",
+    x: 1230,
+    y: 900,
+    desc:
+      "Vector-Scalar interactive graph neural Network: geometry-enhanced equivariant GNN that couples scalar embeddings with explicit vector updates via a runtime geometry calculation strategy; strong on MD17/rMD17/MD22 and QM9 at low cost.",
+    githubUrl: "https://github.com/microsoft/AI2BMD",
+    paperUrl: "https://arxiv.org/abs/2210.16518",
+    lastReviewed: "2026-04-21",
+    tags: ["equivariant", "vector-scalar", "molecular"],
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -598,4 +678,11 @@ export const INITIAL_EDGES: Edge[] = [
 
   // Foundation transformer link
   { from: "orb", to: "mattersim", label: "Scale", dashed: true },
+
+  // New 2023–2025 entries
+  { from: "mace", to: "maceoff", label: "Organic" },
+  { from: "bpnn", to: "nep", label: "Evolution", dashed: true },
+  { from: "orb", to: "petmad", label: "Data Aug", dashed: true },
+  { from: "painn", to: "visnet", label: "+Vec-Scalar" },
+  { from: "eqv2", to: "escaip", label: "Scale Attention", dashed: true },
 ];
