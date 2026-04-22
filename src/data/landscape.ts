@@ -121,7 +121,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 1660,
+    width: 1940,
     height: 400,
   },
   {
@@ -130,7 +130,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Invariant & Descriptors (Speed / Scale)",
     x: 50,
     y: 480,
-    width: 1100,
+    width: 1380,
     height: 500,
   },
 
@@ -331,6 +331,36 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://huggingface.co/facebook/UMA",
     paperUrl: "https://arxiv.org/abs/2506.23971",
   },
+  {
+    id: "nequix",
+    type: "node",
+    category: "Equivariant",
+    label: "Nequix",
+    year: 2025,
+    author: "Koker & Smidt (MIT Atomic Architects)",
+    x: 1790,
+    y: 150,
+    desc:
+      "Compact E(3)-equivariant foundation potential that pairs a simplified NequIP design with equivariant RMS layer normalization and the Muon optimizer, reaching near-SOTA accuracy on a <125 GPU-hour training budget.",
+    githubUrl: "https://github.com/atomicarchitects/nequix",
+    paperUrl: "https://arxiv.org/abs/2508.16067",
+    isNew: true,
+  },
+  {
+    id: "petmad",
+    type: "node",
+    category: "Transformer",
+    label: "PET-MAD",
+    year: 2025,
+    author: "EPFL (Ceriotti lab)",
+    x: 1790,
+    y: 320,
+    desc:
+      "Lightweight universal transformer-GNN potential (Point-Edge Transformer) trained on the Massive Atomistic Diversity (MAD) dataset of ~96k structures across 85 elements; competitive with larger uMLIPs for solids, surfaces, and molecules.",
+    githubUrl: "https://github.com/lab-cosmo/pet-mad",
+    paperUrl: "https://arxiv.org/abs/2503.14118",
+    isNew: true,
+  },
 
   // ---------------------------------------------------------------------------
   // LANE 2: DESCRIPTORS & INDUSTRIAL WORKHORSES  (Middle band, y ≈ 550)
@@ -416,6 +446,36 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Large-scale foundation model trained on millions of ab-initio trajectories, designed as a reusable simulator for materials discovery workflows.",
     githubUrl: "https://github.com/microsoft/mattersim",
+  },
+  {
+    id: "nep89",
+    type: "node",
+    category: "Descriptor",
+    label: "NEP89",
+    year: 2025,
+    author: "Chalmers (Fan group) / Liang et al.",
+    x: 1230,
+    y: 550,
+    desc:
+      "Universal neuroevolution-potential foundation model spanning 89 elements across inorganic and organic materials, trained via separable natural evolution strategies and distributed in GPUMD for empirical-potential-like speed.",
+    githubUrl: "https://github.com/brucefan1983/GPUMD",
+    paperUrl: "https://arxiv.org/abs/2504.21286",
+    isNew: true,
+  },
+  {
+    id: "liten",
+    type: "node",
+    category: "Equivariant",
+    label: "LiTEN-FF",
+    year: 2026,
+    author: "Zhejiang Univ. (Hou lab) / Su et al.",
+    x: 1230,
+    y: 650,
+    desc:
+      "Equivariant network with Linearly Tensorized Quadrangle Attention (TQA) that captures 3- and 4-body interactions in linear time; pre-trained on nablaDFT and fine-tuned on SPICE as a quantum-accurate biomolecular force-field foundation model.",
+    githubUrl: "https://github.com/lingcon01/LiTEN",
+    paperUrl: "https://arxiv.org/abs/2507.00884",
+    isNew: true,
   },
 
   // ---------------------------------------------------------------------------
@@ -598,4 +658,11 @@ export const INITIAL_EDGES: Edge[] = [
 
   // Foundation transformer link
   { from: "orb", to: "mattersim", label: "Scale", dashed: true },
+
+  // New 2025–2026 foundation models
+  { from: "nequip", to: "nequix", label: "Budget" },
+  { from: "orb", to: "petmad", label: "Lightweight", dashed: true },
+  { from: "bpnn", to: "nep89", label: "Evolution NN" },
+  { from: "eqv2", to: "liten", label: "TQA" },
+  { from: "mace", to: "liten", label: "4-body", dashed: true },
 ];
