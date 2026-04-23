@@ -619,6 +619,55 @@ export const INITIAL_NODES: AnyNode[] = [
     trainingData: ["MPTrj"],
     tags: ["invariant", "charge-aware", "foundation model"],
   },
+
+  // ---------------------------------------------------------------------------
+  // 2026 ADDITIONS — distilled, multi-fidelity, and r2SCAN foundation models
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "sevennet_nano",
+    type: "node",
+    category: "Invariant",
+    label: "SevenNet-Nano",
+    year: 2026,
+    author: "Seoul Nat. Univ. (MDIL-SNU)",
+    x: 1230,
+    y: 750,
+    desc:
+      "Lightweight universal MLIP distilled from the SevenNet-Omni teacher, delivering over an order-of-magnitude speedup while retaining broad transferability for scalable atomistic simulations on thousands of atoms.",
+    githubUrl: "https://github.com/MDIL-SNU/SevenNet",
+    paperUrl: "https://arxiv.org/abs/2604.10887",
+    isNew: true,
+  },
+  {
+    id: "sevennet_omni",
+    type: "node",
+    category: "Invariant",
+    label: "SevenNet-Omni",
+    year: 2026,
+    author: "Seoul Nat. Univ. (MDIL-SNU)",
+    x: 1230,
+    y: 900,
+    desc:
+      "Multi-fidelity universal foundation MLIP built on the SevenNet-MF backbone and trained on 15 open datasets (~250M structures across molecules, crystals, and surfaces); serves as the teacher model for SevenNet-Nano.",
+    githubUrl: "https://github.com/MDIL-SNU/SevenNet",
+    paperUrl: "https://www.nature.com/articles/s41467-026-70195-8",
+    isNew: true,
+  },
+  {
+    id: "pfp_v8",
+    type: "node",
+    category: "Transformer",
+    label: "PFP v8",
+    year: 2026,
+    author: "Preferred Networks / Matlantis",
+    x: 100,
+    y: 900,
+    desc:
+      "Eighth release of the Preferred Potential: the first universal MLIP trained on a large r2SCAN meta-GGA dataset (70 elements) atop a 96-element PBE backbone, halving melting-point error vs. PBE-trained models. Distributed commercially via the Matlantis SaaS platform.",
+    paperUrl: "https://arxiv.org/abs/2603.11063",
+    isNew: true,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -665,4 +714,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "bpnn", to: "nep89", label: "Evolution NN" },
   { from: "eqv2", to: "liten", label: "TQA" },
   { from: "mace", to: "liten", label: "4-body", dashed: true },
+
+  // 2026 additions
+  { from: "sevennet", to: "sevennet_omni", label: "Multi-fidelity" },
+  { from: "sevennet_omni", to: "sevennet_nano", label: "Distillation" },
+  { from: "mattersim", to: "pfp_v8", label: "r2SCAN", dashed: true },
 ];
