@@ -11,6 +11,10 @@ import {
   X,
   Zap,
   Filter,
+  Search,
+  Copy,
+  Check,
+  Flag,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -56,6 +60,18 @@ const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Descriptor: Database,
 };
 
+// Color swatch per category for the filter/legend dot. Values intentionally
+// mirror the node card palette defined in CATEGORY_STYLES so the filter row
+// doubles as a color-coding legend.
+const CATEGORY_SWATCH: Record<Category, string> = {
+  Equivariant: "bg-red-400",
+  Invariant: "bg-blue-400",
+  Transformer: "bg-green-400",
+  Descriptor: "bg-orange-400",
+};
+
+const GITHUB_REPO = "https://github.com/lulelaboratory/mlip-landscape";
+
 type FilterType = "All" | Category;
 
 type DeviceType = "mobile" | "tablet" | "desktop";
@@ -65,12 +81,14 @@ export default function MLIPExplorer() {
   const [edges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
+  const [query, setQuery] = useState("");
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
   const [baseScale, setBaseScale] = useState(0.8);
   const [userScale, setUserScale] = useState(1);
   const [userPan, setUserPan] = useState({ x: 0, y: 0 });
   const [filterOpen, setFilterOpen] = useState(true);
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
+  const [citationCopied, setCitationCopied] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -107,6 +125,21 @@ export default function MLIPExplorer() {
       setFontScale(parsed);
     }
   }, []);
+
+  // Escape closes the detail panel.
+  useEffect(() => {
+    if (!selectedNode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedNode(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedNode]);
+
+  // Reset the "copied" indicator whenever the selected model changes.
+  useEffect(() => {
+    setCitationCopied(false);
+  }, [selectedNode]);
 
   const updateFontScale = (next: number) => {
     setFontScale(next);
@@ -214,22 +247,34 @@ export default function MLIPExplorer() {
     setDragPointerId(null);
   };
 
-  // Filter + layering
+  // Filter + layering. Nodes that don't match the current category filter or
+  // the free-text search query are dimmed rather than removed so the overall
+  // landscape shape stays legible while the user narrows in.
   const processedNodes = useMemo(() => {
-    const visibleNodes =
-      filter === "All"
-        ? nodes
-        : nodes.map((n) =>
-            n.type === "node" && n.category !== filter
-              ? { ...n, dimmed: true }
-              : { ...n, dimmed: false },
-          );
+    const q = query.trim().toLowerCase();
+    const matchesQuery = (n: ModelNode) => {
+      if (!q) return true;
+      return (
+        n.label.toLowerCase().includes(q) ||
+        n.author.toLowerCase().includes(q) ||
+        String(n.year).includes(q) ||
+        n.category.toLowerCase().includes(q) ||
+        (n.tags ?? []).some((t) => t.toLowerCase().includes(q))
+      );
+    };
+
+    const visibleNodes = nodes.map((n) => {
+      if (n.type !== "node") return n;
+      const dimmed =
+        (filter !== "All" && n.category !== filter) || !matchesQuery(n);
+      return { ...n, dimmed };
+    });
 
     const groups = visibleNodes.filter((n) => n.type === "group") as GroupNode[];
     const items = visibleNodes.filter((n) => n.type === "node") as ModelNode[];
 
     return { groups, items };
-  }, [nodes, filter]);
+  }, [nodes, filter, query]);
 
   // Orthogonal edge router. Returns an SVG path string that:
   // - exits the source card from the side nearest the target
@@ -484,6 +529,55 @@ export default function MLIPExplorer() {
       )}`
     : "#";
 
+  // A short BibTeX-style snippet that cites the MLIP Hub entry for the
+  // currently selected model. Intended as a starting point — users should
+  // also cite the original model paper via paperUrl.
+  const buildCitation = (node: ModelNode) => {
+    const citeKey = `mliphub_${node.id}`;
+    const howpublished = node.paperUrl
+      ? `\\url{${node.paperUrl}}`
+      : node.githubUrl
+        ? `\\url{${node.githubUrl}}`
+        : "\\url{https://www.mliphub.com}";
+    return `@misc{${citeKey},
+  title        = {{${node.label}}},
+  author       = {${node.author}},
+  year         = {${node.year}},
+  howpublished = {${howpublished}},
+  note         = {MLIP Hub entry: https://www.mliphub.com}
+}`;
+  };
+
+  const copyCitation = async (node: ModelNode) => {
+    const text = buildCitation(node);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCitationCopied(true);
+        window.setTimeout(() => setCitationCopied(false), 2000);
+      }
+    } catch {
+      // Silently ignore — the user can still copy the BibTeX from the /cite page.
+    }
+  };
+
+  const reportIssueUrl = (node: ModelNode) => {
+    const title = `[model] ${node.label}: `;
+    const body = `Model: ${node.label} (id: ${node.id})
+Category: ${node.category}
+Year: ${node.year}
+Authors: ${node.author}
+
+Describe the issue (broken link, outdated description, missing metadata, incorrect lineage, etc.):
+`;
+    const params = new URLSearchParams({
+      title,
+      body,
+      labels: "data,model-card",
+    });
+    return `${GITHUB_REPO}/issues/new?${params.toString()}`;
+  };
+
   const svgWidth = Math.max(graphWidth + CANVAS_PADDING * 4, 1400);
   const svgHeight = Math.max(graphHeight + CANVAS_PADDING * 4, 1100);
 
@@ -511,6 +605,7 @@ export default function MLIPExplorer() {
           </div>
           <button
             onClick={() => setSelectedNode(null)}
+            aria-label="Close details panel"
             className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
           >
             <X size={20} />
@@ -579,6 +674,34 @@ export default function MLIPExplorer() {
           >
             Search on the web
           </a>
+
+          <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+            <button
+              type="button"
+              onClick={() => copyCitation(selectedNode)}
+              aria-label={`Copy BibTeX citation for ${selectedNode.label}`}
+              className="flex items-center justify-center gap-1.5 flex-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+            >
+              {citationCopied ? (
+                <>
+                  <Check size={12} /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy size={12} /> Cite this model
+                </>
+              )}
+            </button>
+            <a
+              href={reportIssueUrl(selectedNode)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Report an issue with ${selectedNode.label}`}
+              className="flex items-center justify-center gap-1.5 flex-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+            >
+              <Flag size={12} /> Report issue
+            </a>
+          </div>
         </div>
       </>
     );
@@ -734,14 +857,42 @@ export default function MLIPExplorer() {
                 className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800"
                 style={fontScaleStyle}
               >
+                <label className="block mb-3">
+                  <span className="sr-only">Search models</span>
+                  <span className="relative block">
+                    <Search
+                      size={12}
+                      className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                    />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search name, author, year…"
+                      aria-label="Search models by name, author, year or tag"
+                      className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[0.8125em] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700"
+                    />
+                    {query && (
+                      <button
+                        type="button"
+                        onClick={() => setQuery("")}
+                        aria-label="Clear search"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </span>
+                </label>
                 <div className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] font-bold mb-3 text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter size={12} /> Filter Architecture
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1" role="group" aria-label="Filter by architecture category">
                   {filters.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setFilter(cat)}
+                      aria-pressed={filter === cat}
                       className={`text-left px-3 py-2 rounded-lg text-[0.875em] sm:text-[0.75em] md:text-[0.6875em] font-semibold transition flex items-center gap-2
                         ${
                           filter === cat
@@ -751,8 +902,11 @@ export default function MLIPExplorer() {
                       `}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          filter === cat ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-600"
+                        aria-hidden="true"
+                        className={`w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 ${
+                          cat === "All"
+                            ? "bg-slate-300 dark:bg-slate-600"
+                            : CATEGORY_SWATCH[cat]
                         }`}
                       ></span>
                       {cat}
