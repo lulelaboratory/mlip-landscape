@@ -1,0 +1,38 @@
+name: Broken link
+description: Report a dead, redirected, or incorrect URL on a model card
+title: "[Broken link] <model name>"
+labels: ["broken-link", "data"]
+body:
+  - type: input
+    id: model_name
+    attributes:
+      label: Model name
+      description: Which model card has the broken link?
+      placeholder: e.g. NequIP
+    validations:
+      required: true
+  - type: input
+    id: broken_url
+    attributes:
+      label: Broken URL
+      description: The exact URL that no longer works (or now redirects somewhere unrelated).
+      placeholder: https://...
+    validations:
+      required: true
+  - type: input
+    id: replacement_url
+    attributes:
+      label: Suggested replacement URL
+      description: A working canonical link, if you have one.
+      placeholder: https://...
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: |
+        How did you confirm this is broken? E.g. HTTP status, a browser
+        screenshot, a quote from the destination page, the date you checked.
+    validations:
+      required: true

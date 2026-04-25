@@ -1,0 +1,124 @@
+name: Add a model
+description: Propose a new MLIP entry for the landscape
+title: "[Add model] <model name>"
+labels: ["add-model", "data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a new MLIP! Please fill in as much as you can — the
+        curators will follow up if anything is missing. See the [editorial
+        policy](https://www.mliphub.com/policy) and the
+        [contributing guide](https://github.com/lulelaboratory/mlip-landscape/blob/main/CONTRIBUTING.md)
+        for the review bar and data schema.
+  - type: input
+    id: model_name
+    attributes:
+      label: Model name
+      description: The canonical name users will search for (e.g. "MACE", "Orb-v3").
+      placeholder: e.g. NequIP
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Which family does the model belong to?
+      options:
+        - Equivariant
+        - Invariant
+        - Transformer
+        - Descriptor
+    validations:
+      required: true
+  - type: input
+    id: paper_url
+    attributes:
+      label: Paper / preprint URL
+      description: arXiv preferred, then peer-reviewed journal, then preprint server.
+      placeholder: https://arxiv.org/abs/...
+    validations:
+      required: true
+  - type: input
+    id: code_url
+    attributes:
+      label: Code repository URL
+      description: Canonical implementation, not a fork.
+      placeholder: https://github.com/...
+    validations:
+      required: true
+  - type: input
+    id: year
+    attributes:
+      label: Year of publication
+      placeholder: "2025"
+    validations:
+      required: true
+  - type: input
+    id: author_lab
+    attributes:
+      label: Author / lab
+      description: Originating group or organisation.
+      placeholder: e.g. Cambridge (Csányi group)
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why does this model deserve its own node?
+      description: A few sentences explaining what's distinct about this architecture / training data / use case.
+    validations:
+      required: true
+  - type: textarea
+    id: lineage_edges
+    attributes:
+      label: Suggested lineage edges
+      description: |
+        Which existing model(s) should this be connected to, and why?
+        Format suggestions as `from-id → to-id (label)`.
+      placeholder: |
+        nequip → <new model> (Higher-order)
+        mace → <new model> (peer)
+    validations:
+      required: true
+  - type: dropdown
+    id: supports_charges
+    attributes:
+      label: supportsCharges
+      description: Can the model be conditioned on a total / atomic charge?
+      options:
+        - "true"
+        - "false"
+        - "null (unknown)"
+    validations:
+      required: true
+  - type: dropdown
+    id: supports_spins
+    attributes:
+      label: supportsSpins
+      description: Can the model be conditioned on spin multiplicity / magnetic moments?
+      options:
+        - "true"
+        - "false"
+        - "null (unknown)"
+    validations:
+      required: true
+  - type: input
+    id: elements_covered
+    attributes:
+      label: elementsCovered
+      description: |
+        Explicit list (`H, C, N, O`), shorthand (`89 elements`,
+        `all elements up to Z=94`), or `"—"` if unknown.
+      placeholder: e.g. "all elements up to Z=94"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: |
+        Anything else worth flagging — license, maintenance status, training
+        data, special caveats.
+    validations:
+      required: false
