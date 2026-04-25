@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1",
-  "generatedAt": "2026-04-24T17:14:27.610Z",
+  "generatedAt": "2026-04-25T01:34:45.926Z",
   "version": "0.2.0",
   "models": [
     {
@@ -602,6 +602,20 @@
       "desc": "Eighth release of the Preferred Potential: the first universal MLIP trained on a large r2SCAN meta-GGA dataset (70 elements) atop a 96-element PBE backbone, halving melting-point error vs. PBE-trained models. Distributed commercially via the Matlantis SaaS platform.",
       "paperUrl": "https://arxiv.org/abs/2603.11063",
       "isNew": true
+    },
+    {
+      "id": "orion",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "ORION",
+      "year": 2026,
+      "author": "Chen et al. (NEP framework)",
+      "x": 1510,
+      "y": 900,
+      "desc": "Universal organic force field for C, H, O, N, S, P built within the Neuroevolution Potential (NEP) framework. Trained on a chemically rich dataset assembled through a unified top-down/bottom-up sampling strategy, providing a balanced description of bond breaking/formation, aromatic growth, hydrogen bonding, van der Waals interactions, and π-stacking; reaches near-DFT force accuracy while running ~200x faster than ReaxFF on identical hardware, enabling hundreds-of-nanoseconds reactive MD.",
+      "githubUrl": "https://github.com/brucefan1983/GPUMD",
+      "paperUrl": "https://arxiv.org/abs/2604.05769",
+      "isNew": true
     }
   ],
   "groups": [
@@ -820,6 +834,17 @@
       "from": "ani",
       "to": "aimnet2",
       "label": "AIM + Charges"
+    },
+    {
+      "from": "nep89",
+      "to": "orion",
+      "label": "Organic CHONSP"
+    },
+    {
+      "from": "ani",
+      "to": "orion",
+      "label": "Reactive Organics",
+      "dashed": true
     }
   ]
 }
