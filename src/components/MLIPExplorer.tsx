@@ -27,6 +27,7 @@ import {
   Edge,
   Category,
 } from "@/data/landscape";
+import OnboardingTour from "@/components/OnboardingTour";
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -1216,6 +1217,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
           </div>
         </div>
       </div>
+      <OnboardingTour />
     </div>
   );
 }
