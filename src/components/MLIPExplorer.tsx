@@ -794,15 +794,23 @@ export default function MLIPExplorer() {
     }
   };
 
-  const reportIssueUrl = (node: ModelNode) => {
-    const title = `[model] ${node.label}: `;
-    const body = `Model: ${node.label} (id: ${node.id})
+  const reportIssueBody = (node: ModelNode) =>
+    `Model: ${node.label} (id: ${node.id})
 Category: ${node.category}
 Year: ${node.year}
 Authors: ${node.author}
 
 Describe the issue (broken link, outdated description, missing metadata, incorrect lineage, etc.):
 `;
+
+  const reportIssueMailto = (node: ModelNode) =>
+    `mailto:support@mliphub.com?subject=${encodeURIComponent(
+      `[model] ${node.label}: correction`,
+    )}&body=${encodeURIComponent(reportIssueBody(node))}`;
+
+  const reportIssueUrl = (node: ModelNode) => {
+    const title = `[model] ${node.label}: `;
+    const body = reportIssueBody(node);
     const params = new URLSearchParams({
       title,
       body,
@@ -941,15 +949,32 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 </>
               )}
             </button>
-            <a
-              href={reportIssueUrl(selectedNode)}
-              target="_blank"
-              rel="noreferrer"
+            <div
+              role="group"
               aria-label={`Report an issue with ${selectedNode.label}`}
-              className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+              className="col-span-2 grid grid-cols-2 gap-2"
             >
-              <Flag size={12} /> Report issue
-            </a>
+              <a
+                href={reportIssueUrl(selectedNode)}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Open a GitHub issue for ${selectedNode.label}. Requires a GitHub account.`}
+                className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+              >
+                <Flag size={12} /> Report on GitHub
+              </a>
+              <a
+                href={reportIssueMailto(selectedNode)}
+                aria-label={`Email a correction about ${selectedNode.label} to the MLIP Hub maintainers`}
+                className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+              >
+                <Flag size={12} /> Email a correction
+              </a>
+              <p className="col-span-2 text-[0.6875em] text-slate-500 dark:text-slate-400 leading-snug">
+                GitHub asks you to log in. No GitHub account? Use the email
+                option instead.
+              </p>
+            </div>
           </div>
         </div>
       </>
