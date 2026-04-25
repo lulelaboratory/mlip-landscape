@@ -1298,8 +1298,25 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
     return `${GITHUB_REPO}/issues/new?${params.toString()}`;
   };
 
-  const svgWidth = Math.max(graphWidth + CANVAS_PADDING * 4, 1400);
-  const svgHeight = Math.max(graphHeight + CANVAS_PADDING * 4, 1100);
+  // The SVG that holds the edges sits at (0, 0) inside the transformed
+  // canvas. Force-directed layout produces nodes at negative coordinates,
+  // and the parent <div> happily renders them because HTML elements aren't
+  // clipped — but the SVG would be, since by default svg children are
+  // clipped to the svg's width/height box. We extend the box to cover the
+  // negative range and set its origin to the most-negative bound so paths
+  // with negative absolute coordinates still render.
+  const svgOriginX = Math.min(0, bounds.minX - CANVAS_PADDING);
+  const svgOriginY = Math.min(0, bounds.minY - CANVAS_PADDING);
+  const svgWidth = Math.max(
+    graphWidth + CANVAS_PADDING * 4,
+    bounds.maxX - svgOriginX + CANVAS_PADDING,
+    1400,
+  );
+  const svgHeight = Math.max(
+    graphHeight + CANVAS_PADDING * 4,
+    bounds.maxY - svgOriginY + CANVAS_PADDING,
+    1100,
+  );
 
   const renderDetailContent = (compact = false) => {
     if (!selectedNode) return null;
@@ -1519,8 +1536,16 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
             {/* Edges */}
             <svg
-              className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 5, width: svgWidth, height: svgHeight }}
+              className="absolute pointer-events-none"
+              style={{
+                zIndex: 5,
+                left: svgOriginX,
+                top: svgOriginY,
+                width: svgWidth,
+                height: svgHeight,
+                overflow: "visible",
+              }}
+              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
             >
               <defs>
                 <marker
