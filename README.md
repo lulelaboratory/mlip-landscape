@@ -5,6 +5,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.<ZENODO_RECORD_ID>.svg)](https://doi.org/10.5281/zenodo.<ZENODO_RECORD_ID>)
 -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![DOI](https://zenodo.org/badge/1101966189.svg)](https://doi.org/10.5281/zenodo.19767545)
+
 
 **MLIP Hub** is a curated, interactive map of machine-learning interatomic
 potentials (MLIPs) — equivariant, invariant, descriptor, and transformer-style
