@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, GitCompare, Search } from "lucide-react";
 import type { ModelNode } from "@/data/landscape";
 
 type SortKey = "label" | "year" | "category" | "license" | "maintenance";
 type SortDir = "asc" | "desc";
+
+const MAX_COMPARE = 4;
 
 const COLUMNS: ReadonlyArray<{
   key: SortKey;
@@ -32,6 +34,15 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
   const [sortKey, setSortKey] = useState<SortKey>("year");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
+  const [compareSelection, setCompareSelection] = useState<string[]>([]);
+
+  const toggleCompare = (id: string) => {
+    setCompareSelection((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_COMPARE) return prev;
+      return [...prev, id];
+    });
+  };
 
   const onSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -123,6 +134,9 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
           </caption>
           <thead className="text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
             <tr>
+              <th scope="col" className="px-3 py-2 w-8">
+                <span className="sr-only">Compare</span>
+              </th>
               {COLUMNS.map((col) => {
                 const isActive = sortKey === col.key;
                 const ariaSort: "ascending" | "descending" | "none" = isActive
@@ -174,20 +188,34 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
             {sorted.length === 0 && (
               <tr>
                 <td
-                  colSpan={COLUMNS.length}
+                  colSpan={COLUMNS.length + 1}
                   className="px-3 py-6 text-center text-slate-500 dark:text-slate-400"
                 >
                   No models match that search.
                 </td>
               </tr>
             )}
-            {sorted.map((m) => (
+            {sorted.map((m) => {
+              const checked = compareSelection.includes(m.id);
+              const disabled =
+                !checked && compareSelection.length >= MAX_COMPARE;
+              return (
               <tr
                 key={m.id}
                 className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/60"
                 itemScope
                 itemType="https://schema.org/SoftwareSourceCode"
               >
+                <td className="px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => toggleCompare(m.id)}
+                    aria-label={`Add ${m.label} to comparison`}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800 disabled:opacity-40"
+                  />
+                </td>
                 <th
                   scope="row"
                   className="px-3 py-2 font-medium text-slate-900 dark:text-slate-100"
@@ -230,15 +258,45 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
                   )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
         Showing {sorted.length} of {models.length} models. Click a model name to
-        open it in the interactive landscape.
+        open it in the interactive landscape. Tick the checkboxes to compare
+        models side by side.
       </p>
+
+      {compareSelection.length > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-slate-950/40"
+        >
+          <span className="text-sm text-slate-700 dark:text-slate-200">
+            {compareSelection.length} selected
+            <span className="text-slate-400 dark:text-slate-500">
+              {" "}/ {MAX_COMPARE}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setCompareSelection([])}
+            className="text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            Clear
+          </button>
+          <Link
+            href={`/compare?models=${compareSelection.map(encodeURIComponent).join(",")}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          >
+            <GitCompare size={14} aria-hidden="true" /> Compare
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

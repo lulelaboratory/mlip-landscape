@@ -7,6 +7,7 @@ type NavLink = { href: string; label: string };
 const LINKS: NavLink[] = [
   { href: "/", label: "Explore" },
   { href: "/models", label: "Table" },
+  { href: "/compare", label: "Compare" },
   { href: "/cite", label: "Cite" },
   { href: "/contributors", label: "Contributors" },
   { href: "/contribute", label: "Contribute" },
