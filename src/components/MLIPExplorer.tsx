@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ExternalLink,
   Github,
@@ -76,7 +77,31 @@ type FilterType = "All" | Category;
 
 type DeviceType = "mobile" | "tablet" | "desktop";
 
+const QUERY_PARAM_QUERY = "query";
+const QUERY_PARAM_CATEGORY = "category";
+const QUERY_PARAM_MODEL = "model";
+
+const CATEGORY_PARAM_TO_FILTER: Record<string, FilterType> = {
+  all: "All",
+  equivariant: "Equivariant",
+  invariant: "Invariant",
+  transformer: "Transformer",
+  descriptor: "Descriptor",
+};
+
+const FILTER_TO_CATEGORY_PARAM: Record<FilterType, string> = {
+  All: "all",
+  Equivariant: "equivariant",
+  Invariant: "invariant",
+  Transformer: "transformer",
+  Descriptor: "descriptor",
+};
+
 export default function MLIPExplorer() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [nodes] = useState<AnyNode[]>(INITIAL_NODES);
   const [edges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null);
@@ -89,6 +114,7 @@ export default function MLIPExplorer() {
   const [filterOpen, setFilterOpen] = useState(true);
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
   const [citationCopied, setCitationCopied] = useState(false);
+  const hasHydratedFromUrl = useRef(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -105,6 +131,58 @@ export default function MLIPExplorer() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const modelNodes = useMemo(
+    () => nodes.filter((node): node is ModelNode => node.type === "node"),
+    [nodes],
+  );
+
+  const modelById = useMemo(
+    () => new Map(modelNodes.map((node) => [node.id, node])),
+    [modelNodes],
+  );
+
+  useEffect(() => {
+    if (hasHydratedFromUrl.current) return;
+
+    const rawQuery = searchParams.get(QUERY_PARAM_QUERY);
+    const rawCategory = searchParams.get(QUERY_PARAM_CATEGORY);
+    const rawModelId = searchParams.get(QUERY_PARAM_MODEL);
+
+    setQuery(rawQuery ?? "");
+
+    const normalizedCategory = rawCategory?.trim().toLowerCase() ?? "";
+    setFilter(CATEGORY_PARAM_TO_FILTER[normalizedCategory] ?? "All");
+
+    const selectedFromUrl = rawModelId ? modelById.get(rawModelId) ?? null : null;
+    setSelectedNode(selectedFromUrl);
+
+    hasHydratedFromUrl.current = true;
+  }, [modelById, searchParams]);
+
+  useEffect(() => {
+    if (!hasHydratedFromUrl.current) return;
+
+    const nextParams = new URLSearchParams();
+    const normalizedQuery = query.trim();
+
+    if (normalizedQuery) {
+      nextParams.set(QUERY_PARAM_QUERY, normalizedQuery);
+    }
+    if (filter !== "All") {
+      nextParams.set(QUERY_PARAM_CATEGORY, FILTER_TO_CATEGORY_PARAM[filter]);
+    }
+    if (selectedNode) {
+      nextParams.set(QUERY_PARAM_MODEL, selectedNode.id);
+    }
+
+    const currentQueryString = searchParams.toString();
+    const nextQueryString = nextParams.toString();
+    if (currentQueryString === nextQueryString) return;
+
+    const nextUrl = nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [filter, pathname, query, router, searchParams, selectedNode]);
 
   const deviceType: DeviceType = useMemo(() => {
     if (viewport.width < 640) return "mobile";
@@ -154,7 +232,7 @@ export default function MLIPExplorer() {
   const canGrowFont = fontScaleIndex >= 0 && fontScaleIndex < FONT_SCALES.length - 1;
 
   const bounds = useMemo(() => {
-    const items = nodes.filter((n) => n.type === "node") as ModelNode[];
+    const items = modelNodes;
     if (items.length === 0) {
       return { minX: 0, minY: 0, maxX: CARD_WIDTH, maxY: CARD_HEIGHT };
     }
@@ -165,7 +243,7 @@ export default function MLIPExplorer() {
     const maxY = Math.max(...items.map((n) => n.y + CARD_HEIGHT));
 
     return { minX, minY, maxX, maxY };
-  }, [nodes]);
+  }, [modelNodes]);
 
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
