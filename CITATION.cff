@@ -25,14 +25,18 @@ authors:
   - family-names: "Lu"
     given-names: "Le"
     affiliation: "Department of Computer Science, University of Colorado Boulder"
-# Once a companion paper exists, uncomment and fill `preferred-citation` so
-# GitHub's "Cite this repository" widget points people to the paper.
+# Once the companion arXiv preprint is posted, uncomment and complete
+# `preferred-citation` so GitHub's "Cite this repository" widget points
+# readers at the paper. Leave `doi:` blank until the arXiv DOI is minted —
+# do not fabricate it.
 # preferred-citation:
 #   type: article
 #   authors:
 #     - family-names: "Lu"
 #       given-names: "Le"
+#       affiliation: "Department of Computer Science, University of Colorado Boulder"
 #   title: "MLIP Hub: a curated landscape of machine-learning interatomic potentials"
 #   year: 2026
-#   journal: ""
+#   journal: "arXiv preprint"
+#   url: ""
 #   doi: ""
