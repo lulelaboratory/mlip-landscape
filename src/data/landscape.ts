@@ -713,6 +713,21 @@ export const INITIAL_NODES: AnyNode[] = [
     paperUrl: "https://arxiv.org/abs/2603.11063",
     isNew: true,
   },
+  {
+    id: "orion",
+    type: "node",
+    category: "Descriptor",
+    label: "ORION",
+    year: 2026,
+    author: "Chen et al. (NEP framework)",
+    x: 1510,
+    y: 900,
+    desc:
+      "Universal organic force field for C, H, O, N, S, P built within the Neuroevolution Potential (NEP) framework. Trained on a chemically rich dataset assembled through a unified top-down/bottom-up sampling strategy, providing a balanced description of bond breaking/formation, aromatic growth, hydrogen bonding, van der Waals interactions, and π-stacking; reaches near-DFT force accuracy while running ~200x faster than ReaxFF on identical hardware, enabling hundreds-of-nanoseconds reactive MD.",
+    githubUrl: "https://github.com/brucefan1983/GPUMD",
+    paperUrl: "https://arxiv.org/abs/2604.05769",
+    isNew: true,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -770,4 +785,6 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orbmol", to: "mace_polar1", label: "OMol25", dashed: true },
   { from: "dpa2", to: "dpa3", label: "LiGS" },
   { from: "ani", to: "aimnet2", label: "AIM + Charges" },
+  { from: "nep89", to: "orion", label: "Organic CHONSP" },
+  { from: "ani", to: "orion", label: "Reactive Organics", dashed: true },
 ];
