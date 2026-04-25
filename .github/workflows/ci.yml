@@ -21,7 +21,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Lint
         run: npm run lint
@@ -31,6 +31,14 @@ jobs:
 
       - name: Export landscape snapshot
         run: npm run export:landscape
+
+      - name: Verify exported snapshots are committed
+        run: |
+          if ! git diff --exit-code public/data; then
+            echo "::error::Landscape exports are out of date."
+            echo "Run 'npm run export:landscape' locally and commit the resulting public/data changes."
+            exit 1
+          fi
 
       - name: Build
         run: npm run build
