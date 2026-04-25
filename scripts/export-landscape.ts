@@ -57,6 +57,9 @@ const CSV_COLUMNS: Array<keyof ModelNode> = [
   "maintenance",
   "lastReviewed",
   "lastUpdated",
+  "supportsCharges",
+  "supportsSpins",
+  "elementsCovered",
 ];
 
 const escapeCsv = (v: unknown): string => {

@@ -10,6 +10,19 @@ type SortDir = "asc" | "desc";
 
 const MAX_COMPARE = 4;
 
+type ChargeSpinFilter = "any" | "yes" | "no" | "unknown";
+
+const matchesChargeSpinFilter = (
+  filter: ChargeSpinFilter,
+  value: boolean | null | undefined,
+): boolean => {
+  if (filter === "any") return true;
+  if (filter === "yes") return value === true;
+  if (filter === "no") return value === false;
+  // unknown: covers undefined, null, and the explicit "—" sentinel.
+  return value === undefined || value === null;
+};
+
 const COLUMNS: ReadonlyArray<{
   key: SortKey;
   label: string;
@@ -35,6 +48,9 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [compareSelection, setCompareSelection] = useState<string[]>([]);
+  const [chargesFilter, setChargesFilter] = useState<ChargeSpinFilter>("any");
+  const [spinsFilter, setSpinsFilter] = useState<ChargeSpinFilter>("any");
+  const [elementsFilter, setElementsFilter] = useState<string>("");
 
   const toggleCompare = (id: string) => {
     setCompareSelection((prev) => {
@@ -55,22 +71,43 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return models;
+    const elementsQ = elementsFilter.trim().toLowerCase();
     return models.filter((m) => {
-      const haystack = [
-        m.label,
-        m.author,
-        m.category,
-        m.license ?? "",
-        m.maintenance ?? "",
-        String(m.year),
-        ...(m.tags ?? []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(q);
+      if (q) {
+        const haystack = [
+          m.label,
+          m.author,
+          m.category,
+          m.license ?? "",
+          m.maintenance ?? "",
+          String(m.year),
+          m.elementsCovered ?? "",
+          ...(m.tags ?? []),
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (!matchesChargeSpinFilter(chargesFilter, m.supportsCharges)) {
+        return false;
+      }
+      if (!matchesChargeSpinFilter(spinsFilter, m.supportsSpins)) {
+        return false;
+      }
+      if (elementsQ) {
+        const cov = (m.elementsCovered ?? "").toLowerCase();
+        // Split the user's query on commas/spaces so e.g. "C, N, O" matches
+        // any model whose elementsCovered string contains all three tokens.
+        const tokens = elementsQ
+          .split(/[,\s]+/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+        if (tokens.length === 0) return true;
+        if (!tokens.every((t) => cov.includes(t))) return false;
+      }
+      return true;
     });
-  }, [models, query]);
+  }, [models, query, chargesFilter, spinsFilter, elementsFilter]);
 
   const sorted = useMemo(() => {
     const next = [...filtered];
@@ -114,11 +151,63 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter by name, author, tag…"
-            aria-label="Filter the model table by name, author, category, license, or tag"
+            aria-label="Filter the model table by name, author, category, license, tag, or elements covered"
             className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
           />
         </span>
       </label>
+
+      <div
+        role="group"
+        aria-label="Capability filters"
+        className="mb-4 flex flex-wrap items-end gap-3 text-sm"
+      >
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Supports charges
+          </span>
+          <select
+            value={chargesFilter}
+            onChange={(e) => setChargesFilter(e.target.value as ChargeSpinFilter)}
+            aria-label="Filter models by whether they support charges"
+            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
+          >
+            <option value="any">Any</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+            <option value="unknown">Unknown / —</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Supports spins
+          </span>
+          <select
+            value={spinsFilter}
+            onChange={(e) => setSpinsFilter(e.target.value as ChargeSpinFilter)}
+            aria-label="Filter models by whether they support spins"
+            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
+          >
+            <option value="any">Any</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+            <option value="unknown">Unknown / —</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Elements covered contains
+          </span>
+          <input
+            type="search"
+            value={elementsFilter}
+            onChange={(e) => setElementsFilter(e.target.value)}
+            placeholder="e.g. H, C, N or '89 elements'"
+            aria-label="Filter models whose elements covered contains all of these tokens"
+            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 min-w-[14rem]"
+          />
+        </label>
+      </div>
 
       <div
         className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800"
@@ -182,13 +271,22 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
                   </th>
                 );
               })}
+              <th scope="col" className="px-3 py-2 font-semibold">
+                Charges
+              </th>
+              <th scope="col" className="px-3 py-2 font-semibold">
+                Spins
+              </th>
+              <th scope="col" className="px-3 py-2 font-semibold">
+                Elements covered
+              </th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 && (
               <tr>
                 <td
-                  colSpan={COLUMNS.length + 1}
+                  colSpan={COLUMNS.length + 4}
                   className="px-3 py-6 text-center text-slate-500 dark:text-slate-400"
                 >
                   No models match that search.
@@ -257,6 +355,19 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
                     <span className="text-slate-400 dark:text-slate-500">—</span>
                   )}
                 </td>
+                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                  <BoolCell value={m.supportsCharges} />
+                </td>
+                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                  <BoolCell value={m.supportsSpins} />
+                </td>
+                <td className="px-3 py-2 text-slate-600 dark:text-slate-300 max-w-[18rem] whitespace-normal">
+                  {m.elementsCovered ? (
+                    m.elementsCovered
+                  ) : (
+                    <span className="text-slate-400 dark:text-slate-500">—</span>
+                  )}
+                </td>
               </tr>
               );
             })}
@@ -299,6 +410,24 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
       )}
     </div>
   );
+}
+
+function BoolCell({ value }: { value: boolean | null | undefined }) {
+  if (value === true) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200">
+        yes
+      </span>
+    );
+  }
+  if (value === false) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        no
+      </span>
+    );
+  }
+  return <span className="text-slate-400 dark:text-slate-500">—</span>;
 }
 
 function MaintenanceBadge({

@@ -2,63 +2,120 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Download, Plus, X } from "lucide-react";
 import type { ModelNode } from "@/data/landscape";
 
 const MAX_COMPARE = 4;
 
+const formatBoolNullable = (v: boolean | null | undefined): string => {
+  if (v === true) return "yes";
+  if (v === false) return "no";
+  return "—";
+};
+
 type Field = {
   key: string;
   label: string;
+  // Plain-text version, used by the CSV export. Defaults to JSON-stringifying
+  // the rendered value, but most fields override it for a cleaner export.
+  text?: (m: ModelNode) => string;
   render: (m: ModelNode) => React.ReactNode;
 };
 
 const FIELDS: Field[] = [
-  { key: "year", label: "Year", render: (m) => m.year },
-  { key: "category", label: "Category", render: (m) => m.category },
-  { key: "author", label: "Author / Org", render: (m) => m.author },
+  {
+    key: "year",
+    label: "Year",
+    text: (m) => String(m.year),
+    render: (m) => m.year,
+  },
+  {
+    key: "category",
+    label: "Category",
+    text: (m) => m.category,
+    render: (m) => m.category,
+  },
+  {
+    key: "author",
+    label: "Author / Org",
+    text: (m) => m.author,
+    render: (m) => m.author,
+  },
   {
     key: "license",
     label: "License",
+    text: (m) => m.license ?? "—",
     render: (m) => m.license ?? "—",
   },
   {
     key: "maintenance",
     label: "Maintenance",
+    text: (m) => m.maintenance ?? "—",
     render: (m) => m.maintenance ?? "—",
   },
   {
     key: "lastReviewed",
     label: "Last reviewed",
+    text: (m) => m.lastReviewed ?? "—",
     render: (m) => m.lastReviewed ?? "—",
   },
   {
     key: "frameworks",
     label: "Frameworks",
+    text: (m) =>
+      m.frameworks && m.frameworks.length > 0 ? m.frameworks.join(", ") : "—",
     render: (m) =>
       m.frameworks && m.frameworks.length > 0 ? m.frameworks.join(", ") : "—",
   },
   {
     key: "properties",
     label: "Properties",
+    text: (m) =>
+      m.properties && m.properties.length > 0 ? m.properties.join(", ") : "—",
     render: (m) =>
       m.properties && m.properties.length > 0 ? m.properties.join(", ") : "—",
   },
   {
     key: "coverage",
     label: "Coverage",
+    text: (m) =>
+      m.coverage && m.coverage.length > 0 ? m.coverage.join(", ") : "—",
     render: (m) =>
       m.coverage && m.coverage.length > 0 ? m.coverage.join(", ") : "—",
   },
   {
     key: "useCases",
     label: "Use cases",
+    text: (m) =>
+      m.useCases && m.useCases.length > 0 ? m.useCases.join(", ") : "—",
     render: (m) =>
       m.useCases && m.useCases.length > 0 ? m.useCases.join(", ") : "—",
   },
   {
+    key: "supportsCharges",
+    label: "Supports charges",
+    text: (m) => formatBoolNullable(m.supportsCharges),
+    render: (m) => formatBoolNullable(m.supportsCharges),
+  },
+  {
+    key: "supportsSpins",
+    label: "Supports spins",
+    text: (m) => formatBoolNullable(m.supportsSpins),
+    render: (m) => formatBoolNullable(m.supportsSpins),
+  },
+  {
+    key: "elementsCovered",
+    label: "Elements covered",
+    text: (m) => m.elementsCovered ?? "—",
+    render: (m) => m.elementsCovered ?? "—",
+  },
+  {
     key: "trainingData",
     label: "Training data",
+    text: (m) =>
+      m.trainingData && m.trainingData.length > 0
+        ? m.trainingData.join(", ")
+        : "—",
     render: (m) =>
       m.trainingData && m.trainingData.length > 0
         ? m.trainingData.join(", ")
@@ -67,11 +124,19 @@ const FIELDS: Field[] = [
   {
     key: "tags",
     label: "Tags",
+    text: (m) => (m.tags && m.tags.length > 0 ? m.tags.join(", ") : "—"),
     render: (m) => (m.tags && m.tags.length > 0 ? m.tags.join(", ") : "—"),
   },
   {
     key: "links",
     label: "Links",
+    text: (m) =>
+      [
+        m.githubUrl ? `Code: ${m.githubUrl}` : null,
+        m.paperUrl ? `Paper: ${m.paperUrl}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ") || "—",
     render: (m) => (
       <div className="flex flex-col gap-1">
         {m.githubUrl && (
@@ -106,6 +171,7 @@ const FIELDS: Field[] = [
   {
     key: "desc",
     label: "Description",
+    text: (m) => m.desc,
     render: (m) => (
       <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
         {m.desc}
@@ -113,6 +179,38 @@ const FIELDS: Field[] = [
     ),
   },
 ];
+
+const escapeCsvCell = (v: string): string => {
+  const needsQuote = /[",\n]/.test(v);
+  return needsQuote ? `"${v.replace(/"/g, '""')}"` : v;
+};
+
+const buildCsvFromComparison = (selected: ModelNode[]): string => {
+  const header = ["Field", ...selected.map((m) => m.label)].map(escapeCsvCell).join(",");
+  const rows = FIELDS.map((field) => {
+    const cells = [
+      field.label,
+      ...selected.map((m) =>
+        field.text ? field.text(m) : String(field.render(m) ?? ""),
+      ),
+    ];
+    return cells.map(escapeCsvCell).join(",");
+  });
+  return [header, ...rows].join("\n") + "\n";
+};
+
+const triggerCsvDownload = (csv: string, filename: string) => {
+  if (typeof window === "undefined") return;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 export default function CompareView({
   allModels,
@@ -185,6 +283,14 @@ export default function CompareView({
     setSelectedIds((prev) => prev.filter((x) => x !== id));
   };
 
+  const downloadCsv = () => {
+    if (selected.length === 0) return;
+    const csv = buildCsvFromComparison(selected);
+    const stamp = new Date().toISOString().slice(0, 10);
+    const slug = selected.map((m) => m.id).join("-");
+    triggerCsvDownload(csv, `mliphub-compare-${slug}-${stamp}.csv`);
+  };
+
   return (
     <div>
       <ModelPicker
@@ -198,8 +304,19 @@ export default function CompareView({
           Add models above to start comparing.
         </p>
       ) : (
+        <>
+        <div className="mt-6 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={downloadCsv}
+            aria-label={`Download the current comparison of ${selected.length} models as a CSV file`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition"
+          >
+            <Download size={14} aria-hidden="true" /> Download CSV
+          </button>
+        </div>
         <div
-          className="mt-6 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800"
+          className="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800"
           tabIndex={0}
           role="region"
           aria-label="Side-by-side model comparison"
@@ -261,6 +378,7 @@ export default function CompareView({
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

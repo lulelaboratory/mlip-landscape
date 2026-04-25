@@ -244,6 +244,51 @@ for (const n of modelNodes) {
       `Model ${n.id} license "${n.license}" is not in the SPDX allowlist (still accepted)`,
     );
   }
+  if (
+    n.supportsCharges !== undefined &&
+    n.supportsCharges !== null &&
+    typeof n.supportsCharges !== "boolean"
+  ) {
+    push(
+      "invalid-supportsCharges",
+      `Model ${n.id} supportsCharges must be boolean or null (got: ${typeof n.supportsCharges})`,
+    );
+  }
+  if (
+    n.supportsSpins !== undefined &&
+    n.supportsSpins !== null &&
+    typeof n.supportsSpins !== "boolean"
+  ) {
+    push(
+      "invalid-supportsSpins",
+      `Model ${n.id} supportsSpins must be boolean or null (got: ${typeof n.supportsSpins})`,
+    );
+  }
+  if (
+    n.elementsCovered !== undefined &&
+    n.elementsCovered !== null &&
+    typeof n.elementsCovered !== "string"
+  ) {
+    push(
+      "invalid-elementsCovered",
+      `Model ${n.id} elementsCovered must be a string, null, or "—" (got: ${typeof n.elementsCovered})`,
+    );
+  }
+  if (typeof n.elementsCovered === "string" && n.elementsCovered.trim() === "") {
+    push(
+      "invalid-elementsCovered",
+      `Model ${n.id} elementsCovered is empty — use "—" to mark unknown explicitly`,
+    );
+  }
+  const missingChargeSpin = (
+    ["supportsCharges", "supportsSpins", "elementsCovered"] as const
+  ).filter((field) => n[field] === undefined);
+  if (missingChargeSpin.length > 0) {
+    warn(
+      "missing-charge-spin-elements",
+      `Model ${n.id} is missing ${missingChargeSpin.join(", ")}; new entries should set this (use null or "—" if unknown)`,
+    );
+  }
 }
 
 // --- 9. Metadata coverage report (non-blocking) ---
