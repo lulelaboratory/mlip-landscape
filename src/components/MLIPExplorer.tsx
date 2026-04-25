@@ -315,13 +315,22 @@ export default function MLIPExplorer() {
     const q = query.trim().toLowerCase();
     const matchesQuery = (n: ModelNode) => {
       if (!q) return true;
-      return (
-        n.label.toLowerCase().includes(q) ||
-        n.author.toLowerCase().includes(q) ||
-        String(n.year).includes(q) ||
-        n.category.toLowerCase().includes(q) ||
-        (n.tags ?? []).some((t) => t.toLowerCase().includes(q))
-      );
+      const haystack = [
+        n.label,
+        n.author,
+        String(n.year),
+        n.category,
+        n.license ?? "",
+        n.maintenance ?? "",
+        ...(n.tags ?? []),
+        ...(n.frameworks ?? []),
+        ...(n.properties ?? []),
+        ...(n.coverage ?? []),
+        ...(n.useCases ?? []),
+      ]
+        .join(" • ")
+        .toLowerCase();
+      return haystack.includes(q);
     };
 
     const visibleNodes = nodes.map((n) => {
@@ -579,6 +588,82 @@ export default function MLIPExplorer() {
     });
 
   const filters: readonly FilterType[] = CATEGORY_FILTERS;
+
+  // Build a flat suggestion list for the search box. Auto-suggestions span
+  // model names, tags, licenses, frameworks, years, and coverage / domains so
+  // typing "ASE" surfaces the framework facet, "MIT" surfaces the license,
+  // "battery" surfaces a coverage facet, and so on.
+  const [searchFocused, setSearchFocused] = useState(false);
+  const modelItems = useMemo(
+    () => nodes.filter((n): n is ModelNode => n.type === "node"),
+    [nodes],
+  );
+  const facetIndex = useMemo(() => {
+    const tag = new Set<string>();
+    const license = new Set<string>();
+    const framework = new Set<string>();
+    const property = new Set<string>();
+    const coverage = new Set<string>();
+    const year = new Set<string>();
+    for (const m of modelItems) {
+      year.add(String(m.year));
+      if (m.license) license.add(m.license);
+      (m.tags ?? []).forEach((t) => tag.add(t));
+      (m.frameworks ?? []).forEach((t) => framework.add(t));
+      (m.properties ?? []).forEach((t) => property.add(t));
+      (m.coverage ?? []).forEach((t) => coverage.add(t));
+    }
+    return { tag, license, framework, property, coverage, year };
+  }, [modelItems]);
+
+  type Suggestion =
+    | { kind: "model"; label: string; sublabel: string; value: string; modelId: string }
+    | { kind: "facet"; label: string; sublabel: string; value: string };
+
+  const suggestions = useMemo<Suggestion[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const out: Suggestion[] = [];
+
+    for (const m of modelItems) {
+      if (
+        m.label.toLowerCase().includes(q) ||
+        m.author.toLowerCase().includes(q)
+      ) {
+        out.push({
+          kind: "model",
+          label: m.label,
+          sublabel: `${m.category} · ${m.year}`,
+          value: m.label,
+          modelId: m.id,
+        });
+        if (out.length >= 6) break;
+      }
+    }
+
+    const pushFacet = (
+      set: Set<string>,
+      type: string,
+      cap: number,
+    ) => {
+      let added = 0;
+      for (const v of set) {
+        if (added >= cap) break;
+        if (v.toLowerCase().includes(q)) {
+          out.push({ kind: "facet", label: v, sublabel: type, value: v });
+          added += 1;
+        }
+      }
+    };
+    pushFacet(facetIndex.tag, "tag", 4);
+    pushFacet(facetIndex.framework, "framework", 3);
+    pushFacet(facetIndex.license, "license", 3);
+    pushFacet(facetIndex.coverage, "domain", 3);
+    pushFacet(facetIndex.property, "property", 2);
+    pushFacet(facetIndex.year, "year", 2);
+
+    return out.slice(0, 12);
+  }, [query, modelItems, facetIndex]);
 
   const handleNodeClick = (node: ModelNode) => {
     setSelectedNode(node);
@@ -1071,13 +1156,22 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     <Search
                       size={12}
                       className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                      aria-hidden="true"
                     />
                     <input
                       type="search"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search name, author, year…"
-                      aria-label="Search models by name, author, year or tag"
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() =>
+                        window.setTimeout(() => setSearchFocused(false), 120)
+                      }
+                      placeholder="Search name, tag, license, year…"
+                      aria-label="Search models by name, author, year, tag, license, framework, or domain"
+                      aria-autocomplete="list"
+                      aria-controls="mliphub-search-suggestions"
+                      aria-expanded={searchFocused && suggestions.length > 0}
+                      autoComplete="off"
                       className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[0.8125em] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700"
                     />
                     {query && (
@@ -1089,6 +1183,42 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       >
                         <X size={12} />
                       </button>
+                    )}
+                    {searchFocused && suggestions.length > 0 && (
+                      <ul
+                        id="mliphub-search-suggestions"
+                        role="listbox"
+                        aria-label="Search suggestions"
+                        className="absolute left-0 right-0 top-full mt-1 z-30 max-h-72 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl dark:shadow-slate-950/60 text-[0.8125em]"
+                      >
+                        {suggestions.map((s, idx) => (
+                          <li key={`${s.kind}-${s.label}-${idx}`} role="option">
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                if (s.kind === "model") {
+                                  const target = modelItems.find(
+                                    (m) => m.id === s.modelId,
+                                  );
+                                  if (target) setSelectedNode(target);
+                                  setQuery(s.value);
+                                } else {
+                                  setQuery(s.value);
+                                }
+                              }}
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-baseline justify-between gap-3"
+                            >
+                              <span className="text-slate-800 dark:text-slate-100 font-medium truncate">
+                                {s.label}
+                              </span>
+                              <span className="text-[0.75em] uppercase tracking-wide text-slate-400 dark:text-slate-500 shrink-0">
+                                {s.sublabel}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </span>
                 </label>
