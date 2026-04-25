@@ -172,24 +172,41 @@ One feature or bugfix per PR when possible. Keep PR descriptions short and speci
 
 `ModelNode` also accepts a set of **optional** fields used by the compare
 view, permalinks, and the editorial-policy coverage report. New entries are
-not required to fill these, but filling them makes the entry much more useful.
+not required to fill *all* of them, but filling them makes the entry much
+more useful.
 
-| Field          | Type                                       | Example                              |
-| -------------- | ------------------------------------------ | ------------------------------------ |
-| `coverage`     | `string[]`                                 | `["oxides","organic molecules"]`     |
-| `useCases`     | `string[]`                                 | `["MD at scale","reaction sampling"]`|
-| `properties`   | `PropertyTag[]`                            | `["energy","forces","stress"]`       |
-| `frameworks`   | `FrameworkTag[]`                           | `["ASE","LAMMPS"]`                   |
-| `license`      | SPDX id                                    | `"MIT"`, `"Apache-2.0"`              |
-| `maintenance`  | `"active"`/`"maintained"`/`"archived"`/`"experimental"` | `"active"` |
-| `lastReviewed` | ISO date (`YYYY-MM-DD`) or `"unknown"`     | `"2026-04-19"`                       |
-| `lastUpdated`  | ISO date                                   | `"2026-03-01"`                       |
-| `trainingData` | `string[]`                                 | `["MPTrj","OC20"]`                   |
-| `tags`         | `string[]`                                 | `["foundation model","transformer"]` |
+| Field             | Type                                       | Example                              |
+| ----------------- | ------------------------------------------ | ------------------------------------ |
+| `coverage`        | `string[]`                                 | `["oxides","organic molecules"]`     |
+| `useCases`        | `string[]`                                 | `["MD at scale","reaction sampling"]`|
+| `properties`      | `PropertyTag[]`                            | `["energy","forces","stress"]`       |
+| `frameworks`      | `FrameworkTag[]`                           | `["ASE","LAMMPS"]`                   |
+| `license`         | SPDX id                                    | `"MIT"`, `"Apache-2.0"`              |
+| `maintenance`     | `"active"`/`"maintained"`/`"archived"`/`"experimental"` | `"active"` |
+| `lastReviewed`    | ISO date (`YYYY-MM-DD`) or `"unknown"`     | `"2026-04-19"`                       |
+| `lastUpdated`     | ISO date                                   | `"2026-03-01"`                       |
+| `trainingData`    | `string[]`                                 | `["MPTrj","OC20"]`                   |
+| `tags`            | `string[]`                                 | `["foundation model","transformer"]` |
+| `supportsCharges` | `boolean \| null`                          | `true` (charge-conditioned) / `false` / `null` (unknown) |
+| `supportsSpins`   | `boolean \| null`                          | `true` (spin-conditioned) / `false` / `null` (unknown)   |
+| `elementsCovered` | `string \| null`                           | `"H, C, N, O, S, F, Cl"`, `"all elements up to Z=94"`, `"—"` |
 
 `npm run check:landscape` enum-validates `maintenance`, `frameworks`,
-`properties`; validates date formats; warns on unknown SPDX licenses; and
-prints a per-field metadata coverage report.
+`properties`; validates date formats; warns on unknown SPDX licenses; warns
+when `supportsCharges` / `supportsSpins` / `elementsCovered` are missing
+on a model; and prints a per-field metadata coverage report.
+
+### Required-for-new-entries fields
+
+The three capability fields above are **required for new entries** so that
+users searching by capability can rely on the result. Pick one of:
+
+- `true` / `false` for booleans when the capability is documented in the
+  model's paper or repo
+- `null` if the data is genuinely unknown
+- For `elementsCovered`, prefer an explicit list (`"H, C, N, O"`) or a
+  shorthand (`"89 elements"`, `"all elements up to Z=94"`); use `"—"` only
+  if no information is available. Never leave the field as `""`.
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ExternalLink,
   Github,
@@ -16,6 +16,8 @@ import {
   Check,
   Flag,
   Link2,
+  Quote,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -89,11 +91,15 @@ const CATEGORY_SWATCH_DEFAULT: Record<Category, string> = {
   Descriptor: "bg-orange-500",
 };
 
+// Color-blind-safe swatch with explicit dark-mode variants. The light-mode
+// hues are deeper for contrast on a near-white card; the dark-mode hues are
+// brighter so they remain distinguishable against the slate-950 canvas while
+// keeping the Okabe-Ito hue identity (vermilion, sky, teal, amber).
 const CATEGORY_SWATCH_CB: Record<Category, string> = {
-  Equivariant: "bg-rose-700",
-  Invariant: "bg-sky-700",
-  Transformer: "bg-teal-700",
-  Descriptor: "bg-amber-700",
+  Equivariant: "bg-rose-700 dark:bg-rose-400",
+  Invariant: "bg-sky-700 dark:bg-sky-400",
+  Transformer: "bg-teal-700 dark:bg-teal-300",
+  Descriptor: "bg-amber-700 dark:bg-amber-400",
 };
 
 type PaletteMode = "default" | "colorblind";
@@ -116,6 +122,209 @@ const isCategoryFilter = (value: string | null): value is FilterType =>
 
 type DeviceType = "mobile" | "tablet" | "desktop";
 
+type LayoutMode = "layered" | "force";
+const LAYOUT_STORAGE_KEY = "mliphub.layout";
+const EDGE_LABELS_STORAGE_KEY = "mliphub.edgeLabels";
+const FORCE_OVERRIDES_STORAGE_KEY = "mliphub.forceOverrides";
+
+const isLayoutMode = (value: string | null): value is LayoutMode =>
+  value === "layered" || value === "force";
+
+// Compact deterministic force-directed layout. Initialised from a category-
+// stratified circular seeding (rather than the layered coordinates, which
+// pre-cluster the cards and bias the simulation toward overlapping
+// solutions) and run for a fixed number of ticks so the result is stable
+// across reloads. We keep this self-contained instead of pulling in
+// d3-force to avoid a new runtime dependency.
+type Vec2 = { x: number; y: number };
+
+// Where on a card's rectangular boundary does the line from its centre
+// toward (dx, dy) exit? Returns the exit point in absolute coordinates.
+// Used to anchor edges to the card border in force layout, instead of a
+// circle of radius CARD_WIDTH/2 (which is too small in y and too large in
+// the corners for the 176x72 rectangle).
+function rectExitPoint(
+  cx: number,
+  cy: number,
+  halfW: number,
+  halfH: number,
+  dx: number,
+  dy: number,
+): Vec2 {
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+  const tx = adx < 1e-6 ? Infinity : halfW / adx;
+  const ty = ady < 1e-6 ? Infinity : halfH / ady;
+  const t = Math.min(tx, ty);
+  return { x: cx + dx * t, y: cy + dy * t };
+}
+
+function computeForcePositions(
+  modelNodes: ModelNode[],
+  edges: Edge[],
+): Record<string, Vec2> {
+  const positions: Record<string, Vec2> = {};
+  const velocities: Record<string, Vec2> = {};
+
+  // Seed positions on a category-stratified ring so the simulation starts
+  // already spread apart. Starting from the curated layered coordinates
+  // pre-clusters the cards and the simulation can't unpack overlaps from
+  // a deeply tangled initial state in a fixed number of ticks.
+  const categoryOrder: Category[] = [
+    "Equivariant",
+    "Transformer",
+    "Invariant",
+    "Descriptor",
+  ];
+  const byCategory = new Map<Category, ModelNode[]>();
+  for (const cat of categoryOrder) byCategory.set(cat, []);
+  for (const n of modelNodes) {
+    const list = byCategory.get(n.category);
+    if (list) list.push(n);
+  }
+  const ringRadius = Math.max(900, modelNodes.length * 22);
+  let i = 0;
+  for (const cat of categoryOrder) {
+    const list = byCategory.get(cat) ?? [];
+    for (const n of list) {
+      const angle = (i / Math.max(1, modelNodes.length)) * Math.PI * 2;
+      // Slight per-category radial offset so the four arcs don't overlap.
+      const r = ringRadius + categoryOrder.indexOf(cat) * 40;
+      positions[n.id] = {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+      };
+      velocities[n.id] = { x: 0, y: 0 };
+      i += 1;
+    }
+  }
+
+  // Tuned for ~40 cards of 176x72. The earlier values produced visibly
+  // overlapping cards; these settle into a clearly readable graph.
+  const idealLink = 360;
+  const repulsion = 110000;
+  const linkStrength = 0.06;
+  const centerStrength = 0.004;
+  // Card half-extent plus padding — used by the rectangle-based collision
+  // pass that prevents cards from physically overlapping.
+  const PAD_X = 28;
+  const PAD_Y = 22;
+  const halfW = CARD_WIDTH / 2 + PAD_X;
+  const halfH = CARD_HEIGHT / 2 + PAD_Y;
+
+  const ids = modelNodes.map((n) => n.id);
+  const TICKS = 600;
+
+  for (let tick = 0; tick < TICKS; tick += 1) {
+    // Cooling factor: forces calm down over time so the layout settles
+    // instead of oscillating. Damping starts ~0.92 and tightens to ~0.6.
+    const progress = tick / TICKS;
+    const damping = 0.92 - progress * 0.32;
+
+    const forces: Record<string, Vec2> = {};
+    for (const id of ids) forces[id] = { x: 0, y: 0 };
+
+    // Repulsive (Coulomb-like) between every pair, with a soft cutoff so
+    // very close pairs don't get an unbounded force.
+    for (let i = 0; i < ids.length; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        const a = positions[ids[i]];
+        const b = positions[ids[j]];
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        let d2 = dx * dx + dy * dy;
+        if (d2 < 1) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          d2 = dx * dx + dy * dy + 0.1;
+        }
+        const d = Math.sqrt(d2);
+        const f = repulsion / Math.max(d2, 400);
+        const fx = (dx / d) * f;
+        const fy = (dy / d) * f;
+        forces[ids[i]].x += fx;
+        forces[ids[i]].y += fy;
+        forces[ids[j]].x -= fx;
+        forces[ids[j]].y -= fy;
+      }
+    }
+
+    // Spring along edges.
+    for (const e of edges) {
+      const a = positions[e.from];
+      const b = positions[e.to];
+      if (!a || !b) continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const f = (d - idealLink) * linkStrength;
+      const fx = (dx / d) * f;
+      const fy = (dy / d) * f;
+      forces[e.from].x += fx;
+      forces[e.from].y += fy;
+      forces[e.to].x -= fx;
+      forces[e.to].y -= fy;
+    }
+
+    // Weak pull toward (0, 0) so the cluster stays roughly centred.
+    for (const id of ids) {
+      forces[id].x += -positions[id].x * centerStrength;
+      forces[id].y += -positions[id].y * centerStrength;
+    }
+
+    // Integrate.
+    for (const id of ids) {
+      velocities[id].x = (velocities[id].x + forces[id].x) * damping;
+      velocities[id].y = (velocities[id].y + forces[id].y) * damping;
+      // Clamp velocity so cards can't shoot off to infinity early on.
+      const speed = Math.hypot(velocities[id].x, velocities[id].y);
+      const maxSpeed = 80;
+      if (speed > maxSpeed) {
+        velocities[id].x = (velocities[id].x / speed) * maxSpeed;
+        velocities[id].y = (velocities[id].y / speed) * maxSpeed;
+      }
+      positions[id].x += velocities[id].x;
+      positions[id].y += velocities[id].y;
+    }
+
+    // Rectangular collision pass — resolve any pair whose padded card
+    // bounding boxes overlap by pushing them apart along the smaller-
+    // overlap axis. This is what guarantees we don't end up with the
+    // crowded, overlapping result the smooth-force solution tends to
+    // produce on its own.
+    for (let i = 0; i < ids.length; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        const a = positions[ids[i]];
+        const b = positions[ids[j]];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const overlapX = halfW * 2 - Math.abs(dx);
+        const overlapY = halfH * 2 - Math.abs(dy);
+        if (overlapX <= 0 || overlapY <= 0) continue;
+        if (overlapX < overlapY) {
+          const push = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+          a.x -= push;
+          b.x += push;
+        } else {
+          const push = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+          a.y -= push;
+          b.y += push;
+        }
+      }
+    }
+  }
+
+  // Convert back from card-centre to top-left coordinates.
+  const out: Record<string, Vec2> = {};
+  for (const id of ids) {
+    out[id] = {
+      x: positions[id].x - CARD_WIDTH / 2,
+      y: positions[id].y - CARD_HEIGHT / 2,
+    };
+  }
+  return out;
+}
+
 export default function MLIPExplorer() {
   const [nodes] = useState<AnyNode[]>(INITIAL_NODES);
   const [edges] = useState<Edge[]>(INITIAL_EDGES);
@@ -131,6 +340,10 @@ export default function MLIPExplorer() {
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [palette, setPalette] = useState<PaletteMode>("default");
+  const [layout, setLayout] = useState<LayoutMode>("layered");
+  const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(true);
+  const [forceOverrides, setForceOverrides] = useState<Record<string, Vec2>>({});
+  const [viewCitationCopied, setViewCitationCopied] = useState(false);
   const CATEGORY_STYLES =
     palette === "colorblind" ? CATEGORY_STYLES_CB : CATEGORY_STYLES_DEFAULT;
   const CATEGORY_SWATCH =
@@ -141,6 +354,14 @@ export default function MLIPExplorer() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragPointerId, setDragPointerId] = useState<number | null>(null);
+
+  // Per-node drag (force-directed layout only)
+  const [nodeDragId, setNodeDragId] = useState<string | null>(null);
+  const nodeDragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Tracks whether the user actually moved the node during the current
+  // pointer interaction; used to suppress the synthetic click that React
+  // fires after a drag so dragging doesn't accidentally open the sidebar.
+  const nodeDragMovedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -186,6 +407,75 @@ export default function MLIPExplorer() {
     }
   };
 
+  // Hydrate layout, edge-label visibility, and any saved drag overrides on
+  // first mount. URL takes precedence over localStorage so a shared link
+  // with ?layout=force always wins, but selections persist across reloads.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const urlLayout = params.get("layout");
+    const stored = window.localStorage.getItem(LAYOUT_STORAGE_KEY);
+    if (isLayoutMode(urlLayout)) {
+      setLayout(urlLayout);
+    } else if (isLayoutMode(stored)) {
+      setLayout(stored);
+    }
+    const labels = window.localStorage.getItem(EDGE_LABELS_STORAGE_KEY);
+    if (labels === "off") setEdgeLabelsVisible(false);
+    if (labels === "on") setEdgeLabelsVisible(true);
+    try {
+      const raw = window.localStorage.getItem(FORCE_OVERRIDES_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, Vec2>;
+        if (parsed && typeof parsed === "object") setForceOverrides(parsed);
+      }
+    } catch {
+      // ignore corrupted persisted state
+    }
+  }, []);
+
+  const updateLayout = (next: LayoutMode) => {
+    setLayout(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LAYOUT_STORAGE_KEY, next);
+    }
+  };
+
+  const updateEdgeLabelsVisible = (next: boolean) => {
+    setEdgeLabelsVisible(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(EDGE_LABELS_STORAGE_KEY, next ? "on" : "off");
+    }
+  };
+
+  // Persist drag overrides whenever they change. Using an effect (rather
+  // than calling localStorage from event handlers) sidesteps the stale-
+  // closure problem with batched React state updates.
+  const overridesHydratedRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!overridesHydratedRef.current) {
+      overridesHydratedRef.current = true;
+      return;
+    }
+    try {
+      if (Object.keys(forceOverrides).length === 0) {
+        window.localStorage.removeItem(FORCE_OVERRIDES_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(
+          FORCE_OVERRIDES_STORAGE_KEY,
+          JSON.stringify(forceOverrides),
+        );
+      }
+    } catch {
+      // localStorage may be disabled / full; the in-memory state still works.
+    }
+  }, [forceOverrides]);
+
+  const resetForceLayout = () => {
+    setForceOverrides({});
+  };
+
   // Hydrate filter / search / selected-model state from URL on first mount so
   // links like /?category=Equivariant&q=mace or /?model=NequIP land in the
   // right view. Tracked with a ref so subsequent state changes can write back
@@ -226,10 +516,12 @@ export default function MLIPExplorer() {
     else params.delete("q");
     if (selectedNode) params.set("model", selectedNode.id);
     else params.delete("model");
+    if (layout !== "layered") params.set("layout", layout);
+    else params.delete("layout");
     const next = params.toString();
     const url = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", url);
-  }, [filter, query, selectedNode]);
+  }, [filter, query, selectedNode, layout]);
 
   // Escape closes the detail panel.
   useEffect(() => {
@@ -259,19 +551,51 @@ export default function MLIPExplorer() {
   const canShrinkFont = fontScaleIndex > 0;
   const canGrowFont = fontScaleIndex >= 0 && fontScaleIndex < FONT_SCALES.length - 1;
 
+  // Stable force-directed positions, computed once from the original layered
+  // coordinates. Recomputing on every render would jitter nodes — instead we
+  // memoise the deterministic simulation output and let user drags and the
+  // "Reset layout" button move things from there.
+  const forcePositions = useMemo(() => {
+    const modelItems = nodes.filter(
+      (n): n is ModelNode => n.type === "node",
+    );
+    return computeForcePositions(modelItems, edges);
+  }, [nodes, edges]);
+
+  // Resolves a model's effective (x, y) for the current layout. In force
+  // mode any user-dragged overrides take precedence over the simulation
+  // output; in layered mode we always use the curated coordinates.
+  const positionOf = useCallback(
+    (node: ModelNode): { x: number; y: number } => {
+      if (layout === "force") {
+        const override = forceOverrides[node.id];
+        if (override) return override;
+        const fp = forcePositions[node.id];
+        if (fp) return fp;
+      }
+      return { x: node.x, y: node.y };
+    },
+    [layout, forceOverrides, forcePositions],
+  );
+
+  const positionedModels = useMemo(() => {
+    return nodes
+      .filter((n): n is ModelNode => n.type === "node")
+      .map((n) => ({ ...n, ...positionOf(n) }));
+  }, [nodes, positionOf]);
+
   const bounds = useMemo(() => {
-    const items = nodes.filter((n) => n.type === "node") as ModelNode[];
-    if (items.length === 0) {
+    if (positionedModels.length === 0) {
       return { minX: 0, minY: 0, maxX: CARD_WIDTH, maxY: CARD_HEIGHT };
     }
 
-    const minX = Math.min(...items.map((n) => n.x));
-    const minY = Math.min(...items.map((n) => n.y));
-    const maxX = Math.max(...items.map((n) => n.x + CARD_WIDTH));
-    const maxY = Math.max(...items.map((n) => n.y + CARD_HEIGHT));
+    const minX = Math.min(...positionedModels.map((n) => n.x));
+    const minY = Math.min(...positionedModels.map((n) => n.y));
+    const maxX = Math.max(...positionedModels.map((n) => n.x + CARD_WIDTH));
+    const maxY = Math.max(...positionedModels.map((n) => n.y + CARD_HEIGHT));
 
     return { minX, minY, maxX, maxY };
-  }, [nodes]);
+  }, [positionedModels]);
 
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
@@ -316,14 +640,15 @@ export default function MLIPExplorer() {
     }
     if (deviceType === "mobile") return;
 
-    const nodeCenterGraphX = selectedNode.x + CARD_WIDTH / 2;
-    const nodeCenterGraphY = selectedNode.y + CARD_HEIGHT / 2;
+    const pos = positionOf(selectedNode);
+    const nodeCenterGraphX = pos.x + CARD_WIDTH / 2;
+    const nodeCenterGraphY = pos.y + CARD_HEIGHT / 2;
     const targetScreenX = availableWidth / 2;
     const targetScreenY = availableHeight / 2;
     const targetUserPanX = targetScreenX - basePan.x - nodeCenterGraphX * effectiveScale;
     const targetUserPanY = targetScreenY - basePan.y - nodeCenterGraphY * effectiveScale;
     setUserPan({ x: targetUserPanX, y: targetUserPanY });
-  }, [selectedNode, deviceType, availableWidth, availableHeight, basePan.x, basePan.y, effectiveScale]);
+  }, [selectedNode, deviceType, availableWidth, availableHeight, basePan.x, basePan.y, effectiveScale, positionOf]);
 
   const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -378,18 +703,15 @@ export default function MLIPExplorer() {
       return haystack.includes(q);
     };
 
-    const visibleNodes = nodes.map((n) => {
-      if (n.type !== "node") return n;
+    const groups = nodes.filter((n): n is GroupNode => n.type === "group");
+    const items = positionedModels.map((n) => {
       const dimmed =
         (filter !== "All" && n.category !== filter) || !matchesQuery(n);
       return { ...n, dimmed };
     });
 
-    const groups = visibleNodes.filter((n) => n.type === "group") as GroupNode[];
-    const items = visibleNodes.filter((n) => n.type === "node") as ModelNode[];
-
     return { groups, items };
-  }, [nodes, filter, query]);
+  }, [nodes, positionedModels, filter, query]);
 
   // Orthogonal edge router. Returns an SVG path string that:
   // - exits the source card from the side nearest the target
@@ -455,8 +777,8 @@ export default function MLIPExplorer() {
     };
 
     edges.forEach((edge, idx) => {
-      const from = nodes.find((n) => n.id === edge.from && n.type === "node") as ModelNode | undefined;
-      const to = nodes.find((n) => n.id === edge.to && n.type === "node") as ModelNode | undefined;
+      const from = positionedModels.find((n) => n.id === edge.from);
+      const to = positionedModels.find((n) => n.id === edge.to);
       if (!from || !to) return;
       const { corridor, source, target, magnitude } = classify(from, to);
       const record = { key: "", idx, magnitude };
@@ -491,7 +813,7 @@ export default function MLIPExplorer() {
     });
 
     return { corridorOffset, sourceStagger, targetStagger };
-  }, [edges, nodes]);
+  }, [edges, positionedModels]);
 
   const buildEdgePath = (
     fromNode: ModelNode,
@@ -583,25 +905,88 @@ export default function MLIPExplorer() {
     };
   };
 
+  // Format the human-readable tooltip for an edge: "<from> → <to> · <label>"
+  // when a label exists, falling back to just the endpoints. The dashed flag
+  // is appended in parentheses so screen readers and hover tooltips both
+  // surface the "weaker / speculative" status.
+  const formatEdgeTooltip = (edge: Edge) => {
+    const fromLabel = positionedModels.find((n) => n.id === edge.from)?.label ?? edge.from;
+    const toLabel = positionedModels.find((n) => n.id === edge.to)?.label ?? edge.to;
+    const head = `${fromLabel} → ${toLabel}`;
+    const body = edge.label ? ` · ${edge.label}` : "";
+    const note = edge.dashed ? " (weaker / speculative link)" : "";
+    return `${head}${body}${note}`;
+  };
+
   const renderEdges = () =>
     edges.map((edge, idx) => {
-      const fromNode = nodes.find((n) => n.id === edge.from) as ModelNode | undefined;
-      const toNode = nodes.find((n) => n.id === edge.to) as ModelNode | undefined;
+      const fromNode = positionedModels.find((n) => n.id === edge.from);
+      const toNode = positionedModels.find((n) => n.id === edge.to);
       if (!fromNode || !toNode) return null;
 
-      const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
-      const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
-      const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
-      const { path, labelX, labelY } = buildEdgePath(
-        fromNode,
-        toNode,
-        corridorOffset,
-        sourceStagger,
-        targetStagger,
-      );
+      let path: string;
+      let labelX: number;
+      let labelY: number;
+
+      if (layout === "force") {
+        // Connect edges to the actual card border (rectangle exit point)
+        // instead of a circle around the centre — the cards are 176x72
+        // so a circular radius leaves visible gaps along the long sides
+        // and overshoots near the corners.
+        const fcx = fromNode.x + CARD_WIDTH / 2;
+        const fcy = fromNode.y + CARD_HEIGHT / 2;
+        const tcx = toNode.x + CARD_WIDTH / 2;
+        const tcy = toNode.y + CARD_HEIGHT / 2;
+        const dx = tcx - fcx;
+        const dy = tcy - fcy;
+        const margin = 6;
+        const start = rectExitPoint(
+          fcx,
+          fcy,
+          CARD_WIDTH / 2 + margin,
+          CARD_HEIGHT / 2 + margin,
+          dx,
+          dy,
+        );
+        const end = rectExitPoint(
+          tcx,
+          tcy,
+          CARD_WIDTH / 2 + margin,
+          CARD_HEIGHT / 2 + margin,
+          -dx,
+          -dy,
+        );
+        path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+        labelX = (start.x + end.x) / 2;
+        labelY = (start.y + end.y) / 2 - 6;
+      } else {
+        const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
+        const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
+        const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
+        const built = buildEdgePath(
+          fromNode,
+          toNode,
+          corridorOffset,
+          sourceStagger,
+          targetStagger,
+        );
+        path = built.path;
+        labelX = built.labelX;
+        labelY = built.labelY;
+      }
+
+      const tooltip = formatEdgeTooltip(edge);
 
       return (
-        <g key={idx} className="transition-opacity duration-500">
+        <g
+          key={idx}
+          className="transition-opacity duration-500"
+          aria-label={tooltip}
+          role="img"
+        >
+          {/* Native SVG <title> doubles as a hover tooltip and an
+              accessibility label without pulling in a tooltip library. */}
+          <title>{tooltip}</title>
           <path
             d={path}
             fill="none"
@@ -613,12 +998,21 @@ export default function MLIPExplorer() {
             className="opacity-90"
             markerEnd="url(#edge-arrow)"
           />
-          {edge.label && (
+          {/* Wider invisible hit-target so the SVG <title> tooltip can
+              actually fire when the cursor passes near a thin edge. */}
+          <path
+            d={path}
+            fill="none"
+            stroke="transparent"
+            strokeWidth={16}
+            style={{ pointerEvents: "stroke" }}
+          />
+          {edge.label && edgeLabelsVisible && (
             <text
               x={labelX}
               y={labelY}
               style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
-              fontSize={11}
+              fontSize={14}
               fontWeight={600}
               textAnchor="middle"
               paintOrder="stroke"
@@ -711,7 +1105,13 @@ export default function MLIPExplorer() {
   }, [query, modelItems, facetIndex]);
 
   const handleNodeClick = (node: ModelNode) => {
-    setSelectedNode(node);
+    // Look up the original (unmodified) entry by id so the stored selection
+    // doesn't carry a layout-specific x/y override; positionOf() always
+    // resolves coordinates lazily from the current layout.
+    const original = nodes.find(
+      (n): n is ModelNode => n.type === "node" && n.id === node.id,
+    );
+    setSelectedNode(original ?? node);
   };
 
   // Spatial arrow-key navigation between visible nodes. Picks the visible
@@ -725,8 +1125,9 @@ export default function MLIPExplorer() {
     const current = visible.find((n) => n.id === fromId);
     if (!current) return;
 
-    const cx = current.x + CARD_WIDTH / 2;
-    const cy = current.y + CARD_HEIGHT / 2;
+    const currentPos = current;
+    const cx = currentPos.x + CARD_WIDTH / 2;
+    const cy = currentPos.y + CARD_HEIGHT / 2;
 
     let best: { node: ModelNode; score: number } | null = null;
     for (const candidate of visible) {
@@ -826,6 +1227,39 @@ export default function MLIPExplorer() {
     return url.toString();
   };
 
+  // Builds a citation snippet that captures the *current view* — selected
+  // model (if any), filter, search query, and layout. Useful for sharing
+  // a specific configuration of the landscape in a paper, slide, or report.
+  const buildViewCitation = () => {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const url =
+      typeof window !== "undefined"
+        ? window.location.href
+        : "https://www.mliphub.com";
+    const parts: string[] = [];
+    if (filter !== "All") parts.push(`category=${filter}`);
+    const trimmed = query.trim();
+    if (trimmed) parts.push(`search="${trimmed}"`);
+    parts.push(`layout=${layout}`);
+    if (selectedNode) parts.push(`selected=${selectedNode.label}`);
+    const note = parts.join("; ");
+    return `MLIP Hub. (${now.getFullYear()}). MLIP landscape, view: ${note}. Retrieved ${dateStr}, from ${url}`;
+  };
+
+  const copyViewCitation = async () => {
+    const text = buildViewCitation();
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setViewCitationCopied(true);
+        window.setTimeout(() => setViewCitationCopied(false), 2000);
+      }
+    } catch {
+      // Best-effort — we don't fall back to a textarea trick here.
+    }
+  };
+
   const copyShareLink = async (node: ModelNode) => {
     const text = buildShareUrl(node);
     try {
@@ -864,8 +1298,25 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
     return `${GITHUB_REPO}/issues/new?${params.toString()}`;
   };
 
-  const svgWidth = Math.max(graphWidth + CANVAS_PADDING * 4, 1400);
-  const svgHeight = Math.max(graphHeight + CANVAS_PADDING * 4, 1100);
+  // The SVG that holds the edges sits at (0, 0) inside the transformed
+  // canvas. Force-directed layout produces nodes at negative coordinates,
+  // and the parent <div> happily renders them because HTML elements aren't
+  // clipped — but the SVG would be, since by default svg children are
+  // clipped to the svg's width/height box. We extend the box to cover the
+  // negative range and set its origin to the most-negative bound so paths
+  // with negative absolute coordinates still render.
+  const svgOriginX = Math.min(0, bounds.minX - CANVAS_PADDING);
+  const svgOriginY = Math.min(0, bounds.minY - CANVAS_PADDING);
+  const svgWidth = Math.max(
+    graphWidth + CANVAS_PADDING * 4,
+    bounds.maxX - svgOriginX + CANVAS_PADDING,
+    1400,
+  );
+  const svgHeight = Math.max(
+    graphHeight + CANVAS_PADDING * 4,
+    bounds.maxY - svgOriginY + CANVAS_PADDING,
+    1100,
+  );
 
   const renderDetailContent = (compact = false) => {
     if (!selectedNode) return null;
@@ -1085,8 +1536,16 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
             {/* Edges */}
             <svg
-              className="absolute top-0 left-0 pointer-events-none"
-              style={{ zIndex: 5, width: svgWidth, height: svgHeight }}
+              className="absolute pointer-events-none"
+              style={{
+                zIndex: 5,
+                left: svgOriginX,
+                top: svgOriginY,
+                width: svgWidth,
+                height: svgHeight,
+                overflow: "visible",
+              }}
+              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
             >
               <defs>
                 <marker
@@ -1111,6 +1570,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 CATEGORY_STYLES[node.category] || "bg-white border-slate-200";
               const Icon = CATEGORY_ICONS[node.category] || Box;
 
+              const isDraggable = layout === "force";
               return (
                 <button
                   key={node.id}
@@ -1121,7 +1581,48 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (nodeDragMovedRef.current) {
+                      // Suppress the click that fires after a drag.
+                      nodeDragMovedRef.current = false;
+                      return;
+                    }
                     handleNodeClick(node);
+                  }}
+                  onPointerDown={(e) => {
+                    if (!isDraggable) return;
+                    e.stopPropagation();
+                    nodeDragMovedRef.current = false;
+                    setNodeDragId(node.id);
+                    nodeDragOffsetRef.current = {
+                      x: e.clientX / effectiveScale - node.x,
+                      y: e.clientY / effectiveScale - node.y,
+                    };
+                    try {
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch {
+                      // ignore — capture failures fall back to onPointerMove
+                    }
+                  }}
+                  onPointerMove={(e) => {
+                    if (!isDraggable) return;
+                    if (nodeDragId !== node.id) return;
+                    const newX = e.clientX / effectiveScale - nodeDragOffsetRef.current.x;
+                    const newY = e.clientY / effectiveScale - nodeDragOffsetRef.current.y;
+                    nodeDragMovedRef.current = true;
+                    setForceOverrides((prev) => ({
+                      ...prev,
+                      [node.id]: { x: newX, y: newY },
+                    }));
+                  }}
+                  onPointerUp={(e) => {
+                    if (!isDraggable) return;
+                    if (nodeDragId !== node.id) return;
+                    try {
+                      e.currentTarget.releasePointerCapture(e.pointerId);
+                    } catch {
+                      // ignore
+                    }
+                    setNodeDragId(null);
                   }}
                   onKeyDown={(e) => handleNodeKeyDown(e, node)}
                   tabIndex={node.dimmed ? -1 : 0}
@@ -1133,11 +1634,12 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   }
                     ${node.dimmed ? "opacity-20 grayscale" : "opacity-100"}
                     ${node.isNew ? "animate-bounce" : ""}
+                    ${isDraggable ? "cursor-grab active:cursor-grabbing" : ""}
                   `}
                   style={{ left: node.x, top: node.y }}
                   aria-pressed={isSelected}
                   aria-describedby="mliphub-node-help"
-                  aria-label={`${node.label}, ${node.category} model from ${node.year} by ${node.author}. Press Enter to view details, arrow keys to move between models.`}
+                  aria-label={`${node.label}, ${node.category} model from ${node.year} by ${node.author}. Press Enter to view details, arrow keys to move between models.${isDraggable ? " In force-directed layout you can also drag this card." : ""}`}
                   itemScope
                   itemType="https://schema.org/SoftwareSourceCode"
                   data-model-id={node.id}
@@ -1326,6 +1828,72 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <div
                     className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
+                    id="mliphub-layout-label"
+                  >
+                    Layout
+                  </div>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="mliphub-layout-label"
+                    className="grid grid-cols-2 gap-1"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "layered"}
+                      onClick={() => updateLayout("layered")}
+                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "layered"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Layered (default)
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "force"}
+                      onClick={() => updateLayout("force")}
+                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "force"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Force-directed
+                    </button>
+                  </div>
+                  {layout === "force" && (
+                    <button
+                      type="button"
+                      onClick={resetForceLayout}
+                      aria-label="Reset force-directed layout to its computed positions"
+                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    >
+                      <RotateCcw size={12} aria-hidden="true" /> Reset layout
+                    </button>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <label
+                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={edgeLabelsVisible}
+                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
+                      aria-label="Show edge labels on the landscape graph"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                    />
+                    Show edge labels
+                  </label>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div
+                    className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
                     id="mliphub-palette-label"
                   >
                     Color palette
@@ -1362,6 +1930,25 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       Color-blind
                     </button>
                   </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={copyViewCitation}
+                    aria-label="Copy a citation for the current Explore view (filters, layout, and selection) to the clipboard"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  >
+                    {viewCitationCopied ? (
+                      <>
+                        <Check size={12} aria-hidden="true" /> Citation copied
+                      </>
+                    ) : (
+                      <>
+                        <Quote size={12} aria-hidden="true" /> Cite current selection
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2">

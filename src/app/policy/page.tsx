@@ -85,6 +85,41 @@ export default function PolicyPage() {
       </section>
 
       <section className="space-y-3 mb-8">
+        <h2 className="text-xl font-semibold">
+          Required capability fields for new entries
+        </h2>
+        <p>
+          Every new model card must declare three capability fields so that
+          users searching the table or compare views by capability get
+          reliable results:
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>
+            <code>supportsCharges</code> — <strong>boolean or <code>null</code></strong>.
+            Whether the model can be conditioned on total or atomic charge.
+          </li>
+          <li>
+            <code>supportsSpins</code> — <strong>boolean or <code>null</code></strong>.
+            Whether the model can be conditioned on spin multiplicity or
+            magnetic moments.
+          </li>
+          <li>
+            <code>elementsCovered</code> — <strong>string or <code>null</code></strong>.
+            An explicit list (<code>&ldquo;H, C, N, O&rdquo;</code>), a
+            shorthand (<code>&ldquo;all elements up to Z=94&rdquo;</code>),
+            or <code>&ldquo;—&rdquo;</code> when no information is available.
+          </li>
+        </ul>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Use <code>null</code> (or <code>&ldquo;—&rdquo;</code> for
+          <code>elementsCovered</code>) only when the information is not
+          documented in the model&rsquo;s paper or repository. Existing
+          model cards without these fields are progressively being
+          back-filled.
+        </p>
+      </section>
+
+      <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">Corrections &amp; additions</h2>
         <p>
           To report a broken link, stale description, or request a new model,

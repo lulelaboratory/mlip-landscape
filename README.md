@@ -20,8 +20,16 @@ The app visualizes descriptor-based, invariant, equivariant, and transformer-sty
 
 - **Zones** for different model families (classics/descriptors, equivariants, foundation models)
 - **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, etc.)
-- **Edges** to show conceptual or architectural relationships
+- **Edges** to show conceptual or architectural relationships, with hover tooltips and an on/off toggle for the labels
+- A **layout switcher** with a curated *Layered* view and a draggable
+  *Force-directed* view (a built-in d3-style force simulation, no extra
+  dependency); the chosen layout is preserved across navigation and reloads
+- A **"Cite current selection"** button that copies a citation for the
+  current view (filters, layout, selected model) to the clipboard
 - A **detail sidebar** linking to code, papers, and web search
+- Per-model metadata for charge / spin support and elemental coverage,
+  surfaced in the table and compare views, with a CSV download for the
+  side-by-side comparison
   
 ## Tech stack
 
@@ -158,6 +166,27 @@ Before opening a PR:
     npm run lint
     npm run check:landscape
     npm run build
+
+---
+
+## Capability metadata fields
+
+Each model card carries three capability fields that drive the table-view
+filters and compare view:
+
+- **`supportsCharges`** (`boolean | null`) — whether the model can be
+  conditioned on a total or atomic charge.
+- **`supportsSpins`** (`boolean | null`) — whether the model can be
+  conditioned on spin multiplicity / magnetic moments.
+- **`elementsCovered`** (`string | null`) — free-form description of the
+  elemental coverage. Either an explicit element list (`"H, C, N, O"`),
+  a shorthand (`"all elements up to Z=94"`, `"89 elements"`), or `"—"` to
+  mark explicitly unknown.
+
+These fields are **required for new entries**; existing models where the
+data is unknown carry `null` (or `"—"` for `elementsCovered`). See
+[CONTRIBUTING.md](./CONTRIBUTING.md) for the full schema and the editorial
+policy that governs capability fields.
 
 ---
 

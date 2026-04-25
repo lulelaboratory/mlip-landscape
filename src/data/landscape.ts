@@ -35,6 +35,18 @@ export interface ModelMeta {
   lastUpdated?: string;
   trainingData?: string[];
   tags?: string[];
+  // Whether the model can be conditioned on a total/atomic charge. `null`
+  // (or an absent value) means the curators have not yet verified this.
+  supportsCharges?: boolean | null;
+  // Whether the model can be conditioned on spin multiplicity / magnetic
+  // moments. `null` (or absent) means unknown.
+  supportsSpins?: boolean | null;
+  // Free-form description of the elemental coverage. Examples:
+  //   "H, C, N, O"           — explicit element list
+  //   "all elements up to Z=94" — bulk-coverage shorthand
+  //   "—"                    — explicitly recorded as unknown / not applicable
+  // For new entries one of: an explicit list, a coverage shorthand, or "—".
+  elementsCovered?: string | null;
 }
 
 export interface BaseNode {
@@ -101,6 +113,9 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
   "lastUpdated",
   "trainingData",
   "tags",
+  "supportsCharges",
+  "supportsSpins",
+  "elementsCovered",
 ] as const;
 
 export type AnyNode = GroupNode | ModelNode;
@@ -160,6 +175,9 @@ export const INITIAL_NODES: AnyNode[] = [
     lastReviewed: "2026-04-19",
     trainingData: ["custom DFT"],
     tags: ["equivariant", "message-passing", "E(3)"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (general molecules and materials)",
   },
   {
     id: "allegro",
@@ -211,6 +229,9 @@ export const INITIAL_NODES: AnyNode[] = [
     lastReviewed: "2026-04-19",
     trainingData: ["MPTrj", "Alexandria"],
     tags: ["equivariant", "higher-order", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by MPTrj / Alexandria (~89 elements)",
   },
   {
     id: "grace",
@@ -246,6 +267,9 @@ export const INITIAL_NODES: AnyNode[] = [
     lastReviewed: "2026-04-19",
     trainingData: ["MPTrj", "Alexandria"],
     tags: ["transformer", "throughput", "torch.compile"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by MPTrj / Alexandria (~89 elements)",
   },
   {
     id: "orbmol",
@@ -260,6 +284,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Orb-v3 variant for molecules, electrolytes, metal complexes, and biomolecules, trained on the ~100M-structure OMol25 dataset with explicit total-charge and spin-multiplicity conditioning.",
     githubUrl: "https://huggingface.co/Orbital-Materials/OrbMol",
     paperUrl: "https://www.orbitalindustries.com/posts/orbmol-extending-orb-to-molecular-systems",
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "elements present in OMol25 (organic + electrolyte + metal-complex chemistry)",
   },
   {
     id: "tfn",
@@ -360,6 +387,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/lab-cosmo/pet-mad",
     paperUrl: "https://arxiv.org/abs/2503.14118",
     isNew: true,
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "85 elements",
   },
   {
     id: "mace_polar1",
@@ -375,6 +405,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/ACEsuit/mace-foundations",
     paperUrl: "https://arxiv.org/abs/2602.19411",
     isNew: true,
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "elements present in OMol25 (molecular chemistry / non-covalent interactions)",
   },
 
   // ---------------------------------------------------------------------------
@@ -491,6 +524,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/brucefan1983/GPUMD",
     paperUrl: "https://arxiv.org/abs/2504.21286",
     isNew: true,
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "89 elements",
   },
   {
     id: "liten",
@@ -525,6 +561,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Accurate NeurAl networK engINe potential for organic molecules (C,H,N,O,S,F,Cl); widely used in drug discovery for fast geometry and energy scans.",
     githubUrl: "https://github.com/aiqm/torchani",
     paperUrl: "https://arxiv.org/abs/1909.08565",
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "H, C, N, O, S, F, Cl",
   },
   {
     id: "aimnet2",
@@ -540,6 +579,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/isayevlab/aimnetcentral",
     paperUrl: "https://doi.org/10.1039/D4SC08572H",
     isNew: true,
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "H, B, C, N, O, F, Si, P, S, Cl, As, Se, Br, I",
   },
   {
     id: "schnet",
@@ -663,6 +705,9 @@ export const INITIAL_NODES: AnyNode[] = [
     lastReviewed: "2026-04-19",
     trainingData: ["MPTrj"],
     tags: ["invariant", "charge-aware", "foundation model"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "all elements covered by MPTrj (~89 elements)",
   },
 
   // ---------------------------------------------------------------------------
@@ -712,6 +757,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Eighth release of the Preferred Potential: the first universal MLIP trained on a large r2SCAN meta-GGA dataset (70 elements) atop a 96-element PBE backbone, halving melting-point error vs. PBE-trained models. Distributed commercially via the Matlantis SaaS platform.",
     paperUrl: "https://arxiv.org/abs/2603.11063",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "all elements up to Z=96 (PBE backbone) / 70 elements (r2SCAN)",
   },
   {
     id: "orion",
@@ -727,6 +775,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/brucefan1983/GPUMD",
     paperUrl: "https://arxiv.org/abs/2604.05769",
     isNew: true,
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "C, H, O, N, S, P",
   },
 ];
 
