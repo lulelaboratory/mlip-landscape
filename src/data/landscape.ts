@@ -192,6 +192,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Strictly local equivariant architecture designed for massive parallel MD (100M+ atoms) while retaining NequIP-level accuracy.",
     githubUrl: "https://github.com/mir-group/allegro",
     paperUrl: "https://www.nature.com/articles/s41467-023-36329-y",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "eqv2",
@@ -206,6 +209,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Improved equivariant transformer with higher-degree tensor representations; achieves state-of-the-art OC20/OC22 performance with strong data-efficiency.",
     githubUrl: "https://github.com/atomicarchitects/equiformer_v2",
     paperUrl: "https://arxiv.org/abs/2306.12059",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "mace",
@@ -245,6 +251,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Graph Atomic Cluster Expansion: a foundation-scale implementation of ACE with explicit multi-body basis functions for wide-coverage materials modelling.",
     githubUrl: "https://github.com/ICAMS/grace-tensorpotential",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "orb",
@@ -301,6 +310,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "First E(3)-equivariant convolutional architecture for point clouds, introducing spherical-harmonic tensor products that underlie nearly all modern equivariant MLIPs (NequIP, MACE, Equiformer).",
     githubUrl: "https://github.com/tensorfieldnetworks/tensorfieldnetworks",
     paperUrl: "https://arxiv.org/abs/1802.08219",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "se3t",
@@ -315,6 +327,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Self-attention generalized to SE(3)-equivariant inputs via tensor field attention; an early blueprint for equivariant transformer architectures like Equiformer.",
     githubUrl: "https://github.com/FabianFuchsML/se3-transformer-public",
     paperUrl: "https://arxiv.org/abs/2006.10503",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "jmp",
@@ -329,6 +344,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Joint Multi-task Pretraining: trains one backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x, demonstrating that multi-dataset pretraining yields strong transferable potentials — a precursor to UMA-style universal models.",
     githubUrl: "https://github.com/facebookresearch/JMP",
     paperUrl: "https://arxiv.org/abs/2310.16802",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "esen",
@@ -343,6 +361,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Equivariant Smooth Energy Network: conservative-force equivariant GNN with a smooth potential energy surface designed for stable long-horizon MD. Serves as the backbone underneath Meta's UMA foundation model.",
     githubUrl: "https://github.com/facebookresearch/fairchem",
     paperUrl: "https://arxiv.org/abs/2502.12147",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "uma",
@@ -357,6 +378,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Universal Model for Atoms: a Mixture of Linear Experts (MoLE) foundation model built on the eSEN backbone, trained on ~500M structures spanning OC20, ODAC23, OMat24, OMC25, and OMol25. NeurIPS 2025 spotlight.",
     githubUrl: "https://huggingface.co/facebook/UMA",
     paperUrl: "https://arxiv.org/abs/2506.23971",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "nequix",
@@ -372,6 +396,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/atomicarchitects/nequix",
     paperUrl: "https://arxiv.org/abs/2508.16067",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "petmad",
@@ -427,6 +454,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "The Behler–Parrinello high-dimensional neural network potential — the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
     githubUrl: "https://github.com/CompPhysVienna/n2p2",
     paperUrl: "https://doi.org/10.1103/PhysRevLett.98.146401",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "ace",
@@ -441,6 +471,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Atomic Cluster Expansion: a complete, systematically improvable many-body basis for the local atomic environment; the mathematical backbone of PACE/GRACE and a strong influence on MACE.",
     githubUrl: "https://github.com/ICAMS/lammps-user-pace",
     paperUrl: "https://arxiv.org/abs/1810.06640",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "gap",
@@ -454,6 +487,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Gaussian Approximation Potentials and SNAP: kernel and descriptor-based MLIPs with rigorous many-body expansions, accurate but relatively expensive.",
     githubUrl: "https://github.com/libAtoms/QUIP",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "deepmd",
@@ -468,6 +504,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Deep Potential Molecular Dynamics: local frame descriptors + deep networks giving ab-initio-level accuracy with linear scaling, widely used for large MD.",
     githubUrl: "https://github.com/deepmodeling/deepmd-kit",
     paperUrl: "https://doi.org/10.1016/j.cpc.2018.02.017",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "dpa2",
@@ -481,6 +520,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Second-generation Deep Potential architecture with attention and multi-task heads, targeting a universal deep potential for diverse chemistries.",
     githubUrl: "https://github.com/deepmodeling/deepmd-kit",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "dpa3",
@@ -496,6 +538,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/deepmodeling/deepmd-kit",
     paperUrl: "https://arxiv.org/abs/2506.01686",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "mattersim",
@@ -509,6 +554,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Large-scale foundation model trained on millions of ab-initio trajectories, designed as a reusable simulator for materials discovery workflows.",
     githubUrl: "https://github.com/microsoft/mattersim",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "nep89",
@@ -542,6 +590,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/lingcon01/LiTEN",
     paperUrl: "https://arxiv.org/abs/2507.00884",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
 
   // ---------------------------------------------------------------------------
@@ -596,6 +647,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Continuous-filter convolutional network that introduced smooth, translation-invariant filters for molecules and crystals; the baseline for many later GNN MLIPs.",
     githubUrl: "https://github.com/atomistic-machine-learning/schnetpack",
     paperUrl: "https://arxiv.org/abs/1706.08566",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "dimenet",
@@ -610,6 +664,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Directional message passing network with spherical basis functions that explicitly encode bond angles, improving data efficiency over SchNet-style models.",
     githubUrl: "https://github.com/gasteigerjo/dimenet",
     paperUrl: "https://arxiv.org/abs/2011.14115",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "gemnet",
@@ -623,6 +680,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "High-capacity spherical message-passing architecture used in the OC20/OC22 benchmarks; very strong for catalyst adsorption and surface chemistry.",
     githubUrl: "https://github.com/OpenCatalystProject/ocp",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
 
   // Sub-lane for derived or speed-optimized architectures
@@ -640,6 +700,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Polarizable Atom Interaction Neural Network: uses coupled scalar/vector features to capture forces and dipoles with E(3) equivariance at lower cost than full tensors.",
     githubUrl: "https://github.com/atomistic-machine-learning/schnetpack",
     paperUrl: "https://arxiv.org/abs/2102.03150",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "sevennet",
@@ -653,6 +716,9 @@ export const INITIAL_NODES: AnyNode[] = [
     desc:
       "Speed-optimized invariant network inspired by NequIP-style features, designed for very large simulations where throughput is more critical than strict equivariance.",
     githubUrl: "https://github.com/MDIL-SNU/SevenNet",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
 
   {
@@ -668,6 +734,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Atomistic Line Graph Neural Network: augments the atomic graph with a line graph so bond angles and higher-order interactions are encoded explicitly.",
     githubUrl: "https://github.com/usnistgov/alignn",
     paperUrl: "https://arxiv.org/abs/2102.05013",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "m3gnet",
@@ -682,6 +751,9 @@ export const INITIAL_NODES: AnyNode[] = [
       "Materials Graph Network with 3-body interactions; trained on Materials Project relaxations to give a universal potential over most of the periodic table.",
     githubUrl: "https://github.com/materialsvirtuallab/m3gnet",
     paperUrl: "https://arxiv.org/abs/2202.02450",
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "chgnet",
@@ -728,6 +800,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/MDIL-SNU/SevenNet",
     paperUrl: "https://arxiv.org/abs/2604.10887",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "sevennet_omni",
@@ -743,6 +818,9 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/MDIL-SNU/SevenNet",
     paperUrl: "https://www.nature.com/articles/s41467-026-70195-8",
     isNew: true,
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
   },
   {
     id: "pfp_v8",
