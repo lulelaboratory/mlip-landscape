@@ -91,6 +91,7 @@ export default function MLIPExplorer() {
   const [citationCopied, setCitationCopied] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const nodeRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragPointerId, setDragPointerId] = useState<number | null>(null);
@@ -523,6 +524,73 @@ export default function MLIPExplorer() {
     setSelectedNode(node);
   };
 
+  // Spatial arrow-key navigation between visible nodes. Picks the visible
+  // (non-dimmed) node whose center is closest to the current node along the
+  // requested cardinal direction, breaking ties by perpendicular distance.
+  const focusAdjacentNode = (
+    fromId: string,
+    direction: "up" | "down" | "left" | "right",
+  ) => {
+    const visible = processedNodes.items.filter((n) => !n.dimmed);
+    const current = visible.find((n) => n.id === fromId);
+    if (!current) return;
+
+    const cx = current.x + CARD_WIDTH / 2;
+    const cy = current.y + CARD_HEIGHT / 2;
+
+    let best: { node: ModelNode; score: number } | null = null;
+    for (const candidate of visible) {
+      if (candidate.id === current.id) continue;
+      const ox = candidate.x + CARD_WIDTH / 2;
+      const oy = candidate.y + CARD_HEIGHT / 2;
+      const dx = ox - cx;
+      const dy = oy - cy;
+
+      const inDirection =
+        (direction === "right" && dx > 0 && Math.abs(dx) >= Math.abs(dy)) ||
+        (direction === "left" && dx < 0 && Math.abs(dx) >= Math.abs(dy)) ||
+        (direction === "down" && dy > 0 && Math.abs(dy) >= Math.abs(dx)) ||
+        (direction === "up" && dy < 0 && Math.abs(dy) >= Math.abs(dx));
+      if (!inDirection) continue;
+
+      const primary = direction === "left" || direction === "right" ? Math.abs(dx) : Math.abs(dy);
+      const perpendicular = direction === "left" || direction === "right" ? Math.abs(dy) : Math.abs(dx);
+      const score = primary + perpendicular * 1.5;
+      if (!best || score < best.score) best = { node: candidate, score };
+    }
+
+    if (best) {
+      const target = nodeRefs.current.get(best.node.id);
+      target?.focus();
+    }
+  };
+
+  const handleNodeKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    node: ModelNode,
+  ) => {
+    switch (e.key) {
+      case "ArrowUp":
+        e.preventDefault();
+        focusAdjacentNode(node.id, "up");
+        return;
+      case "ArrowDown":
+        e.preventDefault();
+        focusAdjacentNode(node.id, "down");
+        return;
+      case "ArrowLeft":
+        e.preventDefault();
+        focusAdjacentNode(node.id, "left");
+        return;
+      case "ArrowRight":
+        e.preventDefault();
+        focusAdjacentNode(node.id, "right");
+        return;
+      default:
+        return;
+    }
+  };
+
   const searchUrl = selectedNode
     ? `https://www.google.com/search?q=${encodeURIComponent(
         `${selectedNode.label} machine learning interatomic potential`,
@@ -713,6 +781,9 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
       style={fontScaleStyle}
     >
       <div className="flex-1 relative flex overflow-hidden">
+        <p id="mliphub-node-help" className="sr-only">
+          Use Tab to enter the model graph, arrow keys to move between models, Enter or Space to open details, and Escape to close them.
+        </p>
         {/* MAIN CANVAS */}
         <div
           className="flex-1 relative bg-slate-100 dark:bg-slate-900 cursor-grab active:cursor-grabbing touch-none"
@@ -721,6 +792,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
+          role="application"
+          aria-label="MLIP landscape graph. Models are arranged by category and year."
         >
           {/* Background dots */}
           <div
@@ -791,11 +864,17 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 <button
                   key={node.id}
                   type="button"
+                  ref={(el) => {
+                    if (el) nodeRefs.current.set(node.id, el);
+                    else nodeRefs.current.delete(node.id);
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNodeClick(node);
                   }}
-                  className={`node-card absolute w-[176px] p-3 rounded-xl border-2 text-left transition-all duration-200
+                  onKeyDown={(e) => handleNodeKeyDown(e, node)}
+                  tabIndex={node.dimmed ? -1 : 0}
+                  className={`node-card absolute w-[176px] p-3 rounded-xl border-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:focus-visible:ring-blue-500
                     ${styleClass} ${
                     isSelected
                       ? "ring-4 ring-blue-200 dark:ring-blue-700 scale-105 z-20"
@@ -806,7 +885,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   `}
                   style={{ left: node.x, top: node.y }}
                   aria-pressed={isSelected}
-                  aria-label={`${node.label} (${node.category}, ${node.year})`}
+                  aria-describedby="mliphub-node-help"
+                  aria-label={`${node.label}, ${node.category} model from ${node.year} by ${node.author}. Press Enter to view details, arrow keys to move between models.`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={16} className="opacity-70" />
