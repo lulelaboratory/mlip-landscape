@@ -15,6 +15,7 @@ import {
   Copy,
   Check,
   Flag,
+  Link2,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -74,6 +75,17 @@ const GITHUB_REPO = "https://github.com/lulelaboratory/mlip-landscape";
 
 type FilterType = "All" | Category;
 
+const CATEGORY_FILTERS: readonly FilterType[] = [
+  "All",
+  "Equivariant",
+  "Invariant",
+  "Transformer",
+  "Descriptor",
+] as const;
+
+const isCategoryFilter = (value: string | null): value is FilterType =>
+  value !== null && (CATEGORY_FILTERS as readonly string[]).includes(value);
+
 type DeviceType = "mobile" | "tablet" | "desktop";
 
 export default function MLIPExplorer() {
@@ -89,6 +101,7 @@ export default function MLIPExplorer() {
   const [filterOpen, setFilterOpen] = useState(true);
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
   const [citationCopied, setCitationCopied] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -127,6 +140,51 @@ export default function MLIPExplorer() {
     }
   }, []);
 
+  // Hydrate filter / search / selected-model state from URL on first mount so
+  // links like /?category=Equivariant&q=mace or /?model=NequIP land in the
+  // right view. Tracked with a ref so subsequent state changes can write back
+  // to the URL without re-reading and clobbering user input.
+  const urlInitialized = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("category");
+    if (isCategoryFilter(cat)) setFilter(cat);
+    const q = params.get("q");
+    if (q) setQuery(q);
+    const modelParam = params.get("model");
+    if (modelParam) {
+      const target = modelParam.toLowerCase();
+      const match = INITIAL_NODES.find(
+        (n) =>
+          n.type === "node" &&
+          (n.id.toLowerCase() === target ||
+            n.label.toLowerCase() === target),
+      );
+      if (match && match.type === "node") setSelectedNode(match);
+    }
+    urlInitialized.current = true;
+  }, []);
+
+  // Reflect filter / query / selection back into the URL query string so the
+  // current view is shareable. Uses replaceState to avoid polluting browser
+  // history with every keystroke.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!urlInitialized.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (filter && filter !== "All") params.set("category", filter);
+    else params.delete("category");
+    const trimmed = query.trim();
+    if (trimmed) params.set("q", trimmed);
+    else params.delete("q");
+    if (selectedNode) params.set("model", selectedNode.id);
+    else params.delete("model");
+    const next = params.toString();
+    const url = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", url);
+  }, [filter, query, selectedNode]);
+
   // Escape closes the detail panel.
   useEffect(() => {
     if (!selectedNode) return;
@@ -140,6 +198,7 @@ export default function MLIPExplorer() {
   // Reset the "copied" indicator whenever the selected model changes.
   useEffect(() => {
     setCitationCopied(false);
+    setShareLinkCopied(false);
   }, [selectedNode]);
 
   const updateFontScale = (next: number) => {
@@ -518,7 +577,7 @@ export default function MLIPExplorer() {
       );
     });
 
-  const filters: FilterType[] = ["All", "Equivariant", "Invariant", "Transformer", "Descriptor"];
+  const filters: readonly FilterType[] = CATEGORY_FILTERS;
 
   const handleNodeClick = (node: ModelNode) => {
     setSelectedNode(node);
@@ -626,6 +685,26 @@ export default function MLIPExplorer() {
       }
     } catch {
       // Silently ignore — the user can still copy the BibTeX from the /cite page.
+    }
+  };
+
+  const buildShareUrl = (node: ModelNode) => {
+    if (typeof window === "undefined") return `https://www.mliphub.com/?model=${node.id}`;
+    const url = new URL(window.location.href);
+    url.searchParams.set("model", node.id);
+    return url.toString();
+  };
+
+  const copyShareLink = async (node: ModelNode) => {
+    const text = buildShareUrl(node);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setShareLinkCopied(true);
+        window.setTimeout(() => setShareLinkCopied(false), 2000);
+      }
+    } catch {
+      // Best-effort. Browsers without clipboard access can copy from the URL bar.
     }
   };
 
@@ -743,12 +822,12 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             Search on the web
           </a>
 
-          <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+          <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => copyCitation(selectedNode)}
               aria-label={`Copy BibTeX citation for ${selectedNode.label}`}
-              className="flex items-center justify-center gap-1.5 flex-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+              className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
             >
               {citationCopied ? (
                 <>
@@ -760,12 +839,28 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 </>
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => copyShareLink(selectedNode)}
+              aria-label={`Copy shareable link to ${selectedNode.label}`}
+              className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+            >
+              {shareLinkCopied ? (
+                <>
+                  <Check size={12} /> Link copied
+                </>
+              ) : (
+                <>
+                  <Link2 size={12} /> Share link
+                </>
+              )}
+            </button>
             <a
               href={reportIssueUrl(selectedNode)}
               target="_blank"
               rel="noreferrer"
               aria-label={`Report an issue with ${selectedNode.label}`}
-              className="flex items-center justify-center gap-1.5 flex-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
+              className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[0.75em] font-semibold transition"
             >
               <Flag size={12} /> Report issue
             </a>
