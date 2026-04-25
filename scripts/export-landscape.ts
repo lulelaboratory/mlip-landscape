@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -17,7 +17,20 @@ const outDir = join(here, "..", "public", "data");
 mkdirSync(outDir, { recursive: true });
 
 const version = (pkg as { version: string }).version;
-const generatedAt = new Date().toISOString();
+
+// Use the release date from CITATION.cff so the export is byte-for-byte
+// reproducible across machines and CI runs. CI gates on `git diff` of
+// public/data — a wall-clock timestamp would make every run dirty even
+// when the underlying data is unchanged.
+const citationPath = join(here, "..", "CITATION.cff");
+const citationText = readFileSync(citationPath, "utf8");
+const dateMatch = citationText.match(/^date-released:\s*"?([0-9]{4}-[0-9]{2}-[0-9]{2})"?\s*$/m);
+if (!dateMatch) {
+  throw new Error(
+    "export-landscape: could not find a 'date-released: YYYY-MM-DD' line in CITATION.cff",
+  );
+}
+const generatedAt = `${dateMatch[1]}T00:00:00Z`;
 
 const models: ModelNode[] = (INITIAL_NODES as AnyNode[]).filter(
   (n): n is ModelNode => n.type === "node",

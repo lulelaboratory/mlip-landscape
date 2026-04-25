@@ -1,0 +1,54 @@
+name: Metadata correction
+description: Fix an incorrect or out-of-date metadata field on a model card
+title: "[Metadata] <model name>: <field>"
+labels: ["metadata", "data"]
+body:
+  - type: input
+    id: model_name
+    attributes:
+      label: Model name
+      description: Which model card needs correcting?
+      placeholder: e.g. CHGNet
+    validations:
+      required: true
+  - type: input
+    id: field
+    attributes:
+      label: Field to correct
+      description: The exact field name (e.g. `license`, `maintenance`, `supportsCharges`, `elementsCovered`).
+      placeholder: e.g. license
+    validations:
+      required: true
+  - type: input
+    id: current_value
+    attributes:
+      label: Current value
+      description: The value as it appears on the site / in `landscape.ts` today.
+    validations:
+      required: true
+  - type: input
+    id: proposed_value
+    attributes:
+      label: Proposed value
+      description: |
+        What should it be? Use `null` for unknown booleans and `"—"` for
+        unknown `elementsCovered` rather than guessing.
+    validations:
+      required: true
+  - type: input
+    id: source_url
+    attributes:
+      label: Source / evidence URL
+      description: |
+        A primary source (paper, repo README, official release notes) that
+        supports the proposed value.
+      placeholder: https://...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Context the curators should know — e.g. licence change history, version-specific differences.
+    validations:
+      required: false
