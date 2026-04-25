@@ -1855,24 +1855,37 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       role="radio"
                       aria-checked={layout === "force"}
                       onClick={() => updateLayout("force")}
-                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                      title="Experimental: deterministic force-directed simulation. The curated layered view remains the default."
+                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
                         layout === "force"
                           ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
                           : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
                       }`}
                     >
                       Force-directed
+                      <span
+                        aria-label="experimental"
+                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                      >
+                        Exp
+                      </span>
                     </button>
                   </div>
                   {layout === "force" && (
-                    <button
-                      type="button"
-                      onClick={resetForceLayout}
-                      aria-label="Reset force-directed layout to its computed positions"
-                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    >
-                      <RotateCcw size={12} aria-hidden="true" /> Reset layout
-                    </button>
+                    <>
+                      <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
+                        Experimental view. The curated layered layout remains
+                        the default and is the version cited in the paper.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={resetForceLayout}
+                        aria-label="Reset force-directed layout to its computed positions"
+                        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      >
+                        <RotateCcw size={12} aria-hidden="true" /> Reset layout
+                      </button>
+                    </>
                   )}
                 </div>
 

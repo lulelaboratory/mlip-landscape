@@ -63,10 +63,12 @@ The app visualises the catalogue as an explorable graph with:
 - **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, …)
 - **Edges** capturing the conceptual / architectural lineage between them,
   with hover tooltips describing the relationship and a label on/off toggle
-- A **layout switcher** with a curated *Layered* view (default) and an
-  optional draggable *Force-directed* view (built-in deterministic
-  simulation, no extra runtime dependency); the chosen layout persists across
-  navigation and reloads via the `?layout=` query parameter and `localStorage`
+- A **layout switcher** with the curated *Layered* view as the default and
+  an optional *Force-directed* view marked **Experimental** (built-in
+  deterministic simulation, no extra runtime dependency); the chosen layout
+  persists across navigation and reloads via the `?layout=` query parameter
+  and `localStorage`. The version cited in the arXiv paper uses the
+  layered layout.
 - A **Cite current selection** button that copies a citation for the
   current view (filters, layout, selected model) to the clipboard
 - A **detail sidebar** with links to code, papers, and a web search
