@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import TopNav from "@/components/TopNav";
 import SiteFooter from "@/components/SiteFooter";
+import FeedbackButton from "@/components/FeedbackButton";
 import { INITIAL_NODES, type ModelNode } from "@/data/landscape";
 import pkg from "../../package.json";
 
@@ -175,6 +176,7 @@ export default function RootLayout({
         <TopNav />
         <main className="flex-1 min-h-0 flex flex-col">{children}</main>
         <SiteFooter />
+        <FeedbackButton />
       </body>
     </html>
   );

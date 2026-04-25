@@ -56,3 +56,28 @@ html.dark * {
 html.dark *::-webkit-scrollbar-thumb {
   background-color: #334155;
 }
+
+/* Respect users who request more contrast at the OS level. We darken edge
+   strokes and labels in light mode, and lighten them in dark mode, so the
+   landscape graph remains legible against the canvas. */
+@media (prefers-contrast: more) {
+  :root {
+    --edge-stroke: #1e293b;
+    --edge-label: #020617;
+    --zone-border: #94a3b8;
+    --zone-label-text: #475569;
+  }
+  html.dark {
+    --edge-stroke: #f8fafc;
+    --edge-label: #f8fafc;
+    --zone-border: #94a3b8;
+    --zone-label-text: #cbd5e1;
+  }
+  .node-card {
+    border-width: 3px !important;
+  }
+  *:focus-visible {
+    outline: 3px solid #2563eb !important;
+    outline-offset: 2px !important;
+  }
+}

@@ -19,22 +19,54 @@ export default function HomePage() {
         <ul>
           {models.map((m) => (
             <li key={m.id}>
-              <article>
-                <h2>{m.label}</h2>
+              <article
+                itemScope
+                itemType="https://schema.org/SoftwareSourceCode"
+                id={`model-${m.id}`}
+              >
+                <h2 itemProp="name">{m.label}</h2>
                 <p>
-                  <strong>Category:</strong> {m.category} ·{" "}
-                  <strong>Year:</strong> {m.year} ·{" "}
-                  <strong>Authors:</strong> {m.author}
+                  <strong>Category:</strong>{" "}
+                  <span itemProp="applicationCategory">{m.category}</span> ·{" "}
+                  <strong>Year:</strong>{" "}
+                  <time itemProp="datePublished" dateTime={String(m.year)}>
+                    {m.year}
+                  </time>{" "}
+                  ·{" "}
+                  <strong>Authors:</strong>{" "}
+                  <span
+                    itemProp="author"
+                    itemScope
+                    itemType="https://schema.org/Organization"
+                  >
+                    <span itemProp="name">{m.author}</span>
+                  </span>
                 </p>
-                <p>{m.desc}</p>
+                <p itemProp="description">{m.desc}</p>
+                {m.license && (
+                  <p>
+                    License: <span itemProp="license">{m.license}</span>
+                  </p>
+                )}
+                {m.tags && m.tags.length > 0 && (
+                  <p>
+                    Tags: <span itemProp="keywords">{m.tags.join(", ")}</span>
+                  </p>
+                )}
                 {m.paperUrl && (
                   <p>
-                    Paper: <a href={m.paperUrl}>{m.paperUrl}</a>
+                    Paper:{" "}
+                    <a href={m.paperUrl} itemProp="url">
+                      {m.paperUrl}
+                    </a>
                   </p>
                 )}
                 {m.githubUrl && (
                   <p>
-                    Code: <a href={m.githubUrl}>{m.githubUrl}</a>
+                    Code:{" "}
+                    <a href={m.githubUrl} itemProp="codeRepository">
+                      {m.githubUrl}
+                    </a>
                   </p>
                 )}
               </article>
