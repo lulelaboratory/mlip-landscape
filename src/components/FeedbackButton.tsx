@@ -80,8 +80,8 @@ export default function FeedbackButton() {
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 mb-5">
               Spotted a wrong link, missing model, or want to suggest one?
-              Reach us by email if you don't have a GitHub account, or open
-              an issue directly.
+              Reach us by email if you don&apos;t have a GitHub account, or
+              open an issue directly.
             </p>
 
             <div className="space-y-2">

@@ -44,15 +44,33 @@ const FONT_SCALES = [0.85, 1, 1.15, 1.3] as const;
 const DEFAULT_FONT_SCALE: number = 1;
 const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 
-const CATEGORY_STYLES: Record<Category, string> = {
+// Default palette tuned for general legibility. Pairs each category with a
+// Tailwind color family for the card border, background, and dark variants.
+const CATEGORY_STYLES_DEFAULT: Record<Category, string> = {
   Equivariant:
-    "bg-red-50 border-red-400 text-red-900 hover:shadow-red-200 dark:bg-red-950/50 dark:border-red-500 dark:text-red-100 dark:hover:shadow-red-900/40",
+    "bg-red-50 border-red-500 text-red-900 hover:shadow-red-200 dark:bg-red-950/50 dark:border-red-400 dark:text-red-100 dark:hover:shadow-red-900/40",
   Invariant:
-    "bg-blue-50 border-blue-400 text-blue-900 hover:shadow-blue-200 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-100 dark:hover:shadow-blue-900/40",
+    "bg-blue-50 border-blue-500 text-blue-900 hover:shadow-blue-200 dark:bg-blue-950/50 dark:border-blue-400 dark:text-blue-100 dark:hover:shadow-blue-900/40",
   Transformer:
-    "bg-green-50 border-green-400 text-green-900 hover:shadow-green-200 dark:bg-green-950/50 dark:border-green-500 dark:text-green-100 dark:hover:shadow-green-900/40",
+    "bg-green-50 border-green-600 text-green-900 hover:shadow-green-200 dark:bg-green-950/50 dark:border-green-400 dark:text-green-100 dark:hover:shadow-green-900/40",
   Descriptor:
-    "bg-orange-50 border-orange-400 text-orange-900 hover:shadow-orange-200 dark:bg-orange-950/50 dark:border-orange-500 dark:text-orange-100 dark:hover:shadow-orange-900/40",
+    "bg-orange-50 border-orange-500 text-orange-900 hover:shadow-orange-200 dark:bg-orange-950/50 dark:border-orange-400 dark:text-orange-100 dark:hover:shadow-orange-900/40",
+};
+
+// High-contrast / color-blind safe palette derived from the Okabe-Ito set.
+// Maps roughly to: Equivariant→vermilion, Invariant→sky, Transformer→teal,
+// Descriptor→amber. These hues remain distinguishable under deuteranopia
+// and protanopia simulations, and the icons (kept in CATEGORY_ICONS) provide
+// a non-color channel for readers who can't distinguish hues at all.
+const CATEGORY_STYLES_CB: Record<Category, string> = {
+  Equivariant:
+    "bg-rose-50 border-rose-700 text-rose-900 hover:shadow-rose-200 dark:bg-rose-950/60 dark:border-rose-300 dark:text-rose-50 dark:hover:shadow-rose-900/40",
+  Invariant:
+    "bg-sky-50 border-sky-700 text-sky-900 hover:shadow-sky-200 dark:bg-sky-950/60 dark:border-sky-300 dark:text-sky-50 dark:hover:shadow-sky-900/40",
+  Transformer:
+    "bg-teal-50 border-teal-700 text-teal-900 hover:shadow-teal-200 dark:bg-teal-950/60 dark:border-teal-300 dark:text-teal-50 dark:hover:shadow-teal-900/40",
+  Descriptor:
+    "bg-amber-50 border-amber-700 text-amber-900 hover:shadow-amber-200 dark:bg-amber-950/60 dark:border-amber-300 dark:text-amber-50 dark:hover:shadow-amber-900/40",
 };
 
 const CATEGORY_ICONS: Record<Category, LucideIcon> = {
@@ -63,14 +81,23 @@ const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 };
 
 // Color swatch per category for the filter/legend dot. Values intentionally
-// mirror the node card palette defined in CATEGORY_STYLES so the filter row
-// doubles as a color-coding legend.
-const CATEGORY_SWATCH: Record<Category, string> = {
-  Equivariant: "bg-red-400",
-  Invariant: "bg-blue-400",
-  Transformer: "bg-green-400",
-  Descriptor: "bg-orange-400",
+// mirror the node card palette so the filter row doubles as a color legend.
+const CATEGORY_SWATCH_DEFAULT: Record<Category, string> = {
+  Equivariant: "bg-red-500",
+  Invariant: "bg-blue-500",
+  Transformer: "bg-green-600",
+  Descriptor: "bg-orange-500",
 };
+
+const CATEGORY_SWATCH_CB: Record<Category, string> = {
+  Equivariant: "bg-rose-700",
+  Invariant: "bg-sky-700",
+  Transformer: "bg-teal-700",
+  Descriptor: "bg-amber-700",
+};
+
+type PaletteMode = "default" | "colorblind";
+const PALETTE_STORAGE_KEY = "mliphub.palette";
 
 const GITHUB_REPO = "https://github.com/lulelaboratory/mlip-landscape";
 
@@ -103,6 +130,11 @@ export default function MLIPExplorer() {
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [palette, setPalette] = useState<PaletteMode>("default");
+  const CATEGORY_STYLES =
+    palette === "colorblind" ? CATEGORY_STYLES_CB : CATEGORY_STYLES_DEFAULT;
+  const CATEGORY_SWATCH =
+    palette === "colorblind" ? CATEGORY_SWATCH_CB : CATEGORY_SWATCH_DEFAULT;
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -140,6 +172,19 @@ export default function MLIPExplorer() {
       setFontScale(parsed);
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(PALETTE_STORAGE_KEY);
+    if (stored === "colorblind" || stored === "default") setPalette(stored);
+  }, []);
+
+  const updatePalette = (next: PaletteMode) => {
+    setPalette(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(PALETTE_STORAGE_KEY, next);
+    }
+  };
 
   // Hydrate filter / search / selected-model state from URL on first mount so
   // links like /?category=Equivariant&q=mace or /?model=NequIP land in the
@@ -1193,9 +1238,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       }
                       placeholder="Search name, tag, license, year…"
                       aria-label="Search models by name, author, year, tag, license, framework, or domain"
-                      aria-autocomplete="list"
-                      aria-controls="mliphub-search-suggestions"
-                      aria-expanded={searchFocused && suggestions.length > 0}
                       autoComplete="off"
                       className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[0.8125em] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700"
                     />
@@ -1217,7 +1259,11 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         className="absolute left-0 right-0 top-full mt-1 z-30 max-h-72 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl dark:shadow-slate-950/60 text-[0.8125em]"
                       >
                         {suggestions.map((s, idx) => (
-                          <li key={`${s.kind}-${s.label}-${idx}`} role="option">
+                          <li
+                            key={`${s.kind}-${s.label}-${idx}`}
+                            role="option"
+                            aria-selected={false}
+                          >
                             <button
                               type="button"
                               onMouseDown={(e) => {
@@ -1275,6 +1321,47 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       {cat}
                     </button>
                   ))}
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div
+                    className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
+                    id="mliphub-palette-label"
+                  >
+                    Color palette
+                  </div>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="mliphub-palette-label"
+                    className="grid grid-cols-2 gap-1"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={palette === "default"}
+                      onClick={() => updatePalette("default")}
+                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        palette === "default"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Default
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={palette === "colorblind"}
+                      onClick={() => updatePalette("colorblind")}
+                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        palette === "colorblind"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Color-blind
+                    </button>
+                  </div>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2">
