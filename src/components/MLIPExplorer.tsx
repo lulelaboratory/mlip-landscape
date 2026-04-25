@@ -130,37 +130,102 @@ const FORCE_OVERRIDES_STORAGE_KEY = "mliphub.forceOverrides";
 const isLayoutMode = (value: string | null): value is LayoutMode =>
   value === "layered" || value === "force";
 
-// Compact deterministic force-directed layout. Initialised from the
-// layered coordinates and run for a fixed number of ticks so the result is
-// stable across reloads. We keep this self-contained instead of pulling in
+// Compact deterministic force-directed layout. Initialised from a category-
+// stratified circular seeding (rather than the layered coordinates, which
+// pre-cluster the cards and bias the simulation toward overlapping
+// solutions) and run for a fixed number of ticks so the result is stable
+// across reloads. We keep this self-contained instead of pulling in
 // d3-force to avoid a new runtime dependency.
 type Vec2 = { x: number; y: number };
+
+// Where on a card's rectangular boundary does the line from its centre
+// toward (dx, dy) exit? Returns the exit point in absolute coordinates.
+// Used to anchor edges to the card border in force layout, instead of a
+// circle of radius CARD_WIDTH/2 (which is too small in y and too large in
+// the corners for the 176x72 rectangle).
+function rectExitPoint(
+  cx: number,
+  cy: number,
+  halfW: number,
+  halfH: number,
+  dx: number,
+  dy: number,
+): Vec2 {
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+  const tx = adx < 1e-6 ? Infinity : halfW / adx;
+  const ty = ady < 1e-6 ? Infinity : halfH / ady;
+  const t = Math.min(tx, ty);
+  return { x: cx + dx * t, y: cy + dy * t };
+}
+
 function computeForcePositions(
   modelNodes: ModelNode[],
   edges: Edge[],
 ): Record<string, Vec2> {
   const positions: Record<string, Vec2> = {};
   const velocities: Record<string, Vec2> = {};
+
+  // Seed positions on a category-stratified ring so the simulation starts
+  // already spread apart. Starting from the curated layered coordinates
+  // pre-clusters the cards and the simulation can't unpack overlaps from
+  // a deeply tangled initial state in a fixed number of ticks.
+  const categoryOrder: Category[] = [
+    "Equivariant",
+    "Transformer",
+    "Invariant",
+    "Descriptor",
+  ];
+  const byCategory = new Map<Category, ModelNode[]>();
+  for (const cat of categoryOrder) byCategory.set(cat, []);
   for (const n of modelNodes) {
-    positions[n.id] = { x: n.x + CARD_WIDTH / 2, y: n.y + CARD_HEIGHT / 2 };
-    velocities[n.id] = { x: 0, y: 0 };
+    const list = byCategory.get(n.category);
+    if (list) list.push(n);
+  }
+  const ringRadius = Math.max(900, modelNodes.length * 22);
+  let i = 0;
+  for (const cat of categoryOrder) {
+    const list = byCategory.get(cat) ?? [];
+    for (const n of list) {
+      const angle = (i / Math.max(1, modelNodes.length)) * Math.PI * 2;
+      // Slight per-category radial offset so the four arcs don't overlap.
+      const r = ringRadius + categoryOrder.indexOf(cat) * 40;
+      positions[n.id] = {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+      };
+      velocities[n.id] = { x: 0, y: 0 };
+      i += 1;
+    }
   }
 
-  const idealLink = 240;
-  const repulsion = 28000;
-  const damping = 0.78;
-  const linkStrength = 0.04;
-  const centerStrength = 0.012;
+  // Tuned for ~40 cards of 176x72. The earlier values produced visibly
+  // overlapping cards; these settle into a clearly readable graph.
+  const idealLink = 360;
+  const repulsion = 110000;
+  const linkStrength = 0.06;
+  const centerStrength = 0.004;
+  // Card half-extent plus padding — used by the rectangle-based collision
+  // pass that prevents cards from physically overlapping.
+  const PAD_X = 28;
+  const PAD_Y = 22;
+  const halfW = CARD_WIDTH / 2 + PAD_X;
+  const halfH = CARD_HEIGHT / 2 + PAD_Y;
 
   const ids = modelNodes.map((n) => n.id);
-  const cx = modelNodes.reduce((s, n) => s + n.x + CARD_WIDTH / 2, 0) / Math.max(1, modelNodes.length);
-  const cy = modelNodes.reduce((s, n) => s + n.y + CARD_HEIGHT / 2, 0) / Math.max(1, modelNodes.length);
+  const TICKS = 600;
 
-  for (let tick = 0; tick < 220; tick += 1) {
+  for (let tick = 0; tick < TICKS; tick += 1) {
+    // Cooling factor: forces calm down over time so the layout settles
+    // instead of oscillating. Damping starts ~0.92 and tightens to ~0.6.
+    const progress = tick / TICKS;
+    const damping = 0.92 - progress * 0.32;
+
     const forces: Record<string, Vec2> = {};
     for (const id of ids) forces[id] = { x: 0, y: 0 };
 
-    // Repulsive (Coulomb-like) between every pair.
+    // Repulsive (Coulomb-like) between every pair, with a soft cutoff so
+    // very close pairs don't get an unbounded force.
     for (let i = 0; i < ids.length; i += 1) {
       for (let j = i + 1; j < ids.length; j += 1) {
         const a = positions[ids[i]];
@@ -173,8 +238,8 @@ function computeForcePositions(
           dy = (Math.random() - 0.5) * 2;
           d2 = dx * dx + dy * dy + 0.1;
         }
-        const f = repulsion / d2;
         const d = Math.sqrt(d2);
+        const f = repulsion / Math.max(d2, 400);
         const fx = (dx / d) * f;
         const fy = (dy / d) * f;
         forces[ids[i]].x += fx;
@@ -201,17 +266,51 @@ function computeForcePositions(
       forces[e.to].y -= fy;
     }
 
-    // Pull toward overall centre so the cluster stays in frame.
+    // Weak pull toward (0, 0) so the cluster stays roughly centred.
     for (const id of ids) {
-      forces[id].x += (cx - positions[id].x) * centerStrength;
-      forces[id].y += (cy - positions[id].y) * centerStrength;
+      forces[id].x += -positions[id].x * centerStrength;
+      forces[id].y += -positions[id].y * centerStrength;
     }
 
+    // Integrate.
     for (const id of ids) {
       velocities[id].x = (velocities[id].x + forces[id].x) * damping;
       velocities[id].y = (velocities[id].y + forces[id].y) * damping;
+      // Clamp velocity so cards can't shoot off to infinity early on.
+      const speed = Math.hypot(velocities[id].x, velocities[id].y);
+      const maxSpeed = 80;
+      if (speed > maxSpeed) {
+        velocities[id].x = (velocities[id].x / speed) * maxSpeed;
+        velocities[id].y = (velocities[id].y / speed) * maxSpeed;
+      }
       positions[id].x += velocities[id].x;
       positions[id].y += velocities[id].y;
+    }
+
+    // Rectangular collision pass — resolve any pair whose padded card
+    // bounding boxes overlap by pushing them apart along the smaller-
+    // overlap axis. This is what guarantees we don't end up with the
+    // crowded, overlapping result the smooth-force solution tends to
+    // produce on its own.
+    for (let i = 0; i < ids.length; i += 1) {
+      for (let j = i + 1; j < ids.length; j += 1) {
+        const a = positions[ids[i]];
+        const b = positions[ids[j]];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const overlapX = halfW * 2 - Math.abs(dx);
+        const overlapY = halfH * 2 - Math.abs(dy);
+        if (overlapX <= 0 || overlapY <= 0) continue;
+        if (overlapX < overlapY) {
+          const push = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+          a.x -= push;
+          b.x += push;
+        } else {
+          const push = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+          a.y -= push;
+          b.y += push;
+        }
+      }
     }
   }
 
@@ -830,24 +929,36 @@ export default function MLIPExplorer() {
       let labelY: number;
 
       if (layout === "force") {
-        // Straight line between card centres for the force layout. The
-        // routed orthogonal paths assume a fixed lane structure that no
-        // longer holds once nodes float freely.
+        // Connect edges to the actual card border (rectangle exit point)
+        // instead of a circle around the centre — the cards are 176x72
+        // so a circular radius leaves visible gaps along the long sides
+        // and overshoots near the corners.
         const fcx = fromNode.x + CARD_WIDTH / 2;
         const fcy = fromNode.y + CARD_HEIGHT / 2;
         const tcx = toNode.x + CARD_WIDTH / 2;
         const tcy = toNode.y + CARD_HEIGHT / 2;
         const dx = tcx - fcx;
         const dy = tcy - fcy;
-        const d = Math.sqrt(dx * dx + dy * dy) || 1;
-        const radius = CARD_WIDTH / 2 + 4;
-        const sx = fcx + (dx / d) * radius;
-        const sy = fcy + (dy / d) * radius;
-        const ex = tcx - (dx / d) * radius;
-        const ey = tcy - (dy / d) * radius;
-        path = `M ${sx} ${sy} L ${ex} ${ey}`;
-        labelX = (sx + ex) / 2;
-        labelY = (sy + ey) / 2 - 6;
+        const margin = 6;
+        const start = rectExitPoint(
+          fcx,
+          fcy,
+          CARD_WIDTH / 2 + margin,
+          CARD_HEIGHT / 2 + margin,
+          dx,
+          dy,
+        );
+        const end = rectExitPoint(
+          tcx,
+          tcy,
+          CARD_WIDTH / 2 + margin,
+          CARD_HEIGHT / 2 + margin,
+          -dx,
+          -dy,
+        );
+        path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+        labelX = (start.x + end.x) / 2;
+        labelY = (start.y + end.y) / 2 - 6;
       } else {
         const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
         const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
