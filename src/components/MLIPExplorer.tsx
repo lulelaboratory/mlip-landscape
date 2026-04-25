@@ -982,17 +982,49 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   aria-pressed={isSelected}
                   aria-describedby="mliphub-node-help"
                   aria-label={`${node.label}, ${node.category} model from ${node.year} by ${node.author}. Press Enter to view details, arrow keys to move between models.`}
+                  itemScope
+                  itemType="https://schema.org/SoftwareSourceCode"
+                  data-model-id={node.id}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon size={16} className="opacity-70" />
-                    <span className="text-xs sm:text-[11px] md:text-[10px] lg:text-xs font-bold uppercase tracking-wide opacity-70">
+                    <Icon size={16} className="opacity-70" aria-hidden="true" />
+                    <span
+                      className="text-xs sm:text-[11px] md:text-[10px] lg:text-xs font-bold uppercase tracking-wide opacity-70"
+                      itemProp="applicationCategory"
+                    >
                       {node.category}
                     </span>
                   </div>
-                  <div className="font-bold text-base sm:text-sm lg:text-base leading-tight mb-1">
+                  <div
+                    className="font-bold text-base sm:text-sm lg:text-base leading-tight mb-1"
+                    itemProp="name"
+                  >
                     {node.label}
                   </div>
-                  <div className="text-[11px] sm:text-xs md:text-[10px] opacity-70 font-mono">{node.year}</div>
+                  <time
+                    className="text-[11px] sm:text-xs md:text-[10px] opacity-70 font-mono"
+                    itemProp="datePublished"
+                    dateTime={String(node.year)}
+                  >
+                    {node.year}
+                  </time>
+                  <meta itemProp="description" content={node.desc} />
+                  <meta itemProp="author" content={node.author} />
+                  {node.githubUrl && (
+                    <meta itemProp="codeRepository" content={node.githubUrl} />
+                  )}
+                  {(node.paperUrl || node.githubUrl) && (
+                    <meta
+                      itemProp="url"
+                      content={node.paperUrl ?? node.githubUrl ?? ""}
+                    />
+                  )}
+                  {node.license && (
+                    <meta itemProp="license" content={node.license} />
+                  )}
+                  {node.tags && node.tags.length > 0 && (
+                    <meta itemProp="keywords" content={node.tags.join(", ")} />
+                  )}
                 </button>
               );
             })}
