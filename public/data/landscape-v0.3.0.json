@@ -316,6 +316,23 @@
       "elementsCovered": "85 elements"
     },
     {
+      "id": "eqv3",
+      "type": "node",
+      "category": "Transformer",
+      "label": "Equiformer V3",
+      "year": 2026,
+      "author": "Liao et al. (MIT Atomic Architects)",
+      "x": 2060,
+      "y": 320,
+      "desc": "Third-generation SE(3)-equivariant graph attention transformer with improved efficiency, expressivity, and generality; achieves the strongest results within the Equiformer family on OC20 S2EF-2M, MPtrj, OMat24, sAlex, and Matbench-Discovery.",
+      "githubUrl": "https://github.com/atomicarchitects/equiformer_v3",
+      "paperUrl": "https://arxiv.org/abs/2604.09130",
+      "isNew": true,
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "all elements covered by MPtrj / OMat24 (~89 elements)"
+    },
+    {
       "id": "mace_polar1",
       "type": "node",
       "category": "Equivariant",
@@ -475,6 +492,23 @@
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
+    },
+    {
+      "id": "matris",
+      "type": "node",
+      "category": "Invariant",
+      "label": "MatRIS",
+      "year": 2026,
+      "author": "Zhou et al. (CAS / UCAS)",
+      "x": 1510,
+      "y": 650,
+      "desc": "Invariant foundation MLIP using a separable O(N) attention mechanism for three-body interactions; 10M-parameter models trained on OMat24 / MPTrj / sAlex match equivariant SOTA on Matbench-Discovery (F1 0.847) at >13x lower training cost than eSEN-30M-MP.",
+      "githubUrl": "https://github.com/HPC-AI-Team/MatRIS",
+      "paperUrl": "https://arxiv.org/abs/2603.02002",
+      "isNew": true,
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "all elements covered by OMat24 / MPTrj (~89 elements)"
     },
     {
       "id": "ani",
@@ -958,6 +992,22 @@
       "from": "ani",
       "to": "orion",
       "label": "Reactive Organics",
+      "dashed": true
+    },
+    {
+      "from": "eqv2",
+      "to": "eqv3",
+      "label": "Scaling"
+    },
+    {
+      "from": "m3gnet",
+      "to": "matris",
+      "label": "3-body Attn"
+    },
+    {
+      "from": "mattersim",
+      "to": "matris",
+      "label": "OMat24",
       "dashed": true
     }
   ]
