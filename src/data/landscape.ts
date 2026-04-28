@@ -671,6 +671,29 @@ export const INITIAL_NODES: AnyNode[] = [
     elementsCovered: "H, B, C, N, O, F, Si, P, S, Cl, As, Se, Br, I",
   },
   {
+    id: "aceff",
+    type: "node",
+    category: "Equivariant",
+    label: "AceFF",
+    year: 2026,
+    author: "Farr, Doerr, Mirarchi, Sabanés Zariquiey & De Fabritiis (Acellera Labs / UPF Barcelona)",
+    x: 2060,
+    y: 750,
+    desc:
+      "Drug-discovery-oriented MLIP built on the TensorNet2 architecture — a refined vector–scalar equivariant TensorNet that adds scalar partial-charge features, performs neutral charge equilibration, and includes a long-range Coulomb energy term. Pretrained on a large dataset of drug-like compounds covering H, B, C, N, O, F, Si, P, S, Cl, Br, I in neutral and charged states; balances DFT-level accuracy on torsion scans, MD trajectories, and batched minimisations with high-throughput inference suitable for FEP and lead-optimisation workflows.",
+    githubUrl: "https://huggingface.co/Acellera/AceFF-2.0",
+    paperUrl: "https://arxiv.org/abs/2601.00581",
+    isNew: true,
+    license: "Apache-2.0",
+    maintenance: "active",
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "PyTorch"],
+    tags: ["TensorNet2", "drug discovery", "charge-aware"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "H, B, C, N, O, F, Si, P, S, Cl, Br, I",
+  },
+  {
     id: "schnet",
     type: "node",
     category: "Invariant",
@@ -1032,4 +1055,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "grace", to: "grace_off", label: "Organic Liquids" },
   { from: "petmad", to: "omnimol", label: "PET", dashed: true },
   { from: "uma", to: "omnimol", label: "OMol25", dashed: true },
+
+  // April 2026 — AceFF (TensorNet2 drug-discovery MLIP)
+  { from: "painn", to: "aceff", label: "TensorNet2" },
+  { from: "aimnet2", to: "aceff", label: "Charge-aware FF", dashed: true },
 ];
