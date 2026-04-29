@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import FeedbackButton from "@/components/FeedbackButton";
 import { INITIAL_NODES, type ModelNode } from "@/data/landscape";
 import pkg from "../../package.json";
+import { Analytics } from "@vercel/analytics/next";
 
 const SITE_URL = "https://www.mliphub.com";
 const SITE_NAME = "MLIP Hub";
@@ -177,6 +178,7 @@ export default function RootLayout({
         <main className="flex-1 min-h-0 flex flex-col">{children}</main>
         <SiteFooter />
         <FeedbackButton />
+        <Analytics />
       </body>
     </html>
   );
