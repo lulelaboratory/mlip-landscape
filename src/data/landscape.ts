@@ -136,7 +136,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 2140,
+    width: 2420,
     height: 400,
   },
   {
@@ -453,6 +453,28 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsCharges: true,
     supportsSpins: true,
     elementsCovered: "elements present in OMol25 (molecular chemistry / non-covalent interactions)",
+  },
+  {
+    id: "mace_osaka26",
+    type: "node",
+    category: "Equivariant",
+    label: "MACE-Osaka26",
+    year: 2026,
+    author: "Kuroda, Ishihara, Shiota, Mizukami (Osaka Univ. / QIQB)",
+    x: 2340,
+    y: 150,
+    desc:
+      "Multi-domain universal MACE-architecture potential extending the MACE-Osaka series to 97 elements — the broadest elemental coverage to date — by integrating MACE-Osaka24's inorganic + organic data with the newly constructed HE26 heavy-element dataset of minor actinides assembled from experimental and computational literature. Targets nuclear and actinide chemistry while retaining strong performance on the inorganic MPtrj and organic OFF23 test sets.",
+    githubUrl: "https://github.com/qiqb-osaka/mace-osaka26",
+    paperUrl: "https://arxiv.org/abs/2603.03223",
+    isNew: true,
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "LAMMPS"],
+    trainingData: ["MACE-Osaka24", "HE26", "MPtrj", "OFF23"],
+    tags: ["MACE", "foundation model", "actinides", "nuclear", "97 elements"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "97 elements (incl. minor actinides)",
   },
 
   // ---------------------------------------------------------------------------
@@ -1059,4 +1081,8 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — AceFF (TensorNet2 drug-discovery MLIP)
   { from: "painn", to: "aceff", label: "TensorNet2" },
   { from: "aimnet2", to: "aceff", label: "Charge-aware FF", dashed: true },
+
+  // April 2026 — MACE-Osaka26 (97-element universal potential incl. actinides)
+  { from: "mace", to: "mace_osaka26", label: "+Actinides" },
+  { from: "mace_polar1", to: "mace_osaka26", label: "MACE family", dashed: true },
 ];
