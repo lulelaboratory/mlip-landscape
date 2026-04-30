@@ -136,7 +136,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 2420,
+    width: 2770,
     height: 400,
   },
   {
@@ -475,6 +475,44 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsCharges: false,
     supportsSpins: false,
     elementsCovered: "97 elements (incl. minor actinides)",
+  },
+  {
+    id: "mlanet",
+    type: "node",
+    category: "Equivariant",
+    label: "MLANet",
+    year: 2026,
+    author: "Hu, Cheng, Bi, Zhao, Sun (Shanghai University)",
+    x: 2340,
+    y: 320,
+    desc:
+      "Efficient equivariant graph neural network MLIP that introduces a geometry-aware dual-path dynamic attention mechanism inside its message-passing layers and a physics-informed multi-perspective pooling strategy for global system representations. Demonstrates competitive accuracy with mainstream equivariant models at markedly lower computational cost across organic molecules (QM7, MD17), Li-containing crystals, two-dimensional materials (bilayer graphene, black phosphorus), surface catalytic reactions (formate decomposition), and charged systems, while remaining stable for long-time MD simulations.",
+    paperUrl: "https://arxiv.org/abs/2603.22810",
+    isNew: true,
+    properties: ["energy", "forces"],
+    tags: ["equivariant", "dynamic attention", "efficient"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "—",
+  },
+  {
+    id: "equiewald",
+    type: "node",
+    category: "Equivariant",
+    label: "EquiEwald",
+    year: 2026,
+    author: "Zhang et al. (Shanghai AI Lab / CUHK)",
+    x: 2620,
+    y: 150,
+    desc:
+      "Unified neural interatomic potential that embeds an Ewald-inspired reciprocal-space formulation inside an irreducible SO(3)-equivariant framework. Performs equivariant message passing in reciprocal space via learned equivariant k-space filters and an equivariant inverse transform, capturing anisotropic tensorial long-range correlations without sacrificing physical consistency; consistently improves energy and force accuracy, data efficiency, and long-range extrapolation across periodic systems, supramolecular assemblies, conjugated molecules, charged dimers, and biomolecular dynamics.",
+    paperUrl: "https://arxiv.org/abs/2603.18389",
+    isNew: true,
+    properties: ["energy", "forces"],
+    tags: ["SO(3)-equivariant", "long-range", "reciprocal space", "Ewald"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "—",
   },
 
   // ---------------------------------------------------------------------------
@@ -1085,4 +1123,12 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — MACE-Osaka26 (97-element universal potential incl. actinides)
   { from: "mace", to: "mace_osaka26", label: "+Actinides" },
   { from: "mace_polar1", to: "mace_osaka26", label: "MACE family", dashed: true },
+
+  // April 2026 — MLANet (efficient equivariant GNN with dynamic attention)
+  { from: "eqv2", to: "mlanet", label: "Dynamic Attn" },
+  { from: "mace", to: "mlanet", label: "Efficient", dashed: true },
+
+  // April 2026 — EquiEwald (SO(3)-equivariant reciprocal-space long-range potential)
+  { from: "nequip", to: "equiewald", label: "+Reciprocal Ewald" },
+  { from: "mace_polar1", to: "equiewald", label: "Long-range", dashed: true },
 ];
