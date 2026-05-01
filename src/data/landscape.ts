@@ -514,6 +514,28 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsSpins: false,
     elementsCovered: "—",
   },
+  {
+    id: "allscaip",
+    type: "node",
+    category: "Transformer",
+    label: "AllScAIP",
+    year: 2026,
+    author: "Qu, Wood, Krishnapriyan, Ulissi (FAIR / Meta, UC Berkeley, LBNL)",
+    x: 2620,
+    y: 320,
+    desc:
+      "Scalable, energy-conserving, attention-based MLIP that pairs local neighborhood self-attention with a global all-to-all node attention layer in which every atom attends to every other atom. The data-driven all-to-all component captures long-range interactions without explicit electrostatic priors and remains the most durable ingredient as data and model size scale to O(100M) training samples. Sits atop the OMol25 leaderboard at release while remaining competitive on OMat24 (materials) and OC20 (catalysts); cuts long-range distance-scaling error by ~90% versus the next-best foundation model, with stable long-timescale MD recovering experimental densities and heats of vaporisation.",
+    githubUrl: "https://github.com/facebookresearch/fairchem",
+    paperUrl: "https://arxiv.org/abs/2603.06567",
+    isNew: true,
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "PyTorch"],
+    trainingData: ["OMol25", "OMat24", "OC20"],
+    tags: ["transformer", "all-to-all attention", "long-range", "foundation model"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "all elements covered by OMol25 / OMat24 (~89 elements)",
+  },
 
   // ---------------------------------------------------------------------------
   // LANE 2: DESCRIPTORS & INDUSTRIAL WORKHORSES  (Middle band, y ≈ 550)
@@ -689,6 +711,28 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsCharges: null,
     supportsSpins: null,
     elementsCovered: "all elements covered by OMat24 / MPTrj (~89 elements)",
+  },
+  {
+    id: "matris_moe",
+    type: "node",
+    category: "Invariant",
+    label: "MatRIS-MoE",
+    year: 2026,
+    author: "Zhou et al. (CAS / ICT, HPC-AI-Team)",
+    x: 1790,
+    y: 650,
+    desc:
+      "Billion-parameter Mixture-of-Experts extension of MatRIS that inserts sparse expert modules around the self-attention layer — a message-update MoE for message construction and a feature-update MoE for post-attention refinement — with element-type routing that keeps the activated expert set time-independent and the potential energy surface continuous. Released in M (2.47B) and L (11.50B) variants and trained on heterogeneous domains (molecules, materials, catalysis, MOFs, and direct air capture) via the new Janus hybrid-parallel framework, attaining 1.0–1.2 EFLOPS at >90% parallel efficiency and compressing billion-parameter uMLIP training from weeks to hours on Exascale supercomputers.",
+    githubUrl: "https://github.com/HPC-AI-Team/MatRIS",
+    paperUrl: "https://arxiv.org/abs/2604.15821",
+    isNew: true,
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["PyTorch"],
+    trainingData: ["OMat24", "MPTrj", "sAlex", "OMol25", "OC20", "ODAC23"],
+    tags: ["invariant", "mixture-of-experts", "billion-parameter", "multi-task", "foundation model"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "all elements covered by OMat24 / MPTrj / OMol25 (~89 elements)",
   },
 
   // ---------------------------------------------------------------------------
@@ -1131,4 +1175,12 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — EquiEwald (SO(3)-equivariant reciprocal-space long-range potential)
   { from: "nequip", to: "equiewald", label: "+Reciprocal Ewald" },
   { from: "mace_polar1", to: "equiewald", label: "Long-range", dashed: true },
+
+  // March 2026 — AllScAIP (scalable all-to-all attention MLIP, FAIR/UCB/LBNL)
+  { from: "eqv2", to: "allscaip", label: "All-to-All Attn" },
+  { from: "uma", to: "allscaip", label: "OMol25", dashed: true },
+
+  // April 2026 — MatRIS-MoE (billion-parameter Mixture-of-Experts uMLIP)
+  { from: "matris", to: "matris_moe", label: "MoE Scale" },
+  { from: "dpa2", to: "matris_moe", label: "Multi-task", dashed: true },
 ];
