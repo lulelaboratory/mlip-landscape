@@ -476,6 +476,59 @@
       "elementsCovered": "all elements covered by OMol25 / OMat24 (~89 elements)"
     },
     {
+      "id": "mace_mag",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "MACE-Magnetic",
+      "year": 2026,
+      "author": "Ho, van der Oord, Darby, Csányi, Ortner et al. (Cambridge / UBC / ACEsuit)",
+      "x": 2900,
+      "y": 150,
+      "desc": "Equivariant many-body message-passing interatomic potential extending the MACE framework to magnetic materials by embedding atomic magnetic moments as explicit degrees of freedom alongside positions. Learns physically consistent and transferable representations of magnetic behaviour beyond collinear approximations and can incorporate spin-orbit coupling, achieving near density-functional-theory accuracy with strong data efficiency by fine-tuning from a pre-trained foundation model. Targets structural transformations, finite-temperature magnetic phenomena, and high-throughput screening of strongly spin-orbit coupled materials.",
+      "paperUrl": "https://arxiv.org/abs/2604.08143",
+      "isNew": true,
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "tags": [
+        "equivariant",
+        "MACE",
+        "magnetic moments",
+        "spin-orbit coupling"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": true,
+      "elementsCovered": "—"
+    },
+    {
+      "id": "allegro_moe",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "Allegro-MoE",
+      "year": 2026,
+      "author": "Nascimento, Descoteaux, Zichi, Tan, Witt, Molinari, Mantha, Kitchaev, Kornbluth, Gadelrab, Tuffile, Kozinsky (Harvard / Bosch)",
+      "x": 2900,
+      "y": 320,
+      "desc": "Multifidelity Mixture-of-Experts framework built on the strictly local E(3)-equivariant Allegro architecture. Spatially partitions the simulation domain into chemically complex regions (e.g. reactive interfaces) and simple regions (e.g. bulk lattices) and assigns Allegro experts of different capacity to each, enabling expensive high-fidelity inference only where required while a cheaper expert handles the rest of the cell. Demonstrated to retain near-foundation-model accuracy at substantially reduced cost for large-scale MD of heterogeneous systems.",
+      "paperUrl": "https://arxiv.org/abs/2604.26143",
+      "isNew": true,
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "tags": [
+        "equivariant",
+        "Allegro",
+        "mixture-of-experts",
+        "multifidelity",
+        "spatial partitioning"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "—"
+    },
+    {
       "id": "bpnn",
       "type": "node",
       "category": "Descriptor",
@@ -1068,7 +1121,7 @@
       "label": "Equivariant & Transformers (Accuracy / Foundations)",
       "x": 50,
       "y": 50,
-      "width": 2770,
+      "width": 3070,
       "height": 400
     },
     {
@@ -1386,6 +1439,28 @@
       "from": "uma",
       "to": "allscaip",
       "label": "OMol25",
+      "dashed": true
+    },
+    {
+      "from": "mace",
+      "to": "mace_mag",
+      "label": "+Magnetic Moments"
+    },
+    {
+      "from": "mace_polar1",
+      "to": "mace_mag",
+      "label": "MACE family",
+      "dashed": true
+    },
+    {
+      "from": "allegro",
+      "to": "allegro_moe",
+      "label": "Mixture-of-Experts"
+    },
+    {
+      "from": "matris_moe",
+      "to": "allegro_moe",
+      "label": "MoE",
       "dashed": true
     },
     {
