@@ -136,7 +136,7 @@ export const INITIAL_NODES: AnyNode[] = [
     label: "Equivariant & Transformers (Accuracy / Foundations)",
     x: 50,
     y: 50,
-    width: 3070,
+    width: 3350,
     height: 400,
   },
   {
@@ -573,6 +573,51 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsCharges: null,
     supportsSpins: null,
     elementsCovered: "—",
+  },
+  {
+    id: "hienet",
+    type: "node",
+    category: "Equivariant",
+    label: "HIENet",
+    year: 2025,
+    author: "Yan, Bohde, Kryvenko, Xiang, Zhao, Zhu, Kolachina, Sarıtürk, Xie, Arroyave, Qian, Qian, Ji (Texas A&M / divelab)",
+    x: 3180,
+    y: 150,
+    desc:
+      "Hybrid invariant-equivariant materials foundation model that combines scalable invariant message passing with equivariant layers to capture high-order interactions, while rigorously satisfying O(3) equivariance for forces and stress through physics-informed derivative-based methods. Built on the SevenNet training pipeline; the released checkpoint is trained on OMat24 / MPtrj-style materials data and reports state-of-the-art accuracy with substantial computational speedups versus EquiformerV2 and Orb on phonons, bulk moduli, ab initio MD, and alloy benchmarks.",
+    githubUrl: "https://github.com/divelab/AIRS/tree/main/OpenMat/HIENet",
+    paperUrl: "https://arxiv.org/abs/2503.05771",
+    isNew: true,
+    license: "GPL-3.0",
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "PyTorch"],
+    trainingData: ["OMat24", "MPtrj"],
+    tags: ["hybrid", "invariant", "equivariant", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by OMat24 / MPtrj (~89 elements)",
+  },
+  {
+    id: "mace_mh1",
+    type: "node",
+    category: "Equivariant",
+    label: "MACE-MH-1",
+    year: 2025,
+    author: "Batatia, Lin, Hart, Kasoar, Elena, Norwood, Wolf, Csányi (Cambridge / ACEsuit)",
+    x: 3180,
+    y: 320,
+    desc:
+      "Multi-head MACE foundation interatomic potential that unifies molecular, surface, and inorganic crystal chemistry in a single model spanning 89 elements. Built on an enhanced MACE architecture with increased weight sharing across elements and non-linear factors in the tensor decomposition of the product basis; trained via a multi-head replay protocol with task-specific heads for OMAT (PBE), OMOL (ωB97M-VV10), OC20, MATPES (r2SCAN), MPtraj, SPICE, and RGD1 to enable cross-domain knowledge transfer without catastrophic forgetting. The OMAT-PBE head is the default and reports state-of-the-art accuracy across solids, molecules, and surfaces benchmarks.",
+    githubUrl: "https://github.com/ACEsuit/mace-foundations",
+    paperUrl: "https://arxiv.org/abs/2510.25380",
+    isNew: true,
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "LAMMPS"],
+    trainingData: ["OMat24", "OMol25", "OC20", "MATPES-r2SCAN", "MPtrj", "SPICE", "RGD1"],
+    tags: ["MACE", "multi-head", "foundation model", "cross-domain"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "89 elements",
   },
 
   // ---------------------------------------------------------------------------
@@ -1229,4 +1274,12 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — MatRIS-MoE (billion-parameter Mixture-of-Experts uMLIP)
   { from: "matris", to: "matris_moe", label: "MoE Scale" },
   { from: "dpa2", to: "matris_moe", label: "Multi-task", dashed: true },
+
+  // 2025 — HIENet (hybrid invariant-equivariant materials foundation model)
+  { from: "sevennet", to: "hienet", label: "Hybrid I/E" },
+  { from: "eqv2", to: "hienet", label: "Foundation alt", dashed: true },
+
+  // 2025 — MACE-MH-1 (multi-head MACE foundation potential)
+  { from: "mace", to: "mace_mh1", label: "Multi-head" },
+  { from: "mace_polar1", to: "mace_mh1", label: "MACE family", dashed: true },
 ];
