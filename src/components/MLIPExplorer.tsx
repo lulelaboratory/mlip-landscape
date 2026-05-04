@@ -46,6 +46,23 @@ const FONT_SCALES = [0.85, 1, 1.15, 1.3] as const;
 const DEFAULT_FONT_SCALE: number = 1;
 const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 
+// Multipliers applied to the curated layered coordinates so cards fan out
+// horizontally and vertically. Larger values give the edge router more room
+// to fan out parallel detours through busy hubs (e.g. MACE, NequIP) without
+// re-tuning every entry in the data file.
+const LAYERED_SPACING_X = 1.2;
+const LAYERED_SPACING_Y = 1.15;
+
+// Layered grid metrics (curated raw column gap is 280, raw row gap is 430).
+// Multiplied by the layered spacing factors so they continue to describe
+// the same visual landmarks after the cards get fanned out.
+const LAYERED_COLUMN_GAP = 280 * LAYERED_SPACING_X;
+const LAYERED_ROW_GAP_Y = 430 * LAYERED_SPACING_Y;
+const LAYERED_TOP_BAND_BOUNDARY = 200 * LAYERED_SPACING_Y;
+const LAYERED_ZONE_GAP_TOP = 450 * LAYERED_SPACING_Y;
+const LAYERED_ZONE_GAP_BOT = 480 * LAYERED_SPACING_Y;
+const LAYERED_SAME_COL_GAP = 200 * LAYERED_SPACING_Y;
+
 // Default palette tuned for general legibility. Pairs each category with a
 // Tailwind color family for the card border, background, and dark variants.
 const CATEGORY_STYLES_DEFAULT: Record<Category, string> = {
@@ -473,7 +490,7 @@ function TimelineAxis({
         className="absolute pointer-events-none select-none"
         style={{ left: x - 60, top: axisY - 28, width: 120 }}
       >
-        <div className="text-center text-[20px] font-bold text-slate-500 dark:text-slate-300 tracking-widest">
+        <div className="text-center text-[1.25em] font-bold text-slate-500 dark:text-slate-300 tracking-widest">
           {y}
         </div>
       </div>,
@@ -758,7 +775,6 @@ export default function MLIPExplorer() {
     }
   };
 
-  const fontScaleStyle = { fontSize: `${fontScale}rem` };
   const fontScaleIndex = FONT_SCALES.indexOf(fontScale as (typeof FONT_SCALES)[number]);
   const canShrinkFont = fontScaleIndex > 0;
   const canGrowFont = fontScaleIndex >= 0 && fontScaleIndex < FONT_SCALES.length - 1;
@@ -799,7 +815,10 @@ export default function MLIPExplorer() {
         const tp = timelinePositions[node.id];
         if (tp) return tp;
       }
-      return { x: node.x, y: node.y };
+      return {
+        x: node.x * LAYERED_SPACING_X,
+        y: node.y * LAYERED_SPACING_Y,
+      };
     },
     [layout, forceOverrides, forcePositions, timelinePositions],
   );
@@ -828,6 +847,10 @@ export default function MLIPExplorer() {
       // Match each card to the curated zone whose declared rectangle
       // contains its layered (x, y). Falls back to the declared zone
       // size if no cards match (defensive: shouldn't happen in practice).
+      // Matching happens in raw (un-spaced) coordinates so the curated
+      // zone rectangles in landscape.ts continue to identify which cards
+      // belong to which band; the result is then scaled to render-space
+      // so the dashed box aligns with the spaced-out cards.
       const inside = layered.filter(
         (n) =>
           n.x + CARD_WIDTH > g.x &&
@@ -835,17 +858,29 @@ export default function MLIPExplorer() {
           n.y + CARD_HEIGHT > g.y &&
           n.y < g.y + g.height,
       );
-      if (inside.length === 0) return g;
-      const minX = Math.min(...inside.map((n) => n.x)) - ZONE_PAD_X;
-      const minY = Math.min(...inside.map((n) => n.y)) - ZONE_PAD_Y_TOP;
-      const maxX = Math.max(...inside.map((n) => n.x + CARD_WIDTH)) + ZONE_PAD_X;
-      const maxY = Math.max(...inside.map((n) => n.y + CARD_HEIGHT)) + ZONE_PAD_Y_BOT;
+      if (inside.length === 0) {
+        return {
+          ...g,
+          x: g.x * LAYERED_SPACING_X,
+          y: g.y * LAYERED_SPACING_Y,
+          width: g.width * LAYERED_SPACING_X,
+          height: g.height * LAYERED_SPACING_Y,
+        };
+      }
+      const minX = Math.min(...inside.map((n) => n.x));
+      const minY = Math.min(...inside.map((n) => n.y));
+      const maxX = Math.max(...inside.map((n) => n.x + CARD_WIDTH));
+      const maxY = Math.max(...inside.map((n) => n.y + CARD_HEIGHT));
+      const scaledMinX = minX * LAYERED_SPACING_X - ZONE_PAD_X;
+      const scaledMinY = minY * LAYERED_SPACING_Y - ZONE_PAD_Y_TOP;
+      const scaledMaxX = maxX * LAYERED_SPACING_X + ZONE_PAD_X;
+      const scaledMaxY = maxY * LAYERED_SPACING_Y + ZONE_PAD_Y_BOT;
       return {
         ...g,
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
+        x: scaledMinX,
+        y: scaledMinY,
+        width: scaledMaxX - scaledMinX,
+        height: scaledMaxY - scaledMinY,
       };
     });
   }, [nodes, layout]);
@@ -953,6 +988,67 @@ export default function MLIPExplorer() {
     setDragPointerId(null);
   };
 
+  // Mouse-wheel and trackpad pinch zoom centred on the cursor. React attaches
+  // wheel listeners as passive by default, which would silently drop our
+  // preventDefault and let the browser scroll the page instead — so we wire
+  // it up via addEventListener with {passive: false}. The latest layout
+  // metrics are read through a ref so the effect can stay mounted once.
+  const wheelStateRef = useRef({
+    baseScale,
+    userScale,
+    panX: pan.x,
+    panY: pan.y,
+    basePanX: basePan.x,
+    basePanY: basePan.y,
+  });
+  useEffect(() => {
+    wheelStateRef.current = {
+      baseScale,
+      userScale,
+      panX: pan.x,
+      panY: pan.y,
+      basePanX: basePan.x,
+      basePanY: basePan.y,
+    };
+  });
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const onWheel = (e: WheelEvent) => {
+      // Trackpad pinch gestures arrive as wheel events with ctrlKey set;
+      // we want to zoom for both that and a regular scroll wheel.
+      e.preventDefault();
+      const state = wheelStateRef.current;
+      const effective = state.baseScale * state.userScale;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      // Exponential mapping keeps zoom feel even across deltaModes (pixel
+      // vs. line vs. page) and pinch gestures, which can swing wildly.
+      const sensitivity = e.ctrlKey ? 0.01 : 0.0015;
+      const factor = Math.exp(-e.deltaY * sensitivity);
+      const nextUserScale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, state.userScale * factor),
+      );
+      if (nextUserScale === state.userScale) return;
+      const nextEffective = state.baseScale * nextUserScale;
+      // Anchor the zoom on the cursor so the point under the mouse stays
+      // put — much more intuitive than always zooming around the centre.
+      const graphX = (mouseX - state.panX) / effective;
+      const graphY = (mouseY - state.panY) / effective;
+      const newPanX = mouseX - graphX * nextEffective;
+      const newPanY = mouseY - graphY * nextEffective;
+      setUserScale(nextUserScale);
+      setUserPan({
+        x: newPanX - state.basePanX,
+        y: newPanY - state.basePanY,
+      });
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, []);
+
   // Filter + layering. Nodes that don't match the current category filter or
   // the free-text search query are dimmed rather than removed so the overall
   // landscape shape stays legible while the user narrows in.
@@ -993,12 +1089,10 @@ export default function MLIPExplorer() {
   // - for long runs, detours above/below rows so the line never cuts
   //   through an unrelated card
   // Also returns a label anchor placed on a clear stretch of the path.
-  const COLUMN_GAP = 280; // approx horizontal spacing between node columns
-  const ROW_GAP_Y = 430; // y coordinate of the gap between zone_eq and zone_inv
   const DETOUR = 48; // vertical detour distance for same-row skips
   const COL_DETOUR = 60; // horizontal detour distance for same-col skips
-  const CORRIDOR_SPACING = 14; // spacing between parallel detour tracks
-  const LATERAL_STAGGER = 10; // spacing between parallel vertical drops at a shared card edge
+  const CORRIDOR_SPACING = 16; // spacing between parallel detour tracks
+  const LATERAL_STAGGER = 12; // spacing between parallel vertical drops at a shared card edge
 
   // Precompute per-edge corridor offset + lateral stagger so parallel edges
   // don't pile up on the same detour line. Edges are grouped by (detour
@@ -1020,8 +1114,8 @@ export default function MLIPExplorer() {
       const sameRow = Math.abs(dy) < 20;
       const sameCol = Math.abs(dx) < 20;
 
-      if (sameRow && Math.abs(dx) > COLUMN_GAP + CARD_WIDTH) {
-        const bowAbove = from.y > 200;
+      if (sameRow && Math.abs(dx) > LAYERED_COLUMN_GAP + CARD_WIDTH) {
+        const bowAbove = from.y > LAYERED_TOP_BAND_BOUNDARY;
         return {
           corridor: `row-${bowAbove ? "up" : "down"}-${from.y}`,
           source: `${from.id}:${bowAbove ? "top" : "bot"}`,
@@ -1029,7 +1123,7 @@ export default function MLIPExplorer() {
           magnitude: Math.abs(dx),
         };
       }
-      if (sameCol && Math.abs(dy) > 200) {
+      if (sameCol && Math.abs(dy) > LAYERED_SAME_COL_GAP) {
         return {
           corridor: `col-right-${from.x}`,
           source: `${from.id}:right`,
@@ -1039,7 +1133,7 @@ export default function MLIPExplorer() {
       }
       if (!sameRow && !sameCol) {
         const goingDown = dy > 0;
-        const crossZone = (from.y < 450 && to.y > 480) || (from.y > 480 && to.y < 450);
+        const crossZone = (from.y < LAYERED_ZONE_GAP_TOP && to.y > LAYERED_ZONE_GAP_BOT) || (from.y > LAYERED_ZONE_GAP_BOT && to.y < LAYERED_ZONE_GAP_TOP);
         return {
           corridor: crossZone ? `diag-zone-gap` : `diag-${from.y}-${to.y}`,
           source: `${from.id}:${goingDown ? "bot" : "top"}`,
@@ -1111,7 +1205,7 @@ export default function MLIPExplorer() {
     const sameCol = Math.abs(dx) < 20;
 
     // Case 1: same row, adjacent columns -> straight horizontal side-to-side
-    if (sameRow && Math.abs(dx) <= COLUMN_GAP + CARD_WIDTH) {
+    if (sameRow && Math.abs(dx) <= LAYERED_COLUMN_GAP + CARD_WIDTH) {
       const sx = dx > 0 ? fx + CARD_WIDTH : fx;
       const ex = dx > 0 ? tx : tx + CARD_WIDTH;
       return {
@@ -1123,7 +1217,7 @@ export default function MLIPExplorer() {
 
     // Case 2: same row, skipping columns -> U-bow above the row (or below for top row)
     if (sameRow) {
-      const bowAbove = fy > 200;
+      const bowAbove = fy > LAYERED_TOP_BAND_BOUNDARY;
       const bowY = bowAbove
         ? fy - DETOUR - corridorOffset
         : fy + CARD_HEIGHT + DETOUR + corridorOffset;
@@ -1139,7 +1233,7 @@ export default function MLIPExplorer() {
     }
 
     // Case 3: same column, adjacent rows -> straight vertical
-    if (sameCol && Math.abs(dy) <= 200) {
+    if (sameCol && Math.abs(dy) <= LAYERED_SAME_COL_GAP) {
       const sy = dy > 0 ? fy + CARD_HEIGHT : fy;
       const ey = dy > 0 ? ty : ty + CARD_HEIGHT;
       return {
@@ -1167,8 +1261,8 @@ export default function MLIPExplorer() {
     const goingDown = dy > 0;
     const sy = goingDown ? fy + CARD_HEIGHT : fy;
     const ey = goingDown ? ty : ty + CARD_HEIGHT;
-    const crossZone = (fy < 450 && ty > 480) || (fy > 480 && ty < 450);
-    const baseBendY = crossZone ? ROW_GAP_Y : (sy + ey) / 2;
+    const crossZone = (fy < LAYERED_ZONE_GAP_TOP && ty > LAYERED_ZONE_GAP_BOT) || (fy > LAYERED_ZONE_GAP_BOT && ty < LAYERED_ZONE_GAP_TOP);
+    const baseBendY = crossZone ? LAYERED_ROW_GAP_Y : (sy + ey) / 2;
     const bendY = baseBendY + corridorOffset;
     const sxMid = fcx + sourceStagger;
     const exMid = tcx + targetStagger;
@@ -1288,7 +1382,7 @@ export default function MLIPExplorer() {
               x={labelX}
               y={labelY}
               style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
-              fontSize={18}
+              fontSize={18 * fontScale}
               fontWeight={700}
               textAnchor="middle"
               paintOrder="stroke"
@@ -1756,7 +1850,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
   return (
     <div
       className="w-full h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-hidden"
-      style={fontScaleStyle}
     >
       <div className="flex-1 relative flex overflow-hidden">
         <p id="mliphub-node-help" className="sr-only">
@@ -1789,6 +1882,11 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             }`}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
+              // Drives the A−/A/A+ control. Children inside the canvas use
+              // em-based text utilities so they scale relative to this
+              // wrapper without affecting the filter panel or detail
+              // sidebar — those keep the browser default font size.
+              fontSize: `${fontScale}rem`,
             }}
           >
             {/* Group zones — only meaningful in the layered layout. */}
@@ -1805,7 +1903,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     zIndex: 0,
                   }}
                 >
-                  <div className="absolute -top-5 left-4 bg-slate-100 dark:bg-slate-900 px-3 py-0.5 rounded-md text-[18px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider shadow-sm border border-slate-200 dark:border-slate-700">
+                  <div className="absolute -top-5 left-4 bg-slate-100 dark:bg-slate-900 px-3 py-0.5 rounded-md text-[1.125em] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider shadow-sm border border-slate-200 dark:border-slate-700">
                     {node.label}
                   </div>
                 </div>
@@ -1934,20 +2032,20 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={16} className="opacity-70" aria-hidden="true" />
                     <span
-                      className="text-xs sm:text-[11px] md:text-[10px] lg:text-xs font-bold uppercase tracking-wide opacity-70"
+                      className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] lg:text-[0.75em] font-bold uppercase tracking-wide opacity-70"
                       itemProp="applicationCategory"
                     >
                       {node.category}
                     </span>
                   </div>
                   <div
-                    className="font-bold text-base sm:text-sm lg:text-base leading-tight mb-1"
+                    className="font-bold text-[1em] sm:text-[0.875em] lg:text-[1em] leading-tight mb-1"
                     itemProp="name"
                   >
                     {node.label}
                   </div>
                   <time
-                    className="text-[11px] sm:text-xs md:text-[10px] opacity-70 font-mono"
+                    className="text-[0.6875em] sm:text-[0.75em] md:text-[0.625em] opacity-70 font-mono"
                     itemProp="datePublished"
                     dateTime={String(node.year)}
                   >
@@ -1995,7 +2093,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
               <button
                 onClick={() => setFilterOpen((open) => !open)}
                 className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-[0.875em] font-semibold text-slate-700 dark:text-slate-200 shadow-sm"
-                style={fontScaleStyle}
               >
                 <span className="flex items-center gap-2">
                   <Filter size={14} /> Filter Architecture
@@ -2007,7 +2104,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             {(filterOpen || deviceType !== "mobile") && (
               <div
                 className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800"
-                style={fontScaleStyle}
               >
                 <label className="block mb-3">
                   <span className="sr-only">Search models</span>
@@ -2310,15 +2406,16 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     }}
                     disabled={!canShrinkFont}
                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Decrease UI font size"
+                    aria-label="Decrease graph text size"
+                    title="Shrink text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
                   >
                     A−
                   </button>
                   <button
                     onClick={() => updateFontScale(DEFAULT_FONT_SCALE)}
                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Reset UI font size"
-                    title={`UI text size ${Math.round(fontScale * 100)}%`}
+                    aria-label="Reset graph text size"
+                    title={`Graph text size ${Math.round(fontScale * 100)}%`}
                   >
                     A
                   </button>
@@ -2329,7 +2426,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     }}
                     disabled={!canGrowFont}
                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[1em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Increase UI font size"
+                    aria-label="Increase graph text size"
+                    title="Grow text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
                   >
                     A+
                   </button>
@@ -2346,7 +2444,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
           {selectedNode && (
             <div
               className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto"
-              style={fontScaleStyle}
             >
               {renderDetailContent()}
             </div>
@@ -2358,7 +2455,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             selectedNode ? "translate-y-0" : "translate-y-full pointer-events-none"
           }`}
         >
-          <div className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto" style={fontScaleStyle}>
+          <div className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <div className="text-[0.875em] font-semibold text-slate-700 dark:text-slate-200">Details</div>
               <button
