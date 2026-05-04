@@ -574,6 +574,25 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsSpins: null,
     elementsCovered: "—",
   },
+  {
+    id: "hi_mlip",
+    type: "node",
+    category: "Equivariant",
+    label: "Hi-MLIP",
+    year: 2026,
+    author: "Yin, Ouyang, Fan, Lin, Hu, Lv, Cao, Xiao, Chen, Ren (ByteDance Seed / Tsinghua / Peking University)",
+    x: 3180,
+    y: 150,
+    desc:
+      "Hessian-informed machine learning interatomic potential trained with the Hessian-INformed Training (HINT) protocol — Hessian pre-training, configuration sampling, curriculum learning, and a stochastic projected Hessian loss — to attain Hessian-level accuracy with two to four orders of magnitude fewer high-fidelity Hessian labels than standard training. Substantially improves transition-state search and brings Gibbs free-energy predictions close to chemical accuracy in data-scarce regimes, and reproduces phonon renormalization and superconducting Tc of strongly anharmonic hydrides in close agreement with experiment.",
+    paperUrl: "https://arxiv.org/abs/2603.25373",
+    isNew: true,
+    properties: ["energy", "forces"],
+    tags: ["Hessian", "HINT", "transition states", "anharmonic", "curvature-aware"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
+  },
 
   // ---------------------------------------------------------------------------
   // LANE 2: DESCRIPTORS & INDUSTRIAL WORKHORSES  (Middle band, y ≈ 550)
@@ -1229,4 +1248,8 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — MatRIS-MoE (billion-parameter Mixture-of-Experts uMLIP)
   { from: "matris", to: "matris_moe", label: "MoE Scale" },
   { from: "dpa2", to: "matris_moe", label: "Multi-task", dashed: true },
+
+  // March 2026 — Hi-MLIP (Hessian-informed MLIP via the HINT training protocol)
+  { from: "mace", to: "hi_mlip", label: "+Hessian Training" },
+  { from: "nequip", to: "hi_mlip", label: "Curvature-aware", dashed: true },
 ];
