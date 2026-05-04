@@ -7,8 +7,8 @@ abstract: >-
   foundation models — with their lineage, papers, code, and normalized
   metadata for decision support.
 type: software
-version: "0.3.0"
-date-released: "2026-04-25"
+version: "2.0.0"
+date-released: "2026-05-04"
 url: "https://www.mliphub.com"
 repository-code: "https://github.com/lulelaboratory/mlip-landscape"
 license: MIT

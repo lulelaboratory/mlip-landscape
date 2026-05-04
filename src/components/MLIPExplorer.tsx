@@ -122,20 +122,27 @@ const isCategoryFilter = (value: string | null): value is FilterType =>
 
 type DeviceType = "mobile" | "tablet" | "desktop";
 
-type LayoutMode = "layered" | "force";
+type LayoutMode = "layered" | "force" | "timeline";
 const LAYOUT_STORAGE_KEY = "mliphub.layout";
 const EDGE_LABELS_STORAGE_KEY = "mliphub.edgeLabels";
 const FORCE_OVERRIDES_STORAGE_KEY = "mliphub.forceOverrides";
 
 const isLayoutMode = (value: string | null): value is LayoutMode =>
-  value === "layered" || value === "force";
+  value === "layered" || value === "force" || value === "timeline";
 
-// Compact deterministic force-directed layout. Initialised from a category-
-// stratified circular seeding (rather than the layered coordinates, which
-// pre-cluster the cards and bias the simulation toward overlapping
-// solutions) and run for a fixed number of ticks so the result is stable
-// across reloads. We keep this self-contained instead of pulling in
-// d3-force to avoid a new runtime dependency.
+// Timeline layout constants — drives the "Tree of Life" view that places
+// cards along a horizontal year axis with vertical lanes per category.
+const TIMELINE_YEAR_WIDTH = 360; // pixels per year
+const TIMELINE_LANE_HEIGHT = 130; // vertical spacing between cards in a lane
+const TIMELINE_TOP = 100; // top padding above the first lane
+const TIMELINE_LEFT = 120; // left padding before the first year tick
+const TIMELINE_AXIS_HEIGHT = 60; // reserved space at the top for the axis
+
+// Deterministic force-directed layout. Seeded with a category-clustered
+// grid so the four families fan out into distinct quadrants, then refined
+// by repulsion + spring + collision passes that adapt to graph size so the
+// simulation keeps producing a readable layout as new cards are added.
+// Self-contained (no d3-force runtime dependency).
 type Vec2 = { x: number; y: number };
 
 // Where on a card's rectangular boundary does the line from its centre
@@ -166,66 +173,102 @@ function computeForcePositions(
   const positions: Record<string, Vec2> = {};
   const velocities: Record<string, Vec2> = {};
 
-  // Seed positions on a category-stratified ring so the simulation starts
-  // already spread apart. Starting from the curated layered coordinates
-  // pre-clusters the cards and the simulation can't unpack overlaps from
-  // a deeply tangled initial state in a fixed number of ticks.
+  // Seed by category cluster: each category occupies a quadrant centred at
+  // a fixed offset from the origin, with cards within a category packed in
+  // a small grid. This gives the simulation a strong category-grouped
+  // starting point so similar models stay near each other while the spring
+  // / repulsion forces pull lineage edges into shape.
   const categoryOrder: Category[] = [
     "Equivariant",
     "Transformer",
     "Invariant",
     "Descriptor",
   ];
+  // Category cluster centres — chosen so the four families fan out into
+  // distinct regions instead of overlapping at the origin.
+  const clusterCenter: Record<Category, Vec2> = {
+    Equivariant: { x: -1100, y: -700 },
+    Transformer: { x: 1100, y: -700 },
+    Invariant: { x: -1100, y: 700 },
+    Descriptor: { x: 1100, y: 700 },
+  };
+
   const byCategory = new Map<Category, ModelNode[]>();
   for (const cat of categoryOrder) byCategory.set(cat, []);
   for (const n of modelNodes) {
     const list = byCategory.get(n.category);
     if (list) list.push(n);
   }
-  const ringRadius = Math.max(900, modelNodes.length * 22);
-  let i = 0;
+  // Within each category, sort by year so older models sit closer to the
+  // cluster centre and newer ones expand outward — a soft chronological
+  // hint that survives the simulation.
   for (const cat of categoryOrder) {
     const list = byCategory.get(cat) ?? [];
-    for (const n of list) {
-      const angle = (i / Math.max(1, modelNodes.length)) * Math.PI * 2;
-      // Slight per-category radial offset so the four arcs don't overlap.
-      const r = ringRadius + categoryOrder.indexOf(cat) * 40;
-      positions[n.id] = {
-        x: Math.cos(angle) * r,
-        y: Math.sin(angle) * r,
-      };
+    list.sort((a, b) => a.year - b.year);
+    const center = clusterCenter[cat];
+    const cols = Math.ceil(Math.sqrt(Math.max(1, list.length)));
+    const cellW = CARD_WIDTH * 1.7;
+    const cellH = CARD_HEIGHT * 2.6;
+    list.forEach((n, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      // Centre the grid on the cluster centre.
+      const dx = (col - (cols - 1) / 2) * cellW;
+      const dy = (row - (cols - 1) / 2) * cellH;
+      positions[n.id] = { x: center.x + dx, y: center.y + dy };
       velocities[n.id] = { x: 0, y: 0 };
-      i += 1;
-    }
+    });
   }
 
-  // Tuned for ~40 cards of 176x72. The earlier values produced visibly
-  // overlapping cards; these settle into a clearly readable graph.
-  const idealLink = 360;
-  const repulsion = 110000;
-  const linkStrength = 0.06;
-  const centerStrength = 0.004;
+  const N = modelNodes.length;
+
+  // Adapt key forces to graph size so the simulation degrades gracefully
+  // as more models are added. The repulsion / link / collision parameters
+  // grow gently with N so big graphs keep the same visual breathing room
+  // a small graph has, instead of collapsing into a tight ball.
+  const sizeScale = Math.max(1, Math.sqrt(N / 30));
+  const idealLink = 320 * sizeScale;
+  const repulsion = 130000 * sizeScale;
+  const linkStrength = 0.05;
+  const centerStrength = 0.0035;
+  // Slight category-level cohesion: pulls each card toward its category
+  // cluster centre so families don't drift apart under repulsion.
+  const categoryCohesion = 0.012;
   // Card half-extent plus padding — used by the rectangle-based collision
   // pass that prevents cards from physically overlapping.
-  const PAD_X = 28;
-  const PAD_Y = 22;
+  const PAD_X = 36;
+  const PAD_Y = 30;
   const halfW = CARD_WIDTH / 2 + PAD_X;
   const halfH = CARD_HEIGHT / 2 + PAD_Y;
 
   const ids = modelNodes.map((n) => n.id);
-  const TICKS = 600;
+  // Look up each id's category once (used inside the tick loop).
+  const idCategory: Record<string, Category> = {};
+  for (const n of modelNodes) idCategory[n.id] = n.category;
+
+  // Adjacency-aware repulsion: cards that aren't connected by an edge
+  // push each other harder than connected pairs, so unrelated cards never
+  // end up neighbours and edges stay short.
+  const linked = new Set<string>();
+  const linkKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  for (const e of edges) linked.add(linkKey(e.from, e.to));
+
+  // More iterations for larger graphs — extra ticks give the bigger graph
+  // time to unfold without changing the steady-state geometry.
+  const TICKS = Math.min(1200, 600 + N * 8);
 
   for (let tick = 0; tick < TICKS; tick += 1) {
     // Cooling factor: forces calm down over time so the layout settles
-    // instead of oscillating. Damping starts ~0.92 and tightens to ~0.6.
+    // instead of oscillating. Damping starts ~0.92 and tightens to ~0.55.
     const progress = tick / TICKS;
-    const damping = 0.92 - progress * 0.32;
+    const damping = 0.92 - progress * 0.37;
 
     const forces: Record<string, Vec2> = {};
     for (const id of ids) forces[id] = { x: 0, y: 0 };
 
     // Repulsive (Coulomb-like) between every pair, with a soft cutoff so
-    // very close pairs don't get an unbounded force.
+    // very close pairs don't get an unbounded force. Unlinked pairs get a
+    // stronger repulsion so they fan out further.
     for (let i = 0; i < ids.length; i += 1) {
       for (let j = i + 1; j < ids.length; j += 1) {
         const a = positions[ids[i]];
@@ -239,7 +282,9 @@ function computeForcePositions(
           d2 = dx * dx + dy * dy + 0.1;
         }
         const d = Math.sqrt(d2);
-        const f = repulsion / Math.max(d2, 400);
+        const isLinked = linked.has(linkKey(ids[i], ids[j]));
+        const localRepulsion = isLinked ? repulsion * 0.7 : repulsion * 1.15;
+        const f = localRepulsion / Math.max(d2, 600);
         const fx = (dx / d) * f;
         const fy = (dy / d) * f;
         forces[ids[i]].x += fx;
@@ -266,10 +311,13 @@ function computeForcePositions(
       forces[e.to].y -= fy;
     }
 
-    // Weak pull toward (0, 0) so the cluster stays roughly centred.
+    // Pull each card toward (0, 0) and toward its category cluster centre.
     for (const id of ids) {
       forces[id].x += -positions[id].x * centerStrength;
       forces[id].y += -positions[id].y * centerStrength;
+      const center = clusterCenter[idCategory[id]];
+      forces[id].x += (center.x - positions[id].x) * categoryCohesion;
+      forces[id].y += (center.y - positions[id].y) * categoryCohesion;
     }
 
     // Integrate.
@@ -289,26 +337,29 @@ function computeForcePositions(
 
     // Rectangular collision pass — resolve any pair whose padded card
     // bounding boxes overlap by pushing them apart along the smaller-
-    // overlap axis. This is what guarantees we don't end up with the
-    // crowded, overlapping result the smooth-force solution tends to
-    // produce on its own.
-    for (let i = 0; i < ids.length; i += 1) {
-      for (let j = i + 1; j < ids.length; j += 1) {
-        const a = positions[ids[i]];
-        const b = positions[ids[j]];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const overlapX = halfW * 2 - Math.abs(dx);
-        const overlapY = halfH * 2 - Math.abs(dy);
-        if (overlapX <= 0 || overlapY <= 0) continue;
-        if (overlapX < overlapY) {
-          const push = (overlapX / 2) * (dx >= 0 ? 1 : -1);
-          a.x -= push;
-          b.x += push;
-        } else {
-          const push = (overlapY / 2) * (dy >= 0 ? 1 : -1);
-          a.y -= push;
-          b.y += push;
+    // overlap axis. Repeat once per tick for the first half of the run
+    // and twice per tick toward the end so the final layout is overlap-
+    // free even when the simulation has nearly cooled off.
+    const collisionPasses = progress > 0.5 ? 2 : 1;
+    for (let pass = 0; pass < collisionPasses; pass += 1) {
+      for (let i = 0; i < ids.length; i += 1) {
+        for (let j = i + 1; j < ids.length; j += 1) {
+          const a = positions[ids[i]];
+          const b = positions[ids[j]];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const overlapX = halfW * 2 - Math.abs(dx);
+          const overlapY = halfH * 2 - Math.abs(dy);
+          if (overlapX <= 0 || overlapY <= 0) continue;
+          if (overlapX < overlapY) {
+            const push = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+            a.x -= push;
+            b.x += push;
+          } else {
+            const push = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+            a.y -= push;
+            b.y += push;
+          }
         }
       }
     }
@@ -323,6 +374,167 @@ function computeForcePositions(
     };
   }
   return out;
+}
+
+// Timeline ("Tree of Life") layout — places cards along a horizontal year
+// axis with one lane per category. Within a year, cards in the same lane
+// stack vertically so multiple-per-year releases stay readable. The output
+// uses top-left coordinates (matching the rest of the layout pipeline).
+function computeTimelinePositions(
+  modelNodes: ModelNode[],
+): { positions: Record<string, Vec2>; minYear: number; maxYear: number } {
+  const positions: Record<string, Vec2> = {};
+  if (modelNodes.length === 0) {
+    return { positions, minYear: 0, maxYear: 0 };
+  }
+
+  const years = modelNodes.map((n) => n.year);
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
+
+  // Lane order: top → bottom. Equivariant first (the dominant family) so
+  // the lineage chain reads naturally from top-left. Descriptors at the
+  // bottom mirror the layered view.
+  const lanes: Category[] = ["Equivariant", "Transformer", "Invariant", "Descriptor"];
+  const laneIndex: Record<Category, number> = {
+    Equivariant: 0,
+    Transformer: 1,
+    Invariant: 2,
+    Descriptor: 3,
+  };
+
+  // Group by (lane, year) so we can stack within a single cell. Sort by
+  // a stable key (label) so the order is deterministic across reloads.
+  const buckets = new Map<string, ModelNode[]>();
+  for (const n of modelNodes) {
+    const key = `${laneIndex[n.category]}|${n.year}`;
+    (buckets.get(key) ?? buckets.set(key, []).get(key)!).push(n);
+  }
+  for (const list of buckets.values()) list.sort((a, b) => a.label.localeCompare(b.label));
+
+  // Track the maximum stack depth in each lane so lanes that need more
+  // vertical room get extra spacing.
+  const laneStackMax: number[] = lanes.map(() => 1);
+  for (const [key, list] of buckets) {
+    const lane = Number(key.split("|")[0]);
+    laneStackMax[lane] = Math.max(laneStackMax[lane], list.length);
+  }
+
+  // Compute lane Y origin from running heights so denser lanes get more
+  // vertical space than sparse lanes.
+  const laneTop: number[] = [];
+  let yCursor = TIMELINE_TOP + TIMELINE_AXIS_HEIGHT;
+  for (let i = 0; i < lanes.length; i += 1) {
+    laneTop.push(yCursor);
+    yCursor += TIMELINE_LANE_HEIGHT * laneStackMax[i] + 40;
+  }
+
+  for (const [key, list] of buckets) {
+    const [laneStr, yearStr] = key.split("|");
+    const lane = Number(laneStr);
+    const year = Number(yearStr);
+    const baseX = TIMELINE_LEFT + (year - minYear) * TIMELINE_YEAR_WIDTH;
+    list.forEach((n, idx) => {
+      // Stack cards vertically within a (lane, year) cell.
+      const yOffset = idx * TIMELINE_LANE_HEIGHT;
+      positions[n.id] = {
+        x: baseX,
+        y: laneTop[lane] + yOffset,
+      };
+    });
+  }
+
+  return { positions, minYear, maxYear };
+}
+
+// Decorative axis drawn in the timeline layout: one major tick per year
+// across the full year span, plus 11 light minor ticks per year so the
+// month resolution requested for "Tree of Life" comparisons is visible.
+function TimelineAxis({
+  minYear,
+  maxYear,
+  bottom,
+}: {
+  minYear: number;
+  maxYear: number;
+  bottom: number;
+}) {
+  if (!Number.isFinite(minYear) || !Number.isFinite(maxYear)) return null;
+  const yearCount = maxYear - minYear;
+  const totalWidth = yearCount * TIMELINE_YEAR_WIDTH + TIMELINE_YEAR_WIDTH;
+  const axisY = TIMELINE_TOP + 30;
+  const axisBottom = Math.max(bottom + 60, axisY + 200);
+  const ticks: React.ReactNode[] = [];
+  for (let y = minYear; y <= maxYear; y += 1) {
+    const x = TIMELINE_LEFT + (y - minYear) * TIMELINE_YEAR_WIDTH + CARD_WIDTH / 2;
+    ticks.push(
+      <div
+        key={`year-${y}`}
+        className="absolute pointer-events-none select-none"
+        style={{ left: x - 60, top: axisY - 28, width: 120 }}
+      >
+        <div className="text-center text-[20px] font-bold text-slate-500 dark:text-slate-300 tracking-widest">
+          {y}
+        </div>
+      </div>,
+    );
+    // Vertical guideline beneath the year label.
+    ticks.push(
+      <div
+        key={`guide-${y}`}
+        className="absolute pointer-events-none border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
+        style={{
+          left: x,
+          top: axisY,
+          height: axisBottom - axisY,
+        }}
+      />,
+    );
+    // Minor ticks for months within this year (11 between major ticks).
+    if (y < maxYear) {
+      for (let m = 1; m < 12; m += 1) {
+        const mx = x + (m / 12) * TIMELINE_YEAR_WIDTH;
+        ticks.push(
+          <div
+            key={`m-${y}-${m}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: mx,
+              top: axisY,
+              width: 1,
+              height: m % 6 === 0 ? 14 : 8,
+              background: "rgba(100,116,139,0.25)",
+            }}
+          />,
+        );
+      }
+    }
+  }
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        left: 0,
+        top: 0,
+        width: TIMELINE_LEFT + totalWidth + CARD_WIDTH,
+        height: axisBottom + 40,
+        zIndex: 0,
+      }}
+    >
+      {/* Horizontal axis line */}
+      <div
+        className="absolute"
+        style={{
+          left: TIMELINE_LEFT + CARD_WIDTH / 2 - 8,
+          top: axisY,
+          width: yearCount * TIMELINE_YEAR_WIDTH + 16,
+          height: 2,
+          background: "rgba(100,116,139,0.45)",
+        }}
+      />
+      {ticks}
+    </div>
+  );
 }
 
 export default function MLIPExplorer() {
@@ -562,6 +774,16 @@ export default function MLIPExplorer() {
     return computeForcePositions(modelItems, edges);
   }, [nodes, edges]);
 
+  // Timeline ("Tree of Life") positions plus the year range — used by the
+  // timeline-layout axis renderer to draw year ticks across the full span.
+  const timelineLayout = useMemo(() => {
+    const modelItems = nodes.filter(
+      (n): n is ModelNode => n.type === "node",
+    );
+    return computeTimelinePositions(modelItems);
+  }, [nodes]);
+  const timelinePositions = timelineLayout.positions;
+
   // Resolves a model's effective (x, y) for the current layout. In force
   // mode any user-dragged overrides take precedence over the simulation
   // output; in layered mode we always use the curated coordinates.
@@ -573,9 +795,13 @@ export default function MLIPExplorer() {
         const fp = forcePositions[node.id];
         if (fp) return fp;
       }
+      if (layout === "timeline") {
+        const tp = timelinePositions[node.id];
+        if (tp) return tp;
+      }
       return { x: node.x, y: node.y };
     },
-    [layout, forceOverrides, forcePositions],
+    [layout, forceOverrides, forcePositions, timelinePositions],
   );
 
   const positionedModels = useMemo(() => {
@@ -584,18 +810,67 @@ export default function MLIPExplorer() {
       .map((n) => ({ ...n, ...positionOf(n) }));
   }, [nodes, positionOf]);
 
+  // Auto-fit each layered zone around the cards that fall inside it. The
+  // hard-coded zone width/height in landscape.ts can become outdated as
+  // new models extend a lane to the right; recomputing the bounds at
+  // render time keeps the dashed zone box hugging its cards no matter how
+  // many entries we add later. Zones are only shown in the layered
+  // layout — force and timeline layouts hide them since the cards no
+  // longer respect the lane partitioning there.
+  const fittedGroups = useMemo(() => {
+    if (layout !== "layered") return [];
+    const groups = nodes.filter((n): n is GroupNode => n.type === "group");
+    const layered = nodes.filter((n): n is ModelNode => n.type === "node");
+    const ZONE_PAD_X = 28;
+    const ZONE_PAD_Y_TOP = 36;
+    const ZONE_PAD_Y_BOT = 28;
+    return groups.map((g) => {
+      // Match each card to the curated zone whose declared rectangle
+      // contains its layered (x, y). Falls back to the declared zone
+      // size if no cards match (defensive: shouldn't happen in practice).
+      const inside = layered.filter(
+        (n) =>
+          n.x + CARD_WIDTH > g.x &&
+          n.x < g.x + g.width &&
+          n.y + CARD_HEIGHT > g.y &&
+          n.y < g.y + g.height,
+      );
+      if (inside.length === 0) return g;
+      const minX = Math.min(...inside.map((n) => n.x)) - ZONE_PAD_X;
+      const minY = Math.min(...inside.map((n) => n.y)) - ZONE_PAD_Y_TOP;
+      const maxX = Math.max(...inside.map((n) => n.x + CARD_WIDTH)) + ZONE_PAD_X;
+      const maxY = Math.max(...inside.map((n) => n.y + CARD_HEIGHT)) + ZONE_PAD_Y_BOT;
+      return {
+        ...g,
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      };
+    });
+  }, [nodes, layout]);
+
   const bounds = useMemo(() => {
     if (positionedModels.length === 0) {
       return { minX: 0, minY: 0, maxX: CARD_WIDTH, maxY: CARD_HEIGHT };
     }
 
-    const minX = Math.min(...positionedModels.map((n) => n.x));
-    const minY = Math.min(...positionedModels.map((n) => n.y));
-    const maxX = Math.max(...positionedModels.map((n) => n.x + CARD_WIDTH));
-    const maxY = Math.max(...positionedModels.map((n) => n.y + CARD_HEIGHT));
+    let minX = Math.min(...positionedModels.map((n) => n.x));
+    let minY = Math.min(...positionedModels.map((n) => n.y));
+    let maxX = Math.max(...positionedModels.map((n) => n.x + CARD_WIDTH));
+    let maxY = Math.max(...positionedModels.map((n) => n.y + CARD_HEIGHT));
+
+    // Timeline layout draws an axis with year labels above the cards;
+    // make sure the auto-fit + the SVG viewBox include that header area
+    // so the year labels aren't clipped at the top of the canvas.
+    if (layout === "timeline") {
+      minX = Math.min(minX, 0);
+      minY = Math.min(minY, TIMELINE_TOP - 20);
+      maxY = maxY + 20;
+    }
 
     return { minX, minY, maxX, maxY };
-  }, [positionedModels]);
+  }, [positionedModels, layout]);
 
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
@@ -703,15 +978,14 @@ export default function MLIPExplorer() {
       return haystack.includes(q);
     };
 
-    const groups = nodes.filter((n): n is GroupNode => n.type === "group");
     const items = positionedModels.map((n) => {
       const dimmed =
         (filter !== "All" && n.category !== filter) || !matchesQuery(n);
       return { ...n, dimmed };
     });
 
-    return { groups, items };
-  }, [nodes, positionedModels, filter, query]);
+    return { groups: fittedGroups, items };
+  }, [fittedGroups, positionedModels, filter, query]);
 
   // Orthogonal edge router. Returns an SVG path string that:
   // - exits the source card from the side nearest the target
@@ -928,11 +1202,13 @@ export default function MLIPExplorer() {
       let labelX: number;
       let labelY: number;
 
-      if (layout === "force") {
+      if (layout === "force" || layout === "timeline") {
         // Connect edges to the actual card border (rectangle exit point)
         // instead of a circle around the centre — the cards are 176x72
         // so a circular radius leaves visible gaps along the long sides
-        // and overshoots near the corners.
+        // and overshoots near the corners. Timeline reuses the same
+        // straight-line edge style: with cards anchored to year columns
+        // the curated layered router would cross many lanes unhelpfully.
         const fcx = fromNode.x + CARD_WIDTH / 2;
         const fcy = fromNode.y + CARD_HEIGHT / 2;
         const tcx = toNode.x + CARD_WIDTH / 2;
@@ -1012,11 +1288,11 @@ export default function MLIPExplorer() {
               x={labelX}
               y={labelY}
               style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
-              fontSize={14}
-              fontWeight={600}
+              fontSize={18}
+              fontWeight={700}
               textAnchor="middle"
               paintOrder="stroke"
-              strokeWidth={3}
+              strokeWidth={4}
               strokeLinejoin="round"
             >
               {edge.label}
@@ -1515,24 +1791,35 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
             }}
           >
-            {/* Group zones */}
-            {processedNodes.groups.map((node) => (
-              <div
-                key={node.id}
-                className="absolute border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-200/30 dark:bg-slate-800/40 backdrop-blur-sm pointer-events-none"
-                style={{
-                  left: node.x,
-                  top: node.y,
-                  width: node.width,
-                  height: node.height,
-                  zIndex: 0,
-                }}
-              >
-                <div className="absolute -top-4 left-4 bg-slate-100 dark:bg-slate-900 px-2 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  {node.label}
+            {/* Group zones — only meaningful in the layered layout. */}
+            {layout === "layered" &&
+              processedNodes.groups.map((node) => (
+                <div
+                  key={node.id}
+                  className="absolute border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-200/30 dark:bg-slate-800/40 backdrop-blur-sm pointer-events-none"
+                  style={{
+                    left: node.x,
+                    top: node.y,
+                    width: node.width,
+                    height: node.height,
+                    zIndex: 0,
+                  }}
+                >
+                  <div className="absolute -top-5 left-4 bg-slate-100 dark:bg-slate-900 px-3 py-0.5 rounded-md text-[18px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider shadow-sm border border-slate-200 dark:border-slate-700">
+                    {node.label}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+
+            {/* Timeline axis — drawn beneath the cards in timeline layout
+                so users can read which year each column corresponds to. */}
+            {layout === "timeline" && (
+              <TimelineAxis
+                minYear={timelineLayout.minYear}
+                maxYear={timelineLayout.maxYear}
+                bottom={bounds.maxY}
+              />
+            )}
 
             {/* Edges */}
             <svg
@@ -1835,7 +2122,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   <div
                     role="radiogroup"
                     aria-labelledby="mliphub-layout-label"
-                    className="grid grid-cols-2 gap-1"
+                    className="grid grid-cols-1 gap-1"
                   >
                     <button
                       type="button"
@@ -1870,6 +2157,26 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         Exp
                       </span>
                     </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "timeline"}
+                      onClick={() => updateLayout("timeline")}
+                      title="Tree of Life view: cards arranged left-to-right by release year with month ticks."
+                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "timeline"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Timeline (Tree of Life)
+                      <span
+                        aria-label="new"
+                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                      >
+                        New
+                      </span>
+                    </button>
                   </div>
                   {layout === "force" && (
                     <>
@@ -1886,6 +2193,13 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         <RotateCcw size={12} aria-hidden="true" /> Reset layout
                       </button>
                     </>
+                  )}
+                  {layout === "timeline" && (
+                    <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
+                      Tree-of-life view: cards are placed left-to-right by
+                      year (older → newer), grouped into one lane per
+                      architecture family. Minor ticks mark months.
+                    </p>
                   )}
                 </div>
 

@@ -26,15 +26,38 @@ is fully reproducible.
 
 ## Release status
 
-The current public release is **v0.3.0**, the snapshot referenced by the
-companion arXiv manuscript. The version described in the arXiv paper
-corresponds to MLIP Hub **v0.3.0**; subsequent releases extend it but should be
-considered moving targets. Pin to v0.3.0 (or the matching dataset snapshot
-under `public/data/landscape-v0.3.0.{json,csv}`) for exact reproducibility.
+The current public release is **v2.0.0** — a major refresh that adds the new
+**Timeline (Tree of Life)** layout, retunes the force-directed simulation so
+it stays readable as the catalogue grows, auto-fits the layered group zones
+around their cards, and bumps the on-canvas typography (edge labels and group
+headings) for better legibility.
 
-A DOI for the v0.3.0 archive will be minted via Zenodo on first public release;
-the citation page and `CITATION.cff` will be updated once the DOI is
-available.
+The snapshot referenced by the companion arXiv manuscript is **v0.3.0**;
+v2.0.0 extends that catalogue with new entries and visual improvements.
+Pin to v2.0.0 (or the matching dataset snapshot under
+`public/data/landscape-v2.0.0.{json,csv}`) for exact reproducibility against
+the current site.
+
+### What's new in v2.0.0
+
+- **Timeline (Tree of Life) layout** — left-to-right by year with month
+  ticks and one lane per architecture family, switchable from the layout
+  panel.
+- **Force-directed redesign** — category-clustered seeding,
+  size-adaptive forces, link-aware repulsion, and a stronger collision
+  pass keep the experimental view legible even with many more cards.
+- **Auto-fit layered zones** — the dashed group rectangles
+  (*Equivariant & Transformers*, *Invariant & Descriptors*) recompute
+  their bounds from the cards inside them on every render, so newly
+  added models on the right edge no longer poke outside the box.
+- **Larger on-canvas typography** — edge labels and zone headings have
+  been bumped up so they remain readable at default zoom.
+- **Updated dataset snapshot** — `public/data/landscape-v2.0.0.json`
+  pins the catalogue served by the live site.
+
+A DOI for the v2.0.0 archive will be minted via Zenodo on the next public
+release; the citation page and `CITATION.cff` will be updated once the DOI
+is available.
 
 ---
 
@@ -66,12 +89,14 @@ The app visualises the catalogue as an explorable graph with:
 - **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, …)
 - **Edges** capturing the conceptual / architectural lineage between them,
   with hover tooltips describing the relationship and a label on/off toggle
-- A **layout switcher** with the curated *Layered* view as the default and
+- A **layout switcher** with the curated *Layered* view as the default,
   an optional *Force-directed* view marked **Experimental** (built-in
-  deterministic simulation, no extra runtime dependency); the chosen layout
-  persists across navigation and reloads via the `?layout=` query parameter
-  and `localStorage`. The version cited in the arXiv paper uses the
-  layered layout.
+  deterministic simulation, no extra runtime dependency), and a new
+  *Timeline (Tree of Life)* view that arranges cards left-to-right by
+  release year (with month ticks) across one lane per architecture
+  family. The chosen layout persists across navigation and reloads via
+  the `?layout=` query parameter and `localStorage`. The version cited
+  in the arXiv paper uses the layered layout.
 - A **Cite current selection** button that copies a citation for the
   current view (filters, layout, selected model) to the clipboard
 - A **detail sidebar** with links to code, papers, and a web search
@@ -177,11 +202,11 @@ they used. The schema version is recorded inside each JSON payload.
 
 ## Local reproduction
 
-To reproduce the v0.3.0 snapshot locally:
+To reproduce the v2.0.0 snapshot locally:
 
     git clone https://github.com/lulelaboratory/mlip-landscape.git
     cd mlip-landscape
-    git checkout v0.3.0
+    git checkout v2.0.0
     npm install
     npm run check:landscape
     npm run export:landscape
@@ -189,7 +214,9 @@ To reproduce the v0.3.0 snapshot locally:
     npm run start
 
 The exported dataset matches the files committed under
-`public/data/landscape-v0.3.0.*` and the JSON served by the live site.
+`public/data/landscape-v2.0.0.*` and the JSON served by the live site.
+The v0.3.0 snapshot — the version cited in the companion arXiv paper —
+remains available at `public/data/landscape-v0.3.0.*`.
 
 ---
 
