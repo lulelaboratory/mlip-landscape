@@ -2018,7 +2018,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       : "hover:scale-105 z-10 shadow-md dark:shadow-slate-950/40"
                   }
                     ${node.dimmed ? "opacity-20 grayscale" : "opacity-100"}
-                    ${node.isNew ? "animate-bounce" : ""}
                     ${isDraggable ? "cursor-grab active:cursor-grabbing" : ""}
                   `}
                   style={{ left: node.x, top: node.y }}
@@ -2038,6 +2037,17 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       {node.category}
                     </span>
                   </div>
+                  {/* Static "new entry" tag: replaces the previous bouncing
+                      animation, which made the cards hard to read and to
+                      capture in screenshots. */}
+                  {node.isNew && (
+                    <span
+                      aria-label="recently added"
+                      className="absolute top-1.5 right-1.5 px-1.5 py-0 rounded text-[0.55em] font-bold uppercase tracking-wider bg-amber-200 text-amber-900 dark:bg-amber-300 dark:text-amber-900"
+                    >
+                      New
+                    </span>
+                  )}
                   <div
                     className="font-bold text-[1em] sm:text-[0.875em] lg:text-[1em] leading-tight mb-1"
                     itemProp="name"
@@ -2103,7 +2113,12 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
             {(filterOpen || deviceType !== "mobile") && (
               <div
-                className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800"
+                // Cap the panel height to the visible canvas (header is
+                // ~112 px and we want a small breathing margin top + bottom)
+                // and scroll its contents when sections like Layout, Color
+                // palette, and the zoom + font controls would otherwise run
+                // off the bottom of short laptop viewports.
+                className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain"
               >
                 <label className="block mb-3">
                   <span className="sr-only">Search models</span>
