@@ -35,7 +35,7 @@
       ],
       "license": "MIT",
       "maintenance": "maintained",
-      "lastReviewed": "2026-04-19",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "custom DFT"
       ],
@@ -60,9 +60,38 @@
       "desc": "Strictly local equivariant architecture designed for massive parallel MD (100M+ atoms) while retaining NequIP-level accuracy.",
       "githubUrl": "https://github.com/mir-group/allegro",
       "paperUrl": "https://www.nature.com/articles/s41467-023-36329-y",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "general materials",
+        "organic molecules"
+      ],
+      "useCases": [
+        "massive parallel MD",
+        "large-scale MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT"
+      ],
+      "tags": [
+        "equivariant",
+        "strictly local",
+        "parallel MD"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "dataset-dependent (general molecules and materials)"
     },
     {
       "id": "eqv2",
@@ -76,9 +105,39 @@
       "desc": "Improved equivariant transformer with higher-degree tensor representations; achieves state-of-the-art OC20/OC22 performance with strong data-efficiency.",
       "githubUrl": "https://github.com/atomicarchitects/equiformer_v2",
       "paperUrl": "https://arxiv.org/abs/2306.12059",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "catalysts",
+        "surfaces",
+        "general materials"
+      ],
+      "useCases": [
+        "catalyst discovery",
+        "surface chemistry"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch",
+        "ASE"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OC20",
+        "OC22"
+      ],
+      "tags": [
+        "transformer",
+        "equivariant",
+        "attention",
+        "higher-order tensors"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OC20 / OC22 (~56 elements)"
     },
     {
       "id": "mace",
@@ -113,7 +172,7 @@
       ],
       "license": "MIT",
       "maintenance": "active",
-      "lastReviewed": "2026-04-19",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "MPTrj",
         "Alexandria"
@@ -138,15 +197,39 @@
       "y": 320,
       "desc": "Graph Atomic Cluster Expansion: a foundation-scale implementation of ACE with explicit multi-body basis functions for wide-coverage materials modelling.",
       "githubUrl": "https://github.com/ICAMS/grace-tensorpotential",
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "Apache-2.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPTrj"
+      ],
       "tags": [
         "equivariant",
         "ACE",
         "graph",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPTrj (~89 elements)"
     },
     {
       "id": "orb",
@@ -177,7 +260,7 @@
       ],
       "license": "Apache-2.0",
       "maintenance": "active",
-      "lastReviewed": "2026-04-19",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "MPTrj",
         "Alexandria"
@@ -203,6 +286,30 @@
       "desc": "Orb-v3 variant for molecules, electrolytes, metal complexes, and biomolecules, trained on the ~100M-structure OMol25 dataset with explicit total-charge and spin-multiplicity conditioning.",
       "githubUrl": "https://huggingface.co/Orbital-Materials/OrbMol",
       "paperUrl": "https://www.orbitalmaterials.com/posts/orbmol-extending-orb-to-molecular-systems",
+      "coverage": [
+        "organic molecules",
+        "electrolytes",
+        "metal complexes",
+        "biomolecules"
+      ],
+      "useCases": [
+        "drug discovery",
+        "electrolyte design",
+        "molecular MD"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "Apache-2.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OMol25"
+      ],
       "tags": [
         "transformer",
         "charge-aware",
@@ -225,6 +332,32 @@
       "desc": "First E(3)-equivariant convolutional architecture for point clouds, introducing spherical-harmonic tensor products that underlie nearly all modern equivariant MLIPs (NequIP, MACE, Equiformer).",
       "githubUrl": "https://github.com/tensorfieldnetworks/tensorfieldnetworks",
       "paperUrl": "https://arxiv.org/abs/1802.08219",
+      "coverage": [
+        "point clouds",
+        "small molecules"
+      ],
+      "useCases": [
+        "equivariance research baseline"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "toy/synthetic"
+      ],
+      "tags": [
+        "equivariant",
+        "E(3)",
+        "tensor field",
+        "point cloud"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -241,6 +374,33 @@
       "desc": "Self-attention generalized to SE(3)-equivariant inputs via tensor field attention; an early blueprint for equivariant transformer architectures like Equiformer.",
       "githubUrl": "https://github.com/FabianFuchsML/se3-transformer-public",
       "paperUrl": "https://arxiv.org/abs/2006.10503",
+      "coverage": [
+        "point clouds",
+        "small molecules"
+      ],
+      "useCases": [
+        "equivariant attention research baseline"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "QM9",
+        "MD17"
+      ],
+      "tags": [
+        "transformer",
+        "SE(3)",
+        "self-attention",
+        "equivariant"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -257,9 +417,41 @@
       "desc": "Joint Multi-task Pretraining: trains one backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x, demonstrating that multi-dataset pretraining yields strong transferable potentials — a precursor to UMA-style universal models.",
       "githubUrl": "https://github.com/facebookresearch/JMP",
       "paperUrl": "https://arxiv.org/abs/2310.16802",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "catalysts",
+        "surfaces",
+        "organic molecules",
+        "transition states"
+      ],
+      "useCases": [
+        "multi-task pretraining",
+        "transferable potential fine-tuning"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch",
+        "ASE"
+      ],
+      "license": "CC-BY-NC-4.0",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OC20",
+        "OC22",
+        "ANI-1x",
+        "Transition-1x"
+      ],
+      "tags": [
+        "transformer",
+        "multi-task pretraining",
+        "foundation model"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "elements present in OC20 / OC22 / ANI-1x / Transition-1x (organic + catalytic chemistry)"
     },
     {
       "id": "esen",
@@ -273,14 +465,39 @@
       "desc": "Equivariant Smooth Energy Network: conservative-force equivariant GNN with a smooth potential energy surface designed for stable long-horizon MD. Serves as the backbone underneath Meta's UMA foundation model.",
       "githubUrl": "https://github.com/facebookresearch/fairchem",
       "paperUrl": "https://arxiv.org/abs/2502.12147",
+      "coverage": [
+        "general materials",
+        "catalysts"
+      ],
+      "useCases": [
+        "long-horizon MD",
+        "stable PES sampling"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OMat24",
+        "MPTrj"
+      ],
       "tags": [
         "equivariant",
         "smooth PES",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPTrj (~89 elements)"
     },
     {
       "id": "uma",
@@ -294,6 +511,38 @@
       "desc": "Universal Model for Atoms: a Mixture of Linear Experts (MoLE) foundation model built on the eSEN backbone, trained on ~500M structures spanning OC20, ODAC23, OMat24, OMC25, and OMol25. NeurIPS 2025 spotlight.",
       "githubUrl": "https://huggingface.co/facebook/UMA",
       "paperUrl": "https://arxiv.org/abs/2506.23971",
+      "coverage": [
+        "general materials",
+        "catalysts",
+        "MOFs",
+        "molecular crystals",
+        "organic molecules"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "multi-task simulation",
+        "drug + materials"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "proprietary",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OC20",
+        "ODAC23",
+        "OMat24",
+        "OMC25",
+        "OMol25"
+      ],
       "tags": [
         "transformer",
         "mixture-of-experts",
@@ -301,9 +550,9 @@
         "charge-aware",
         "spin-aware"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "elementsCovered": "elements present in OC20 / ODAC23 / OMat24 / OMC25 / OMol25 (~89 elements)"
     },
     {
       "id": "nequix",
@@ -318,9 +567,41 @@
       "githubUrl": "https://github.com/atomicarchitects/nequix",
       "paperUrl": "https://arxiv.org/abs/2508.16067",
       "isNew": true,
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "budget-constrained training",
+        "phonon calculations"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "JAX-MD",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "MPTrj",
+        "OMat24",
+        "sAlex",
+        "MDR Phonon"
+      ],
+      "tags": [
+        "equivariant",
+        "JAX",
+        "foundation model",
+        "Muon optimizer"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by MPTrj / OMat24 (~89 elements)"
     },
     {
       "id": "petmad",
@@ -335,6 +616,36 @@
       "githubUrl": "https://github.com/lab-cosmo/pet-mad",
       "paperUrl": "https://arxiv.org/abs/2503.14118",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "surfaces",
+        "molecules"
+      ],
+      "useCases": [
+        "lightweight universal MLIP",
+        "MD with uncertainty"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "MAD"
+      ],
+      "tags": [
+        "transformer",
+        "PET",
+        "foundation model",
+        "lightweight"
+      ],
       "supportsCharges": false,
       "supportsSpins": false,
       "elementsCovered": "85 elements"
@@ -352,13 +663,40 @@
       "githubUrl": "https://github.com/atomicarchitects/equiformer_v3",
       "paperUrl": "https://arxiv.org/abs/2604.09130",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "catalysts"
+      ],
+      "useCases": [
+        "foundation MLIP",
+        "Matbench-Discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "PyTorch",
+        "ASE"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OC20",
+        "MPTrj",
+        "OMat24",
+        "sAlex",
+        "Matbench-Discovery"
+      ],
       "tags": [
         "transformer",
         "SE(3)-equivariant",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
+      "supportsCharges": false,
+      "supportsSpins": false,
       "elementsCovered": "all elements covered by MPtrj / OMat24 (~89 elements)"
     },
     {
@@ -374,6 +712,29 @@
       "githubUrl": "https://github.com/ACEsuit/mace-foundations",
       "paperUrl": "https://arxiv.org/abs/2602.19411",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "non-covalent interactions"
+      ],
+      "useCases": [
+        "polarisable molecular MD",
+        "drug discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OMol25"
+      ],
       "tags": [
         "equivariant",
         "MACE",
@@ -400,6 +761,16 @@
       "githubUrl": "https://github.com/qiqb-osaka/mace-osaka26",
       "paperUrl": "https://arxiv.org/abs/2603.03223",
       "isNew": true,
+      "coverage": [
+        "nuclear materials",
+        "actinides",
+        "general materials",
+        "organic molecules"
+      ],
+      "useCases": [
+        "actinide chemistry",
+        "nuclear waste materials"
+      ],
       "properties": [
         "energy",
         "forces",
@@ -409,6 +780,9 @@
         "ASE",
         "LAMMPS"
       ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "MACE-Osaka24",
         "HE26",
@@ -438,9 +812,29 @@
       "desc": "Efficient equivariant graph neural network MLIP that introduces a geometry-aware dual-path dynamic attention mechanism inside its message-passing layers and a physics-informed multi-perspective pooling strategy for global system representations. Demonstrates competitive accuracy with mainstream equivariant models at markedly lower computational cost across organic molecules (QM7, MD17), Li-containing crystals, two-dimensional materials (bilayer graphene, black phosphorus), surface catalytic reactions (formate decomposition), and charged systems, while remaining stable for long-time MD simulations.",
       "paperUrl": "https://arxiv.org/abs/2603.22810",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "Li-containing crystals",
+        "2D materials",
+        "catalytic surfaces",
+        "charged systems"
+      ],
+      "useCases": [
+        "efficient equivariant MD",
+        "long-time MD"
+      ],
       "properties": [
         "energy",
         "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "QM7",
+        "MD17"
       ],
       "tags": [
         "equivariant",
@@ -463,9 +857,26 @@
       "desc": "Unified neural interatomic potential that embeds an Ewald-inspired reciprocal-space formulation inside an irreducible SO(3)-equivariant framework. Performs equivariant message passing in reciprocal space via learned equivariant k-space filters and an equivariant inverse transform, capturing anisotropic tensorial long-range correlations without sacrificing physical consistency; consistently improves energy and force accuracy, data efficiency, and long-range extrapolation across periodic systems, supramolecular assemblies, conjugated molecules, charged dimers, and biomolecular dynamics.",
       "paperUrl": "https://arxiv.org/abs/2603.18389",
       "isNew": true,
+      "coverage": [
+        "periodic systems",
+        "supramolecular assemblies",
+        "biomolecules"
+      ],
+      "useCases": [
+        "long-range electrostatics",
+        "biomolecular MD"
+      ],
       "properties": [
         "energy",
         "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom periodic + biomolecular DFT"
       ],
       "tags": [
         "SO(3)-equivariant",
@@ -490,6 +901,15 @@
       "githubUrl": "https://github.com/facebookresearch/fairchem",
       "paperUrl": "https://arxiv.org/abs/2603.06567",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "general materials",
+        "catalysts"
+      ],
+      "useCases": [
+        "large-scale MD",
+        "long-range chemistry"
+      ],
       "properties": [
         "energy",
         "forces"
@@ -498,6 +918,9 @@
         "ASE",
         "PyTorch"
       ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "OMol25",
         "OMat24",
@@ -527,9 +950,27 @@
       "desc": "Equivariant many-body message-passing interatomic potential extending the MACE framework to magnetic materials by embedding atomic magnetic moments as explicit degrees of freedom alongside positions. Learns physically consistent and transferable representations of magnetic behaviour beyond collinear approximations and can incorporate spin-orbit coupling, achieving near density-functional-theory accuracy with strong data efficiency by fine-tuning from a pre-trained foundation model. Targets structural transformations, finite-temperature magnetic phenomena, and high-throughput screening of strongly spin-orbit coupled materials.",
       "paperUrl": "https://arxiv.org/abs/2604.08143",
       "isNew": true,
+      "coverage": [
+        "magnetic materials",
+        "strongly spin-orbit coupled materials"
+      ],
+      "useCases": [
+        "magnetic structure prediction",
+        "finite-temperature magnetism"
+      ],
       "properties": [
         "energy",
-        "forces"
+        "forces",
+        "magnetic_moment"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom magnetic materials DFT"
       ],
       "tags": [
         "equivariant",
@@ -553,9 +994,28 @@
       "desc": "Multifidelity Mixture-of-Experts framework built on the strictly local E(3)-equivariant Allegro architecture. Spatially partitions the simulation domain into chemically complex regions (e.g. reactive interfaces) and simple regions (e.g. bulk lattices) and assigns Allegro experts of different capacity to each, enabling expensive high-fidelity inference only where required while a cheaper expert handles the rest of the cell. Demonstrated to retain near-foundation-model accuracy at substantially reduced cost for large-scale MD of heterogeneous systems.",
       "paperUrl": "https://arxiv.org/abs/2604.26143",
       "isNew": true,
+      "coverage": [
+        "heterogeneous interfaces",
+        "reactive interfaces",
+        "bulk lattices"
+      ],
+      "useCases": [
+        "multifidelity MD",
+        "large heterogeneous-system simulation"
+      ],
       "properties": [
         "energy",
         "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom heterogeneous-system DFT"
       ],
       "tags": [
         "equivariant",
@@ -580,9 +1040,27 @@
       "desc": "Hessian-informed machine learning interatomic potential trained with the Hessian-INformed Training (HINT) protocol — Hessian pre-training, configuration sampling, curriculum learning, and a stochastic projected Hessian loss — to attain Hessian-level accuracy with two to four orders of magnitude fewer high-fidelity Hessian labels than standard training. Substantially improves transition-state search and brings Gibbs free-energy predictions close to chemical accuracy in data-scarce regimes, and reproduces phonon renormalization and superconducting Tc of strongly anharmonic hydrides in close agreement with experiment.",
       "paperUrl": "https://arxiv.org/abs/2603.25373",
       "isNew": true,
+      "coverage": [
+        "transition states",
+        "anharmonic hydrides",
+        "phonon systems"
+      ],
+      "useCases": [
+        "transition-state search",
+        "Gibbs free energy",
+        "phonon prediction"
+      ],
       "properties": [
         "energy",
         "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom Hessian-labeled DFT"
       ],
       "tags": [
         "Hessian",
@@ -607,10 +1085,30 @@
       "desc": "Self-attention message-passing potential with explicit electronic degrees of freedom — total charge and spin multiplicity are injected as global tokens that condition the local atomic embeddings. A direct conceptual ancestor of charge/spin-conditioned foundation models such as UMA and MACE-POLAR-1.",
       "githubUrl": "https://github.com/OUnke/SpookyNet",
       "paperUrl": "https://www.nature.com/articles/s41467-021-27504-0",
+      "coverage": [
+        "organic molecules",
+        "charged molecules"
+      ],
+      "useCases": [
+        "charge/spin-conditioned MD",
+        "ionic systems"
+      ],
       "properties": [
         "energy",
         "forces",
         "dipole"
+      ],
+      "frameworks": [
+        "PyTorch",
+        "ASE"
+      ],
+      "license": "MIT",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT",
+        "QMspin",
+        "QM7-X"
       ],
       "tags": [
         "transformer",
@@ -634,9 +1132,26 @@
       "y": 320,
       "desc": "SpookyNet-based biomolecular force-field framework that combines top-down (whole-protein) and bottom-up (fragment) sampling to train transferable, quantum-accurate ML potentials for proteins and condensed-phase biomolecular dynamics.",
       "paperUrl": "https://www.science.org/doi/10.1126/sciadv.adn4397",
+      "coverage": [
+        "proteins",
+        "biomolecules"
+      ],
+      "useCases": [
+        "biomolecular MD",
+        "protein simulation"
+      ],
       "properties": [
         "energy",
         "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "license": "proprietary",
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom protein/biomolecular DFT"
       ],
       "tags": [
         "transformer",
@@ -660,6 +1175,35 @@
       "desc": "The Behler–Parrinello high-dimensional neural network potential — the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
       "githubUrl": "https://github.com/CompPhysVienna/n2p2",
       "paperUrl": "https://doi.org/10.1103/PhysRevLett.98.146401",
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "high-dimensional NN potential",
+        "MD simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE"
+      ],
+      "license": "GPL-3.0-or-later",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2024-11-22",
+      "trainingData": [
+        "custom DFT"
+      ],
+      "tags": [
+        "descriptor",
+        "atomic NN",
+        "symmetry functions",
+        "BPNN",
+        "HDNNP"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -676,6 +1220,35 @@
       "desc": "Atomic Cluster Expansion: a complete, systematically improvable many-body basis for the local atomic environment; the mathematical backbone of PACE/GRACE and a strong influence on MACE.",
       "githubUrl": "https://github.com/ICAMS/lammps-user-pace",
       "paperUrl": "https://arxiv.org/abs/1810.06640",
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "many-body MLIP basis",
+        "production MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE"
+      ],
+      "license": "Apache-2.0",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2026-02-09",
+      "trainingData": [
+        "custom DFT"
+      ],
+      "tags": [
+        "descriptor",
+        "ACE",
+        "many-body",
+        "linear basis"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -692,10 +1265,35 @@
       "desc": "Gaussian Approximation Potentials: a kernel-based MLIP fit to ab-initio energies and forces using SOAP-like many-body descriptors; the canonical kernel reference for descriptor-based potentials.",
       "githubUrl": "https://github.com/libAtoms/QUIP",
       "paperUrl": "https://doi.org/10.1103/PhysRevLett.104.136403",
+      "coverage": [
+        "general materials",
+        "amorphous systems"
+      ],
+      "useCases": [
+        "kernel MLIP fitting",
+        "amorphous solids MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE"
+      ],
+      "license": "GPL-3.0-or-later",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2026-04-01",
+      "trainingData": [
+        "custom DFT"
+      ],
       "tags": [
         "descriptor",
         "kernel",
-        "SOAP"
+        "SOAP",
+        "Gaussian process"
       ],
       "supportsCharges": null,
       "supportsSpins": null,
@@ -713,6 +1311,36 @@
       "desc": "Deep Potential Molecular Dynamics: local frame descriptors + deep networks giving ab-initio-level accuracy with linear scaling, widely used for large MD.",
       "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
       "paperUrl": "https://doi.org/10.1016/j.cpc.2018.02.017",
+      "coverage": [
+        "general materials",
+        "molecules"
+      ],
+      "useCases": [
+        "large-scale ab-initio MD",
+        "GPU MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "LGPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2026-03-19",
+      "trainingData": [
+        "custom DFT"
+      ],
+      "tags": [
+        "descriptor",
+        "deep potential",
+        "local frame"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -728,6 +1356,38 @@
       "y": 550,
       "desc": "Second-generation Deep Potential architecture with attention and multi-task heads, targeting a universal deep potential for diverse chemistries.",
       "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
+      "coverage": [
+        "general materials",
+        "molecules",
+        "diverse chemistries"
+      ],
+      "useCases": [
+        "universal deep potential",
+        "multi-task fine-tuning"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "LGPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2026-03-19",
+      "trainingData": [
+        "multi-task DFT"
+      ],
+      "tags": [
+        "descriptor",
+        "attention",
+        "multi-task",
+        "foundation model"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -745,6 +1405,37 @@
       "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
       "paperUrl": "https://arxiv.org/abs/2506.01686",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "molecules"
+      ],
+      "useCases": [
+        "large atomistic models",
+        "zero-shot generalization"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "LGPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2026-03-19",
+      "trainingData": [
+        "OpenLAM-v1"
+      ],
+      "tags": [
+        "descriptor",
+        "message-passing",
+        "line graph",
+        "foundation model"
+      ],
       "supportsCharges": null,
       "supportsSpins": null,
       "elementsCovered": "—"
@@ -760,13 +1451,36 @@
       "y": 550,
       "desc": "Large-scale foundation model trained on millions of ab-initio trajectories, designed as a reusable simulator for materials discovery workflows.",
       "githubUrl": "https://github.com/microsoft/mattersim",
+      "paperUrl": "https://arxiv.org/abs/2405.04967",
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "materials discovery",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom MatterSim DFT"
+      ],
       "tags": [
         "transformer",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements up to Z=89"
     },
     {
       "id": "nep89",
@@ -781,6 +1495,28 @@
       "githubUrl": "https://github.com/brucefan1983/GPUMD",
       "paperUrl": "https://arxiv.org/abs/2504.21286",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "organic molecules"
+      ],
+      "useCases": [
+        "high-throughput MD",
+        "empirical-potential-speed simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS"
+      ],
+      "license": "GPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom 89-element DFT"
+      ],
       "tags": [
         "descriptor",
         "neuroevolution",
@@ -803,9 +1539,38 @@
       "githubUrl": "https://github.com/lingcon01/LiTEN",
       "paperUrl": "https://arxiv.org/abs/2507.00884",
       "isNew": true,
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "biomolecules",
+        "organic molecules"
+      ],
+      "useCases": [
+        "biomolecular force field",
+        "drug discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "nablaDFT",
+        "SPICE"
+      ],
+      "tags": [
+        "equivariant",
+        "linear tensor",
+        "biomolecular",
+        "attention"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "SPICE / nablaDFT organic and biomolecular chemistry"
     },
     {
       "id": "matris",
@@ -820,13 +1585,38 @@
       "githubUrl": "https://github.com/HPC-AI-Team/MatRIS",
       "paperUrl": "https://arxiv.org/abs/2603.02002",
       "isNew": true,
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "foundation MLIP",
+        "Matbench-Discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress",
+        "magnetic_moment"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OMat24",
+        "MPTrj",
+        "sAlex"
+      ],
       "tags": [
         "invariant",
         "attention",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
+      "supportsCharges": false,
+      "supportsSpins": true,
       "elementsCovered": "all elements covered by OMat24 / MPTrj (~89 elements)"
     },
     {
@@ -842,6 +1632,18 @@
       "githubUrl": "https://github.com/HPC-AI-Team/MatRIS",
       "paperUrl": "https://arxiv.org/abs/2604.15821",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "molecules",
+        "catalysts",
+        "MOFs",
+        "direct air capture"
+      ],
+      "useCases": [
+        "billion-parameter MLIP",
+        "exascale training",
+        "multi-task foundation model"
+      ],
       "properties": [
         "energy",
         "forces",
@@ -850,6 +1652,9 @@
       "frameworks": [
         "PyTorch"
       ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "OMat24",
         "MPTrj",
@@ -880,8 +1685,27 @@
       "y": 550,
       "desc": "Spectral Neighbor Analysis Potential: a linear descriptor MLIP fit to bispectrum components of the local atomic environment, designed for high-throughput LAMMPS simulations. The canonical industrial-scale linear descriptor potential alongside GAP and MTP.",
       "paperUrl": "https://doi.org/10.1016/j.jcp.2014.12.018",
+      "coverage": [
+        "general materials",
+        "metals"
+      ],
+      "useCases": [
+        "industrial-scale linear MLIP",
+        "high-throughput MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
       "frameworks": [
         "LAMMPS"
+      ],
+      "license": "GPL-2.0",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT"
       ],
       "tags": [
         "descriptor",
@@ -904,6 +1728,29 @@
       "desc": "Moment Tensor Potentials: a systematically improvable linear descriptor MLIP based on contractions of moment tensors of the local environment. Pairs naturally with D-optimality active learning (MaxVol), making it the canonical reference for AL-native potential fitting.",
       "githubUrl": "https://gitlab.com/ashapeev/mlip-2",
       "paperUrl": "https://arxiv.org/abs/1512.06054",
+      "coverage": [
+        "general materials",
+        "metals",
+        "alloys"
+      ],
+      "useCases": [
+        "active learning MLIP fitting",
+        "high-throughput MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS"
+      ],
+      "license": "BSD-2-Clause",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT"
+      ],
       "tags": [
         "descriptor",
         "linear",
@@ -926,6 +1773,28 @@
       "desc": "Symmetric Gradient-Domain Machine Learning: a kernel ridge regression force field fit directly in the gradient domain, with energy obtained by closed-form integration. Strong on small molecules where rigorous symmetry handling is critical.",
       "githubUrl": "https://github.com/stefanch/sGDML",
       "paperUrl": "https://www.science.org/doi/10.1126/sciadv.1603015",
+      "coverage": [
+        "small organic molecules"
+      ],
+      "useCases": [
+        "high-accuracy molecular MD",
+        "MD17/MD22 benchmarks"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "MD17",
+        "MD22"
+      ],
       "tags": [
         "descriptor",
         "kernel",
@@ -947,6 +1816,29 @@
       "desc": "Fast Learning of Atomistic Rare Events: a Gaussian-process Bayesian potential built on top of 2-/3-body or B2 SOAP descriptors with on-the-fly active learning. The principal kernel-based AL framework and the immediate predecessor of the Kozinsky group's NequIP/Allegro line.",
       "githubUrl": "https://github.com/mir-group/flare",
       "paperUrl": "https://www.nature.com/articles/s41524-020-0283-z",
+      "coverage": [
+        "general materials",
+        "rare events"
+      ],
+      "useCases": [
+        "on-the-fly active learning",
+        "Bayesian uncertainty MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT"
+      ],
       "tags": [
         "descriptor",
         "Gaussian process",
@@ -969,6 +1861,27 @@
       "desc": "Original Atoms-in-Molecules Network: a self-consistent message-passing potential that propagates atomic environment vectors through repeated neighbour updates, learning charge-aware atomic representations for organic chemistry. The conceptual precursor to AIMNet-NSE and AIMNet2.",
       "githubUrl": "https://github.com/aiqm/aimnet",
       "paperUrl": "https://pubs.rsc.org/en/content/articlehtml/2019/sc/c9sc00531e",
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "organic chemistry MD",
+        "atomic charge prediction"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "ANI-1x"
+      ],
       "tags": [
         "descriptor",
         "message-passing",
@@ -990,6 +1903,27 @@
       "desc": "Neural Spin Equilibration variant of AIMNet that handles arbitrary total charge and spin multiplicity through an SCF-like message-passing loop, predicting transferable atomic charges and spins. The conceptual ancestor of charge/spin-conditioned models like AIMNet2 and SpookyNet.",
       "githubUrl": "https://github.com/zubatyuk/aimnet-nse",
       "paperUrl": "https://www.nature.com/articles/s41467-021-24904-0",
+      "coverage": [
+        "organic molecules",
+        "charged species"
+      ],
+      "useCases": [
+        "charge/spin equilibration",
+        "ionic + radical chemistry"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom organic DFT"
+      ],
       "tags": [
         "descriptor",
         "message-passing",
@@ -1013,6 +1947,29 @@
       "desc": "Hierarchically Interacting Particle Neural Network: a message-passing potential that decomposes atomic energies into a hierarchy of n-body terms with explicit residual structure, providing both interpretable hierarchical decomposition and natural uncertainty estimates from the residual stack.",
       "githubUrl": "https://github.com/lanl/hippynn",
       "paperUrl": "https://pubs.aip.org/aip/jcp/article/148/24/241715/962591",
+      "coverage": [
+        "general materials",
+        "molecules"
+      ],
+      "useCases": [
+        "hierarchical decomposition",
+        "uncertainty quantification"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom DFT"
+      ],
       "tags": [
         "invariant",
         "message-passing",
@@ -1035,6 +1992,33 @@
       "desc": "ANI variant extending coverage to seven elements (H, C, N, O, S, F, Cl); widely used in drug discovery for fast geometry and energy scans on organic chemistry.",
       "githubUrl": "https://github.com/aiqm/torchani",
       "paperUrl": "https://pubs.acs.org/doi/10.1021/acs.jctc.0c00121",
+      "coverage": [
+        "organic molecules",
+        "drug-like molecules"
+      ],
+      "useCases": [
+        "drug discovery",
+        "geometry/energy scans"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "ANI-2x"
+      ],
+      "tags": [
+        "descriptor",
+        "atomic NN",
+        "symmetry functions"
+      ],
       "supportsCharges": false,
       "supportsSpins": false,
       "elementsCovered": "H, C, N, O, S, F, Cl"
@@ -1051,6 +2035,26 @@
       "desc": "Original ANI: an atomistic neural network potential built on Behler-style symmetry function descriptors and per-element atomic networks, trained on ~22M DFT structures of organic molecules covering H, C, N, O.",
       "githubUrl": "https://github.com/aiqm/torchani",
       "paperUrl": "https://pubs.rsc.org/en/content/articlehtml/2017/sc/c6sc05720a",
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "fast organic chemistry energies"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "ANI-1"
+      ],
       "tags": [
         "descriptor",
         "atomic NN",
@@ -1072,6 +2076,27 @@
       "desc": "Active-learned extension of ANI-1: applies query-by-committee active learning to grow the training set towards a chemically diverse organic-molecule sampling, dramatically improving generalisation while maintaining ANI-style efficiency.",
       "githubUrl": "https://github.com/aiqm/torchani",
       "paperUrl": "https://pubs.aip.org/aip/jcp/article/148/24/241733/962534",
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "active learning",
+        "diverse chemistry"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "ANI-1x"
+      ],
       "tags": [
         "descriptor",
         "atomic NN",
@@ -1093,6 +2118,28 @@
       "desc": "ANI-1x transfer-learned to a CCSD(T)/CBS-quality reference, yielding a near-coupled-cluster-accuracy organic-chemistry potential at deep-network speed. The first widely deployed example of using transfer learning to push beyond DFT.",
       "githubUrl": "https://github.com/aiqm/torchani",
       "paperUrl": "https://www.nature.com/articles/s41467-019-10827-4",
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "coupled-cluster-level chemistry",
+        "drug discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "ANI-1ccx",
+        "ANI-1x"
+      ],
       "tags": [
         "descriptor",
         "atomic NN",
@@ -1116,6 +2163,29 @@
       "githubUrl": "https://github.com/isayevlab/aimnetcentral",
       "paperUrl": "https://doi.org/10.1039/D4SC08572H",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "elemental-organic chemistry",
+        "charged molecules"
+      ],
+      "useCases": [
+        "drug discovery",
+        "DFT replacement"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom hybrid-DFT (wB97M-D3)"
+      ],
       "tags": [
         "descriptor",
         "AIM",
@@ -1139,8 +2209,18 @@
       "githubUrl": "https://huggingface.co/Acellera/AceFF-2.0",
       "paperUrl": "https://arxiv.org/abs/2601.00581",
       "isNew": true,
+      "coverage": [
+        "drug-like molecules",
+        "organic molecules"
+      ],
+      "useCases": [
+        "FEP",
+        "lead optimisation",
+        "drug discovery"
+      ],
       "license": "Apache-2.0",
       "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "properties": [
         "energy",
         "forces"
@@ -1148,6 +2228,9 @@
       "frameworks": [
         "ASE",
         "PyTorch"
+      ],
+      "trainingData": [
+        "custom drug-like compound DFT"
       ],
       "tags": [
         "TensorNet2",
@@ -1171,9 +2254,38 @@
       "desc": "Continuous-filter convolutional network that introduced smooth, translation-invariant filters for molecules and crystals; the baseline for many later GNN MLIPs.",
       "githubUrl": "https://github.com/atomistic-machine-learning/schnetpack",
       "paperUrl": "https://arxiv.org/abs/1706.08566",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "organic molecules",
+        "general materials"
+      ],
+      "useCases": [
+        "GNN MLIP baseline",
+        "molecular property prediction"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2025-12-19",
+      "trainingData": [
+        "QM9",
+        "MD17"
+      ],
+      "tags": [
+        "invariant",
+        "message-passing",
+        "continuous-filter convolution"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "dataset-dependent"
     },
     {
       "id": "dimenet",
@@ -1187,9 +2299,36 @@
       "desc": "Directional message passing network with spherical basis functions that explicitly encode bond angles, improving data efficiency over SchNet-style models.",
       "githubUrl": "https://github.com/gasteigerjo/dimenet",
       "paperUrl": "https://arxiv.org/abs/2011.14115",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "molecular property prediction",
+        "data-efficient GNN"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "license": "Hippocratic-2.1",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "QM9",
+        "MD17"
+      ],
+      "tags": [
+        "invariant",
+        "message-passing",
+        "directional",
+        "spherical"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "dataset-dependent"
     },
     {
       "id": "gemnet",
@@ -1202,9 +2341,38 @@
       "y": 750,
       "desc": "High-capacity spherical message-passing architecture used in the OC20/OC22 benchmarks; very strong for catalyst adsorption and surface chemistry.",
       "githubUrl": "https://github.com/OpenCatalystProject/ocp",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "catalysts",
+        "surfaces",
+        "oxides"
+      ],
+      "useCases": [
+        "catalyst adsorption",
+        "surface chemistry"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch",
+        "ASE"
+      ],
+      "license": "MIT",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "OC20",
+        "OC22"
+      ],
+      "tags": [
+        "equivariant",
+        "message-passing",
+        "spherical"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OC20 / OC22 (~56 elements)"
     },
     {
       "id": "painn",
@@ -1218,9 +2386,40 @@
       "desc": "Polarizable Atom Interaction Neural Network: uses coupled scalar/vector features to capture forces and dipoles with E(3) equivariance at lower cost than full tensors.",
       "githubUrl": "https://github.com/atomistic-machine-learning/schnetpack",
       "paperUrl": "https://arxiv.org/abs/2102.03150",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "dipole prediction",
+        "polarizable response"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "dipole",
+        "polarizability"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2025-12-19",
+      "trainingData": [
+        "QM9",
+        "MD17"
+      ],
+      "tags": [
+        "equivariant",
+        "vector",
+        "scalar",
+        "polarizable"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "dataset-dependent"
     },
     {
       "id": "sevennet",
@@ -1233,9 +2432,37 @@
       "y": 900,
       "desc": "Speed-optimized invariant network inspired by NequIP-style features, designed for very large simulations where throughput is more critical than strict equivariance.",
       "githubUrl": "https://github.com/MDIL-SNU/SevenNet",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "large-scale MD",
+        "throughput-oriented simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "MPTrj"
+      ],
+      "tags": [
+        "invariant",
+        "speed-optimized",
+        "NequIP-derived"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by MPTrj (~89 elements)"
     },
     {
       "id": "alignn",
@@ -1249,9 +2476,36 @@
       "desc": "Atomistic Line Graph Neural Network: augments the atomic graph with a line graph so bond angles and higher-order interactions are encoded explicitly.",
       "githubUrl": "https://github.com/usnistgov/alignn",
       "paperUrl": "https://arxiv.org/abs/2102.05013",
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "materials property prediction",
+        "JARVIS workflows"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "Unlicense",
+      "maintenance": "maintained",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "JARVIS-DFT"
+      ],
+      "tags": [
+        "invariant",
+        "line graph",
+        "directional"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by JARVIS-DFT"
     },
     {
       "id": "m3gnet",
@@ -1265,6 +2519,28 @@
       "desc": "Materials Graph Network with 3-body interactions; trained on Materials Project relaxations to give a universal potential over most of the periodic table.",
       "githubUrl": "https://github.com/materialsvirtuallab/m3gnet",
       "paperUrl": "https://arxiv.org/abs/2202.02450",
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "universal materials potential",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "archived",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2025-04-09",
+      "trainingData": [
+        "MPF.2021.2.8"
+      ],
       "tags": [
         "invariant",
         "foundation model"
@@ -1305,7 +2581,8 @@
       ],
       "license": "BSD-3-Clause",
       "maintenance": "maintained",
-      "lastReviewed": "2026-04-19",
+      "lastReviewed": "2026-05-05",
+      "lastUpdated": "2025-09-22",
       "trainingData": [
         "MPTrj"
       ],
@@ -1331,9 +2608,38 @@
       "githubUrl": "https://github.com/MDIL-SNU/SevenNet",
       "paperUrl": "https://arxiv.org/abs/2604.10887",
       "isNew": true,
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "lightweight foundation MLIP",
+        "thousand-atom MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "distilled from SevenNet-Omni"
+      ],
+      "tags": [
+        "invariant",
+        "distilled",
+        "lightweight",
+        "foundation model"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by SevenNet-Omni"
     },
     {
       "id": "sevennet_omni",
@@ -1348,14 +2654,39 @@
       "githubUrl": "https://github.com/MDIL-SNU/SevenNet",
       "paperUrl": "https://www.nature.com/articles/s41467-026-70195-8",
       "isNew": true,
+      "coverage": [
+        "general materials",
+        "molecules",
+        "surfaces"
+      ],
+      "useCases": [
+        "multi-fidelity universal MLIP",
+        "teacher model for distillation"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "15 open datasets (~250M structures)"
+      ],
       "tags": [
         "invariant",
         "multi-fidelity",
         "foundation model"
       ],
-      "supportsCharges": null,
-      "supportsSpins": null,
-      "elementsCovered": "—"
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by combined open MLIP datasets (~89 elements)"
     },
     {
       "id": "pfp_v8",
@@ -1369,6 +2700,28 @@
       "desc": "Eighth release of the Preferred Potential: the first universal MLIP trained on a large r2SCAN meta-GGA dataset (70 elements) atop a 96-element PBE backbone, halving melting-point error vs. PBE-trained models. Distributed commercially via the Matlantis SaaS platform.",
       "paperUrl": "https://arxiv.org/abs/2603.11063",
       "isNew": true,
+      "coverage": [
+        "general materials"
+      ],
+      "useCases": [
+        "commercial materials simulation",
+        "Matlantis SaaS"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "proprietary",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom r2SCAN",
+        "custom PBE"
+      ],
       "tags": [
         "transformer",
         "foundation model",
@@ -1391,6 +2744,28 @@
       "githubUrl": "https://github.com/brucefan1983/GPUMD",
       "paperUrl": "https://arxiv.org/abs/2604.05769",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "reactive chemistry"
+      ],
+      "useCases": [
+        "reactive MD",
+        "bond breaking/formation",
+        "ReaxFF replacement"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "LAMMPS"
+      ],
+      "license": "GPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-05",
+      "trainingData": [
+        "custom organic CHONSP DFT"
+      ],
       "tags": [
         "descriptor",
         "neuroevolution",
@@ -1414,8 +2789,17 @@
       "githubUrl": "https://github.com/dralgroup/omni-p2x",
       "paperUrl": "https://www.nature.com/articles/s41467-026-71380-5",
       "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "excited states"
+      ],
+      "useCases": [
+        "UV/vis spectra",
+        "photodynamics"
+      ],
       "license": "MIT",
       "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "properties": [
         "energy",
         "forces"
@@ -1449,8 +2833,17 @@
       "githubUrl": "https://github.com/heid-lab/grace-off",
       "paperUrl": "https://chemrxiv.org/doi/full/10.26434/chemrxiv.15001529/v1",
       "isNew": true,
+      "coverage": [
+        "organic liquids",
+        "condensed-phase organic chemistry"
+      ],
+      "useCases": [
+        "organic liquid MD",
+        "RDFs and densities"
+      ],
       "license": "MIT",
       "maintenance": "active",
+      "lastReviewed": "2026-05-05",
       "properties": [
         "energy",
         "forces"
@@ -1483,10 +2876,22 @@
       "desc": "Transformer-based small-molecule MLIP that adapts the Omnilearned Point-Edge-Transformer (PET) foundation model — pre-trained on ~1 billion LHC particle jets — to molecular dynamics via cross-domain transfer learning. Uses an interaction-matrix attention bias to inject pairwise atomic physics into transformer attention; on the OMol25 dataset OmniMol-M outperforms a 1B-parameter baseline transformer with ~20× fewer parameters, demonstrating the first cross-discipline transfer for scientific point-cloud foundation models.",
       "paperUrl": "https://arxiv.org/abs/2601.10791",
       "isNew": true,
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "molecular MD",
+        "cross-domain foundation transfer"
+      ],
       "properties": [
         "energy",
         "forces"
       ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-05",
       "trainingData": [
         "OMol25"
       ],
