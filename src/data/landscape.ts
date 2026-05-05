@@ -984,6 +984,27 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsSpins: null,
     elementsCovered: "—",
   },
+  {
+    id: "matris_moe",
+    type: "node",
+    category: "Invariant",
+    label: "MatRIS-MoE",
+    year: 2026,
+    author: "Zhou et al. (ICT, CAS / UCAS — Weile Jia group)",
+    x: 1790,
+    y: 650,
+    desc:
+      "Billion-parameter Mixture-of-Experts extension of the MatRIS invariant MLIP, paired with the Janus high-dimensional distributed training framework with hardware-aware optimisations for second-order-derivative training. Demonstrated end-to-end training on two Exascale supercomputers, sustaining 1.2/1.0 EFLOPS in single precision (24% / 35.5% of theoretical peak) at >90% parallel efficiency, establishing billion-parameter universal MLIP training as a new Exascale AI-for-Science workload.",
+    githubUrl: "https://github.com/HPC-AI-Team/MatRIS",
+    paperUrl: "https://arxiv.org/abs/2604.15821",
+    isNew: true,
+    properties: ["energy", "forces", "stress"],
+    trainingData: ["OMat24", "MPTrj"],
+    tags: ["mixture-of-experts", "billion parameters", "exascale"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "all elements covered by OMat24 / MPTrj (~89 elements)",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -1059,4 +1080,7 @@ export const INITIAL_EDGES: Edge[] = [
   // April 2026 — AceFF (TensorNet2 drug-discovery MLIP)
   { from: "painn", to: "aceff", label: "TensorNet2" },
   { from: "aimnet2", to: "aceff", label: "Charge-aware FF", dashed: true },
+
+  // April 2026 — MatRIS-MoE (billion-parameter Mixture-of-Experts MatRIS)
+  { from: "matris", to: "matris_moe", label: "MoE / Exascale" },
 ];
