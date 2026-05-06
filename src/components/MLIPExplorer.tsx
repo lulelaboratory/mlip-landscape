@@ -18,6 +18,8 @@ import {
   Link2,
   Quote,
   RotateCcw,
+  HelpCircle,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -28,6 +30,10 @@ import {
   INITIAL_EDGES,
   Edge,
   Category,
+  Equivariance,
+  Architecture,
+  EQUIVARIANCE_VALUES,
+  ARCHITECTURE_VALUES,
 } from "@/data/landscape";
 import OnboardingTour from "@/components/OnboardingTour";
 const CARD_WIDTH = 176;
@@ -76,22 +82,6 @@ const CATEGORY_STYLES_DEFAULT: Record<Category, string> = {
     "bg-orange-50 border-orange-500 text-orange-900 hover:shadow-orange-200 dark:bg-orange-950/50 dark:border-orange-400 dark:text-orange-100 dark:hover:shadow-orange-900/40",
 };
 
-// High-contrast / color-blind safe palette derived from the Okabe-Ito set.
-// Maps roughly to: Equivariant→vermilion, Invariant→sky, Transformer→teal,
-// Descriptor→amber. These hues remain distinguishable under deuteranopia
-// and protanopia simulations, and the icons (kept in CATEGORY_ICONS) provide
-// a non-color channel for readers who can't distinguish hues at all.
-const CATEGORY_STYLES_CB: Record<Category, string> = {
-  Equivariant:
-    "bg-rose-50 border-rose-700 text-rose-900 hover:shadow-rose-200 dark:bg-rose-950/60 dark:border-rose-300 dark:text-rose-50 dark:hover:shadow-rose-900/40",
-  Invariant:
-    "bg-sky-50 border-sky-700 text-sky-900 hover:shadow-sky-200 dark:bg-sky-950/60 dark:border-sky-300 dark:text-sky-50 dark:hover:shadow-sky-900/40",
-  Transformer:
-    "bg-teal-50 border-teal-700 text-teal-900 hover:shadow-teal-200 dark:bg-teal-950/60 dark:border-teal-300 dark:text-teal-50 dark:hover:shadow-teal-900/40",
-  Descriptor:
-    "bg-amber-50 border-amber-700 text-amber-900 hover:shadow-amber-200 dark:bg-amber-950/60 dark:border-amber-300 dark:text-amber-50 dark:hover:shadow-amber-900/40",
-};
-
 const CATEGORY_ICONS: Record<Category, LucideIcon> = {
   Equivariant: Box,
   Invariant: Layers,
@@ -108,19 +98,67 @@ const CATEGORY_SWATCH_DEFAULT: Record<Category, string> = {
   Descriptor: "bg-orange-500",
 };
 
-// Color-blind-safe swatch with explicit dark-mode variants. The light-mode
-// hues are deeper for contrast on a near-white card; the dark-mode hues are
-// brighter so they remain distinguishable against the slate-950 canvas while
-// keeping the Okabe-Ito hue identity (vermilion, sky, teal, amber).
-const CATEGORY_SWATCH_CB: Record<Category, string> = {
-  Equivariant: "bg-rose-700 dark:bg-rose-400",
-  Invariant: "bg-sky-700 dark:bg-sky-400",
-  Transformer: "bg-teal-700 dark:bg-teal-300",
-  Descriptor: "bg-amber-700 dark:bg-amber-400",
+// Color buckets derived from the multi-axis tag fields. We bin by the most
+// common (equivariance, architecture, attention) combinations rather than
+// painting every distinct tuple a different colour — six buckets cover
+// ~90% of the catalogue and stay legible in a legend.
+type ColorBucket =
+  | "eq-gnn"       // constrained-equivariant (NequIP, MACE, Allegro, Equiformer)
+  | "inv-gnn"      // invariant GNN (SchNet, DimeNet, M3GNet, CHGNet)
+  | "descriptor"   // descriptor + regression / NN (BPNN, GAP, ANI, ACE, MTP)
+  | "learnt"       // learnt / data-augmented equivariance (Orb, MatterSim)
+  | "unknown";     // unverified or ambiguous tag fields
+
+const BUCKET_LABEL: Record<ColorBucket, string> = {
+  "eq-gnn": "Equivariant",
+  "inv-gnn": "Invariant GNN",
+  descriptor: "Descriptor",
+  learnt: "Learnt equivariance",
+  unknown: "Unclassified",
 };
 
-type PaletteMode = "default" | "colorblind";
-const PALETTE_STORAGE_KEY = "mliphub.palette";
+const BUCKET_STYLES_DEFAULT: Record<ColorBucket, string> = {
+  "eq-gnn":
+    "bg-red-50 border-red-500 text-red-900 hover:shadow-red-200 dark:bg-red-950/50 dark:border-red-400 dark:text-red-100 dark:hover:shadow-red-900/40",
+  "inv-gnn":
+    "bg-blue-50 border-blue-500 text-blue-900 hover:shadow-blue-200 dark:bg-blue-950/50 dark:border-blue-400 dark:text-blue-100 dark:hover:shadow-blue-900/40",
+  descriptor:
+    "bg-orange-50 border-orange-500 text-orange-900 hover:shadow-orange-200 dark:bg-orange-950/50 dark:border-orange-400 dark:text-orange-100 dark:hover:shadow-orange-900/40",
+  learnt:
+    "bg-purple-50 border-purple-500 text-purple-900 hover:shadow-purple-200 dark:bg-purple-950/50 dark:border-purple-400 dark:text-purple-100 dark:hover:shadow-purple-900/40",
+  unknown:
+    "bg-slate-50 border-slate-400 text-slate-700 hover:shadow-slate-200 dark:bg-slate-800/50 dark:border-slate-500 dark:text-slate-200 dark:hover:shadow-slate-900/40",
+};
+
+const BUCKET_SWATCH_DEFAULT: Record<ColorBucket, string> = {
+  "eq-gnn": "bg-red-500",
+  "inv-gnn": "bg-blue-500",
+  descriptor: "bg-orange-500",
+  learnt: "bg-purple-500",
+  unknown: "bg-slate-400",
+};
+
+const BUCKET_ICONS: Record<ColorBucket, LucideIcon> = {
+  "eq-gnn": Box,
+  "inv-gnn": Layers,
+  descriptor: Database,
+  learnt: Sparkles,
+  unknown: HelpCircle,
+};
+
+// Bin a model into one of the colour buckets. Order matters: descriptor and
+// learnt-equivariance short-circuit before the equivariance-axis check so
+// that e.g. a constrained-equivariant attention model still falls under the
+// generic "Equivariant" bucket — attention is a filter axis, not a primary
+// taxonomic split. Models with insufficient tag data fall through to
+// "unknown".
+function colorBucketOf(node: ModelNode): ColorBucket {
+  if (node.equivariance === "learnt") return "learnt";
+  if (node.architecture === "descriptor") return "descriptor";
+  if (node.equivariance === "constrained") return "eq-gnn";
+  if (node.equivariance === "invariant") return "inv-gnn";
+  return "unknown";
+}
 
 const GITHUB_REPO = "https://github.com/lulelaboratory/mlip-landscape";
 
@@ -558,7 +596,23 @@ export default function MLIPExplorer() {
   const [nodes] = useState<AnyNode[]>(INITIAL_NODES);
   const [edges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
+  // Multi-axis tag filters. Each axis is a Set of selected values; an axis
+  // with no selections imposes no constraint. Filter logic ANDs across axes
+  // and ORs within an axis. Models with `null`/absent value on an axis that
+  // has selections do NOT match (treated as unknown rather than wildcard).
+  const [tagFilters, setTagFilters] = useState<{
+    equivariance: Set<Equivariance>;
+    architecture: Set<Architecture>;
+    usesAttention: Set<"yes" | "no">;
+    longRange: Set<"yes" | "no">;
+  }>({
+    equivariance: new Set(),
+    architecture: new Set(),
+    usesAttention: new Set(),
+    longRange: new Set(),
+  });
   const [query, setQuery] = useState("");
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
   const [baseScale, setBaseScale] = useState(0.8);
@@ -568,15 +622,14 @@ export default function MLIPExplorer() {
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
-  const [palette, setPalette] = useState<PaletteMode>("default");
   const [layout, setLayout] = useState<LayoutMode>("layered");
   const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(true);
   const [forceOverrides, setForceOverrides] = useState<Record<string, Vec2>>({});
   const [viewCitationCopied, setViewCitationCopied] = useState(false);
-  const CATEGORY_STYLES =
-    palette === "colorblind" ? CATEGORY_STYLES_CB : CATEGORY_STYLES_DEFAULT;
-  const CATEGORY_SWATCH =
-    palette === "colorblind" ? CATEGORY_SWATCH_CB : CATEGORY_SWATCH_DEFAULT;
+  const CATEGORY_STYLES = CATEGORY_STYLES_DEFAULT;
+  const CATEGORY_SWATCH = CATEGORY_SWATCH_DEFAULT;
+  const BUCKET_STYLES = BUCKET_STYLES_DEFAULT;
+  const BUCKET_SWATCH = BUCKET_SWATCH_DEFAULT;
 
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -622,19 +675,6 @@ export default function MLIPExplorer() {
       setFontScale(parsed);
     }
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(PALETTE_STORAGE_KEY);
-    if (stored === "colorblind" || stored === "default") setPalette(stored);
-  }, []);
-
-  const updatePalette = (next: PaletteMode) => {
-    setPalette(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(PALETTE_STORAGE_KEY, next);
-    }
-  };
 
   // Hydrate layout, edge-label visibility, and any saved drag overrides on
   // first mount. URL takes precedence over localStorage so a shared link
@@ -728,6 +768,26 @@ export default function MLIPExplorer() {
       );
       if (match && match.type === "node") setSelectedNode(match);
     }
+    // Hydrate multi-axis tag filters: ?eq=constrained,learnt&arch=gnn&att=yes&long=no
+    const eqParam = params.get("eq");
+    const archParam = params.get("arch");
+    const attParam = params.get("att");
+    const longParam = params.get("long");
+    if (eqParam || archParam || attParam || longParam) {
+      const splitToSet = <T extends string>(s: string | null, allowed: readonly T[]): Set<T> => {
+        if (!s) return new Set<T>();
+        const allowedSet = new Set(allowed as readonly string[]);
+        return new Set(
+          s.split(",").map((v) => v.trim()).filter((v) => allowedSet.has(v)) as T[],
+        );
+      };
+      setTagFilters({
+        equivariance: splitToSet<Equivariance>(eqParam, EQUIVARIANCE_VALUES),
+        architecture: splitToSet<Architecture>(archParam, ARCHITECTURE_VALUES),
+        usesAttention: splitToSet<"yes" | "no">(attParam, ["yes", "no"] as const),
+        longRange: splitToSet<"yes" | "no">(longParam, ["yes", "no"] as const),
+      });
+    }
     urlInitialized.current = true;
   }, []);
 
@@ -747,20 +807,32 @@ export default function MLIPExplorer() {
     else params.delete("model");
     if (layout !== "layered") params.set("layout", layout);
     else params.delete("layout");
+    // Multi-axis tag filters round-trip as comma-separated lists.
+    const setOrDelete = (key: string, set: Set<string>) => {
+      if (set.size > 0) params.set(key, Array.from(set).sort().join(","));
+      else params.delete(key);
+    };
+    setOrDelete("eq", tagFilters.equivariance as Set<string>);
+    setOrDelete("arch", tagFilters.architecture as Set<string>);
+    setOrDelete("att", tagFilters.usesAttention as Set<string>);
+    setOrDelete("long", tagFilters.longRange as Set<string>);
     const next = params.toString();
     const url = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", url);
-  }, [filter, query, selectedNode, layout]);
+  }, [filter, query, selectedNode, layout, tagFilters]);
 
   // Escape closes the detail panel.
   useEffect(() => {
-    if (!selectedNode) return;
+    if (!selectedNode && !selectedEdge) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedNode(null);
+      if (e.key === "Escape") {
+        setSelectedNode(null);
+        setSelectedEdge(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedNode]);
+  }, [selectedNode, selectedEdge]);
 
   // Reset the "copied" indicator whenever the selected model changes.
   useEffect(() => {
@@ -940,14 +1012,21 @@ export default function MLIPExplorer() {
   const effectiveScale = baseScale * userScale;
   const pan = { x: basePan.x + userPan.x, y: basePan.y + userPan.y };
 
+  // Reset the pan when the user closes the detail sidebar (selectedNode goes
+  // from a model to null). Kept in its own effect so it depends only on
+  // `selectedNode` — otherwise it would also fire on every scale change and
+  // undo the cursor-anchored zoom logic in the wheel handler.
+  useEffect(() => {
+    if (!selectedNode) {
+      setUserPan({ x: 0, y: 0 });
+    }
+  }, [selectedNode]);
+
   // Auto-pan the canvas so the selected node sits in the visible (non-sidebar)
   // region. Skipped on mobile because the mobile detail drawer is a separate
   // full-height overlay rather than a right-side column.
   useEffect(() => {
-    if (!selectedNode) {
-      setUserPan({ x: 0, y: 0 });
-      return;
-    }
+    if (!selectedNode) return;
     if (deviceType === "mobile") return;
 
     const pos = positionOf(selectedNode);
@@ -964,7 +1043,9 @@ export default function MLIPExplorer() {
 
   // Canvas panning via pointer events (mouse + touch)
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
-    if ((e.target as HTMLElement).closest(".node-card")) return;
+    const target = e.target as Element;
+    if (target.closest(".node-card")) return;
+    if (target.closest("[data-edge='true']")) return;
     setIsDragging(true);
     setDragPointerId(e.pointerId);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
@@ -1011,6 +1092,13 @@ export default function MLIPExplorer() {
       basePanY: basePan.y,
     };
   });
+  // While the user is actively driving the canvas (wheel / pinch zoom), we
+  // need the transform's CSS transition to be effectively instant —
+  // otherwise rapid state updates queue up against the 500ms ease-out used
+  // for programmatic moves (e.g. auto-pan to a selected node) and the canvas
+  // visibly judders. Mirrors `isDragging` for panning; this covers wheel.
+  const [isWheelZooming, setIsWheelZooming] = useState(false);
+  const wheelIdleTimerRef = useRef<number | null>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1044,9 +1132,23 @@ export default function MLIPExplorer() {
         x: newPanX - state.basePanX,
         y: newPanY - state.basePanY,
       });
+      // Mark the canvas as actively interacting so the wrapper's CSS
+      // transition is suppressed for the duration of the zoom gesture.
+      setIsWheelZooming(true);
+      if (wheelIdleTimerRef.current !== null) {
+        window.clearTimeout(wheelIdleTimerRef.current);
+      }
+      wheelIdleTimerRef.current = window.setTimeout(() => {
+        setIsWheelZooming(false);
+      }, 180);
     };
     canvas.addEventListener("wheel", onWheel, { passive: false });
-    return () => canvas.removeEventListener("wheel", onWheel);
+    return () => {
+      canvas.removeEventListener("wheel", onWheel);
+      if (wheelIdleTimerRef.current !== null) {
+        window.clearTimeout(wheelIdleTimerRef.current);
+      }
+    };
   }, []);
 
   // Filter + layering. Nodes that don't match the current category filter or
@@ -1074,14 +1176,39 @@ export default function MLIPExplorer() {
       return haystack.includes(q);
     };
 
+    const matchesTags = (n: ModelNode) => {
+      if (tagFilters.equivariance.size > 0) {
+        if (!n.equivariance || !tagFilters.equivariance.has(n.equivariance))
+          return false;
+      }
+      if (tagFilters.architecture.size > 0) {
+        if (!n.architecture || !tagFilters.architecture.has(n.architecture))
+          return false;
+      }
+      if (tagFilters.usesAttention.size > 0) {
+        if (n.usesAttention === null || n.usesAttention === undefined)
+          return false;
+        const v = n.usesAttention ? "yes" : "no";
+        if (!tagFilters.usesAttention.has(v as "yes" | "no")) return false;
+      }
+      if (tagFilters.longRange.size > 0) {
+        if (n.longRange === null || n.longRange === undefined) return false;
+        const v = n.longRange ? "yes" : "no";
+        if (!tagFilters.longRange.has(v as "yes" | "no")) return false;
+      }
+      return true;
+    };
+
     const items = positionedModels.map((n) => {
       const dimmed =
-        (filter !== "All" && n.category !== filter) || !matchesQuery(n);
+        (filter !== "All" && n.category !== filter) ||
+        !matchesQuery(n) ||
+        !matchesTags(n);
       return { ...n, dimmed };
     });
 
     return { groups: fittedGroups, items };
-  }, [fittedGroups, positionedModels, filter, query]);
+  }, [fittedGroups, positionedModels, filter, query, tagFilters]);
 
   // Orthogonal edge router. Returns an SVG path string that:
   // - exits the source card from the side nearest the target
@@ -1286,7 +1413,7 @@ export default function MLIPExplorer() {
     return `${head}${body}${note}`;
   };
 
-  const renderEdges = () =>
+  const renderEdges = (mode: "visible" | "hit" = "visible") =>
     edges.map((edge, idx) => {
       const fromNode = positionedModels.find((n) => n.id === edge.from);
       const toNode = positionedModels.find((n) => n.id === edge.to);
@@ -1346,36 +1473,77 @@ export default function MLIPExplorer() {
       }
 
       const tooltip = formatEdgeTooltip(edge);
+      const isSelected =
+        selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const baseStrokeWidth = isSelected
+        ? (edge.dashed ? 3.5 : 4)
+        : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
+
+      // Two render modes:
+      // - "visible": halo + coloured stroke + label. Lives in the SVG layer
+      //   above the cards so an edge crossing an unrelated card stays
+      //   readable. Pointer events disabled here so the visible artwork
+      //   never blocks card clicks.
+      // - "hit": wide invisible hit-target + click handlers. Lives in the
+      //   SVG layer below the cards so it stays clickable in empty space
+      //   but defers to cards wherever they overlap.
+      if (mode === "hit") {
+        return (
+          <g
+            key={idx}
+            data-edge="true"
+            className="cursor-pointer"
+            aria-label={tooltip}
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdgeClick(edge);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleEdgeClick(edge);
+              }
+            }}
+          >
+            <title>{tooltip}</title>
+            <path
+              d={path}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={20}
+              style={{ pointerEvents: "stroke" }}
+            />
+          </g>
+        );
+      }
 
       return (
         <g
           key={idx}
           className="transition-opacity duration-500"
-          aria-label={tooltip}
-          role="img"
+          style={{ pointerEvents: "none" }}
+          aria-hidden="true"
         >
-          {/* Native SVG <title> doubles as a hover tooltip and an
-              accessibility label without pulling in a tooltip library. */}
-          <title>{tooltip}</title>
+          <path
+            d={path}
+            fill="none"
+            stroke="var(--edge-halo)"
+            strokeWidth={baseStrokeWidth + 4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <path
             d={path}
             fill="none"
             style={{ stroke: "var(--edge-stroke)" }}
-            strokeWidth={edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25}
+            strokeWidth={baseStrokeWidth}
             strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="opacity-90"
+            className={isSelected ? "opacity-100" : "opacity-90"}
             markerEnd="url(#edge-arrow)"
-          />
-          {/* Wider invisible hit-target so the SVG <title> tooltip can
-              actually fire when the cursor passes near a thin edge. */}
-          <path
-            d={path}
-            fill="none"
-            stroke="transparent"
-            strokeWidth={16}
-            style={{ pointerEvents: "stroke" }}
           />
           {edge.label && edgeLabelsVisible && (
             <text
@@ -1396,7 +1564,6 @@ export default function MLIPExplorer() {
       );
     });
 
-  const filters: readonly FilterType[] = CATEGORY_FILTERS;
 
   // Build a flat suggestion list for the search box. Auto-suggestions span
   // model names, tags, licenses, frameworks, years, and coverage / domains so
@@ -1481,7 +1648,18 @@ export default function MLIPExplorer() {
     const original = nodes.find(
       (n): n is ModelNode => n.type === "node" && n.id === node.id,
     );
+    setSelectedEdge(null);
     setSelectedNode(original ?? node);
+  };
+
+  const handleEdgeClick = (edge: Edge) => {
+    setSelectedNode(null);
+    setSelectedEdge(edge);
+  };
+
+  const closeDetails = () => {
+    setSelectedNode(null);
+    setSelectedEdge(null);
   };
 
   // Spatial arrow-key navigation between visible nodes. Picks the visible
@@ -1613,6 +1791,14 @@ export default function MLIPExplorer() {
     if (trimmed) parts.push(`search="${trimmed}"`);
     parts.push(`layout=${layout}`);
     if (selectedNode) parts.push(`selected=${selectedNode.label}`);
+    if (tagFilters.equivariance.size)
+      parts.push(`equivariance=${Array.from(tagFilters.equivariance).sort().join(",")}`);
+    if (tagFilters.architecture.size)
+      parts.push(`architecture=${Array.from(tagFilters.architecture).sort().join(",")}`);
+    if (tagFilters.usesAttention.size)
+      parts.push(`attention=${Array.from(tagFilters.usesAttention).sort().join(",")}`);
+    if (tagFilters.longRange.size)
+      parts.push(`long-range=${Array.from(tagFilters.longRange).sort().join(",")}`);
     const note = parts.join("; ");
     return `MLIP Hub. (${now.getFullYear()}). MLIP landscape, view: ${note}. Retrieved ${dateStr}, from ${url}`;
   };
@@ -1687,6 +1873,110 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
     bounds.maxY - svgOriginY + CANVAS_PADDING,
     1100,
   );
+
+  const renderEdgeDetailContent = () => {
+    if (!selectedEdge) return null;
+    const fromNode = modelItems.find((n) => n.id === selectedEdge.from);
+    const toNode = modelItems.find((n) => n.id === selectedEdge.to);
+
+    return (
+      <>
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1">
+            <span className="inline-block uppercase tracking-widest font-bold text-[0.75em] sm:text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
+              Connection {selectedEdge.dashed ? "(speculative)" : ""}
+            </span>
+            <h2 className="text-[1.25em] md:text-[1.5em] font-bold text-slate-900 dark:text-slate-100 leading-snug">
+              {fromNode?.label ?? selectedEdge.from}
+              <span className="mx-2 text-slate-400 dark:text-slate-500">→</span>
+              {toNode?.label ?? selectedEdge.to}
+            </h2>
+          </div>
+          <button
+            onClick={closeDetails}
+            aria-label="Close connection details"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {selectedEdge.label && (
+          <div>
+            <div className="uppercase tracking-widest font-bold text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
+              Relationship
+            </div>
+            <div className="text-[0.95em] font-semibold text-slate-700 dark:text-slate-200">
+              {selectedEdge.label}
+            </div>
+          </div>
+        )}
+
+        {selectedEdge.description ? (
+          <div>
+            <div className="uppercase tracking-widest font-bold text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
+              Explanation
+            </div>
+            <p className="text-[0.875em] md:text-[1em] text-slate-700 dark:text-slate-200 leading-relaxed">
+              {selectedEdge.description}
+            </p>
+          </div>
+        ) : (
+          <p className="text-[0.8125em] italic text-slate-500 dark:text-slate-400 leading-relaxed">
+            No long-form explanation yet — see the endpoint descriptions below
+            for context. Curators: add a <code>description</code> field on this
+            edge in <code>landscape.ts</code> to fill this in.
+          </p>
+        )}
+
+        {fromNode && (
+          <button
+            type="button"
+            onClick={() => handleNodeClick(fromNode)}
+            className="text-left w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="uppercase tracking-widest font-bold text-[0.625em] text-slate-400 dark:text-slate-500">
+                From · {fromNode.category}
+              </span>
+            </div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 mb-1">
+              {fromNode.label}{" "}
+              <span className="text-[0.75em] font-normal text-slate-500 dark:text-slate-400">
+                ({fromNode.year})
+              </span>
+            </div>
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug line-clamp-3">
+              {fromNode.desc}
+            </p>
+          </button>
+        )}
+
+        {toNode && (
+          <button
+            type="button"
+            onClick={() => handleNodeClick(toNode)}
+            className="text-left w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="uppercase tracking-widest font-bold text-[0.625em] text-slate-400 dark:text-slate-500">
+                To · {toNode.category}
+              </span>
+            </div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 mb-1">
+              {toNode.label}{" "}
+              <span className="text-[0.75em] font-normal text-slate-500 dark:text-slate-400">
+                ({toNode.year})
+              </span>
+            </div>
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug line-clamp-3">
+              {toNode.desc}
+            </p>
+          </button>
+        )}
+      </>
+    );
+  };
 
   const renderDetailContent = (compact = false) => {
     if (!selectedNode) return null;
@@ -1878,7 +2168,9 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
           <div
             className={`absolute origin-top-left ease-out ${
-              isDragging ? "transition-transform duration-75" : "transition-transform duration-500"
+              isDragging || isWheelZooming
+                ? "transition-none"
+                : "transition-transform duration-500"
             }`}
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
@@ -1919,9 +2211,12 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
               />
             )}
 
-            {/* Edges */}
+            {/* Edges — hit-target layer (below cards). Wide invisible
+                strokes that capture clicks on / near the line, but defer
+                to cards wherever they overlap so card clicks aren't
+                blocked. */}
             <svg
-              className="absolute pointer-events-none"
+              className="absolute"
               style={{
                 zIndex: 5,
                 left: svgOriginX,
@@ -1929,6 +2224,25 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 width: svgWidth,
                 height: svgHeight,
                 overflow: "visible",
+              }}
+              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
+            >
+              {renderEdges("hit")}
+            </svg>
+
+            {/* Edges — visible layer (above cards). Halo + coloured stroke
+                + label + arrow markers; pointer events are disabled here so
+                this layer never blocks clicks on the cards beneath it. */}
+            <svg
+              className="absolute"
+              style={{
+                zIndex: 11,
+                left: svgOriginX,
+                top: svgOriginY,
+                width: svgWidth,
+                height: svgHeight,
+                overflow: "visible",
+                pointerEvents: "none",
               }}
               viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
             >
@@ -1945,15 +2259,15 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   <path d="M0,0 L0,6 L6,3 z" style={{ fill: "var(--edge-stroke)" }} />
                 </marker>
               </defs>
-              {renderEdges()}
+              {renderEdges("visible")}
             </svg>
 
             {/* Nodes */}
             {processedNodes.items.map((node) => {
               const isSelected = selectedNode?.id === node.id;
               const styleClass =
-                CATEGORY_STYLES[node.category] || "bg-white border-slate-200";
-              const Icon = CATEGORY_ICONS[node.category] || Box;
+                BUCKET_STYLES[colorBucketOf(node)] || "bg-white border-slate-200";
+              const Icon = BUCKET_ICONS[colorBucketOf(node)] || Box;
 
               const isDraggable = layout === "force";
               return (
@@ -2034,7 +2348,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] lg:text-[0.75em] font-bold uppercase tracking-wide opacity-70"
                       itemProp="applicationCategory"
                     >
-                      {node.category}
+                      {BUCKET_LABEL[colorBucketOf(node)]}
                     </span>
                   </div>
                   {/* Static "new entry" tag: replaces the previous bouncing
@@ -2105,7 +2419,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 className="w-full mb-2 flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-[0.875em] font-semibold text-slate-700 dark:text-slate-200 shadow-sm"
               >
                 <span className="flex items-center gap-2">
-                  <Filter size={14} /> Filter Architecture
+                  <Filter size={14} /> Filters
                 </span>
                 <span className="text-[0.75em] text-slate-500 dark:text-slate-400">{filterOpen ? "Hide" : "Show"}</span>
               </button>
@@ -2193,34 +2507,125 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     )}
                   </span>
                 </label>
-                <div className="text-[0.75em] sm:text-[0.6875em] md:text-[0.625em] font-bold mb-3 text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                  <Filter size={12} /> Filter Architecture
-                </div>
-                <div className="flex flex-col gap-1" role="group" aria-label="Filter by architecture category">
-                  {filters.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setFilter(cat)}
-                      aria-pressed={filter === cat}
-                      className={`text-left px-3 py-2 rounded-lg text-[0.875em] sm:text-[0.75em] md:text-[0.6875em] font-semibold transition flex items-center gap-2
-                        ${
-                          filter === cat
-                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-                            : "hover:bg-slate-50 text-slate-500 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                      Filter tags
+                    </div>
+                    {(tagFilters.equivariance.size +
+                      tagFilters.architecture.size +
+                      tagFilters.usesAttention.size +
+                      tagFilters.longRange.size) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTagFilters({
+                            equivariance: new Set(),
+                            architecture: new Set(),
+                            usesAttention: new Set(),
+                            longRange: new Set(),
+                          })
                         }
-                      `}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 ${
-                          cat === "All"
-                            ? "bg-slate-300 dark:bg-slate-600"
-                            : CATEGORY_SWATCH[cat]
-                        }`}
-                      ></span>
-                      {cat}
-                    </button>
+                        className="text-[0.6875em] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {(
+                    [
+                      {
+                        axis: "equivariance" as const,
+                        label: "Equivariance",
+                        values: EQUIVARIANCE_VALUES as readonly string[],
+                      },
+                      {
+                        axis: "architecture" as const,
+                        label: "Architecture",
+                        values: ARCHITECTURE_VALUES as readonly string[],
+                      },
+                      {
+                        axis: "usesAttention" as const,
+                        label: "Attention",
+                        values: ["yes", "no"] as readonly string[],
+                      },
+                      {
+                        axis: "longRange" as const,
+                        label: "Long-range",
+                        values: ["yes", "no"] as readonly string[],
+                      },
+                    ]
+                  ).map(({ axis, label, values }) => (
+                    <div key={axis} className="mb-2 last:mb-0">
+                      <div className="text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize">
+                        {label}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {values.map((value) => {
+                          const set = tagFilters[axis] as Set<string>;
+                          const active = set.has(value);
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => {
+                                setTagFilters((prev) => {
+                                  const next = new Set(prev[axis] as Set<string>);
+                                  if (next.has(value)) next.delete(value);
+                                  else next.add(value);
+                                  return {
+                                    ...prev,
+                                    [axis]: next,
+                                  } as typeof prev;
+                                });
+                              }}
+                              className={`px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
+                                active
+                                  ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500"
+                                  : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ))}
+                  <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
+                    Models with unverified tag values are dimmed when an axis
+                    is active.
+                  </p>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Colour key
+                  </div>
+                  <ul className="flex flex-col gap-1">
+                    {(
+                      [
+                        "eq-gnn",
+                        "inv-gnn",
+                        "descriptor",
+                        "learnt",
+                        "unknown",
+                      ] as const
+                    ).map((bucket) => (
+                      <li
+                        key={bucket}
+                        className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] text-slate-600 dark:text-slate-300"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 ${BUCKET_SWATCH[bucket]}`}
+                        />
+                        {BUCKET_LABEL[bucket]}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
@@ -2330,47 +2735,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <div
-                    className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
-                    id="mliphub-palette-label"
-                  >
-                    Color palette
-                  </div>
-                  <div
-                    role="radiogroup"
-                    aria-labelledby="mliphub-palette-label"
-                    className="grid grid-cols-2 gap-1"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={palette === "default"}
-                      onClick={() => updatePalette("default")}
-                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
-                        palette === "default"
-                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      Default
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={palette === "colorblind"}
-                      onClick={() => updatePalette("colorblind")}
-                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
-                        palette === "colorblind"
-                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      Color-blind
-                    </button>
-                  </div>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <button
                     type="button"
                     onClick={copyViewCitation}
@@ -2454,34 +2818,40 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
         {/* DETAILS SIDEBAR */}
         <div
-          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-2xl dark:shadow-slate-950/70 border-l border-slate-200 dark:border-slate-800 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode ? "translate-x-0" : "translate-x-full"}`}
+          className={`hidden md:flex absolute right-0 top-0 h-full md:w-80 lg:w-96 bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-2xl dark:shadow-slate-950/70 border-l border-slate-200 dark:border-slate-800 z-30 transition-transform duration-300 ease-in-out flex-col ${selectedNode || selectedEdge ? "translate-x-0" : "translate-x-full"}`}
         >
-          {selectedNode && (
+          {(selectedNode || selectedEdge) && (
             <div
               className="p-6 flex-1 flex flex-col gap-4 overflow-y-auto"
             >
-              {renderDetailContent()}
+              {selectedEdge ? renderEdgeDetailContent() : renderDetailContent()}
             </div>
           )}
         </div>
 
         <div
           className={`md:hidden fixed inset-0 z-30 transform transition-transform duration-300 ease-in-out ${
-            selectedNode ? "translate-y-0" : "translate-y-full pointer-events-none"
+            selectedNode || selectedEdge ? "translate-y-0" : "translate-y-full pointer-events-none"
           }`}
         >
           <div className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-              <div className="text-[0.875em] font-semibold text-slate-700 dark:text-slate-200">Details</div>
+              <div className="text-[0.875em] font-semibold text-slate-700 dark:text-slate-200">
+                {selectedEdge ? "Connection" : "Details"}
+              </div>
               <button
-                onClick={() => setSelectedNode(null)}
+                onClick={closeDetails}
                 className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
                 aria-label="Close details"
               >
                 <X size={18} />
               </button>
             </div>
-            {selectedNode && <div className="p-4 space-y-4">{renderDetailContent()}</div>}
+            {(selectedNode || selectedEdge) && (
+              <div className="p-4 space-y-4">
+                {selectedEdge ? renderEdgeDetailContent() : renderDetailContent()}
+              </div>
+            )}
           </div>
         </div>
       </div>
