@@ -983,16 +983,25 @@ export default function MLIPExplorer() {
   const graphHeight = bounds.maxY - bounds.minY;
 
   const sidebarSpace = deviceType === "desktop" ? SIDEBAR_WIDTH : deviceType === "tablet" ? TABLET_SIDEBAR_WIDTH : 0;
-  const availableWidth = Math.max(viewport.width - sidebarSpace - 32, 320);
+  // The right detail sidebar is hidden until a model/edge is selected, so the
+  // initial fit + centering should treat the entire viewport as canvas. The
+  // auto-pan effect below shifts the view when the sidebar opens. Subtracting
+  // the sidebar width up front used to leave the graph crammed into a narrow
+  // left band with empty space to its right.
+  const availableWidth = Math.max(viewport.width - 32, 320);
+  const availableWidthWithSidebar = Math.max(viewport.width - sidebarSpace - 32, 320);
   const availableHeight = Math.max(viewport.height - HEADER_HEIGHT, 320);
 
   useEffect(() => {
-    const preferred = deviceType === "mobile" ? 0.95 : deviceType === "tablet" ? 0.8 : 0.65;
     const widthScale = availableWidth / (graphWidth + CANVAS_PADDING * 2);
     const heightScale = availableHeight / (graphHeight + CANVAS_PADDING * 2);
     const fitScale = Math.min(widthScale, heightScale);
-    const scaledFit = Math.min(preferred, fitScale) * 1.08;
-    const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, scaledFit));
+    // Per-device floor: the auto-fit can drop very low for large graphs on
+    // small canvases, leaving cards too small to read at first glance.
+    // Desktops keep cards at ≥70% so labels stay legible — the user can
+    // still pan to see anything that overflows.
+    const deviceMinScale = deviceType === "mobile" ? MIN_BASE_SCALE : deviceType === "tablet" ? 0.55 : 0.7;
+    const nextBase = Math.max(deviceMinScale, Math.min(MAX_BASE_SCALE, fitScale));
     setBaseScale(nextBase);
     setUserScale(1);
   }, [availableHeight, availableWidth, deviceType, graphHeight, graphWidth]);
@@ -1024,7 +1033,8 @@ export default function MLIPExplorer() {
 
   // Auto-pan the canvas so the selected node sits in the visible (non-sidebar)
   // region. Skipped on mobile because the mobile detail drawer is a separate
-  // full-height overlay rather than a right-side column.
+  // full-height overlay rather than a right-side column. Centres on the
+  // sidebar-adjusted width so the card doesn't end up under the detail panel.
   useEffect(() => {
     if (!selectedNode) return;
     if (deviceType === "mobile") return;
@@ -1032,12 +1042,12 @@ export default function MLIPExplorer() {
     const pos = positionOf(selectedNode);
     const nodeCenterGraphX = pos.x + CARD_WIDTH / 2;
     const nodeCenterGraphY = pos.y + CARD_HEIGHT / 2;
-    const targetScreenX = availableWidth / 2;
+    const targetScreenX = availableWidthWithSidebar / 2;
     const targetScreenY = availableHeight / 2;
     const targetUserPanX = targetScreenX - basePan.x - nodeCenterGraphX * effectiveScale;
     const targetUserPanY = targetScreenY - basePan.y - nodeCenterGraphY * effectiveScale;
     setUserPan({ x: targetUserPanX, y: targetUserPanY });
-  }, [selectedNode, deviceType, availableWidth, availableHeight, basePan.x, basePan.y, effectiveScale, positionOf]);
+  }, [selectedNode, deviceType, availableWidthWithSidebar, availableHeight, basePan.x, basePan.y, effectiveScale, positionOf]);
 
   const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -1413,7 +1423,7 @@ export default function MLIPExplorer() {
     return `${head}${body}${note}`;
   };
 
-  const renderEdges = (mode: "visible" | "hit" = "visible") =>
+  const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
     edges.map((edge, idx) => {
       const fromNode = positionedModels.find((n) => n.id === edge.from);
       const toNode = positionedModels.find((n) => n.id === edge.to);
@@ -1479,14 +1489,17 @@ export default function MLIPExplorer() {
         ? (edge.dashed ? 3.5 : 4)
         : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
 
-      // Two render modes:
-      // - "visible": halo + coloured stroke + label. Lives in the SVG layer
-      //   above the cards so an edge crossing an unrelated card stays
-      //   readable. Pointer events disabled here so the visible artwork
-      //   never blocks card clicks.
-      // - "hit": wide invisible hit-target + click handlers. Lives in the
-      //   SVG layer below the cards so it stays clickable in empty space
-      //   but defers to cards wherever they overlap.
+      // Three render modes, each on a dedicated SVG layer so we can stack
+      // them around the card layer:
+      // - "hit": wide transparent hit-target. Below cards (zIndex 5) so it
+      //   stays clickable in empty space but defers to cards on overlap.
+      // - "lines": halo + coloured stroke + arrow marker. Below cards
+      //   (zIndex 4) so an edge that visually crosses an unrelated card is
+      //   masked by that card — otherwise the line looked like A↔B↔C even
+      //   when only A→C was wired.
+      // - "labels": text labels with a halo + background rect. Above cards
+      //   (zIndex 12) so the words stay readable even when the edge happens
+      //   to fold its midpoint over a card.
       if (mode === "hit") {
         return (
           <g
@@ -1519,6 +1532,51 @@ export default function MLIPExplorer() {
         );
       }
 
+      if (mode === "labels") {
+        if (!edge.label || !edgeLabelsVisible) return null;
+        // Approximate the rendered text width so we can draw a background
+        // rect that masks whatever card the label overlaps. SVG <text> has
+        // no synchronous width API, but bold sans-serif at fontSize ≈ 0.55em
+        // per character is close enough for the short edge labels we have.
+        const labelFontSize = 18 * fontScale;
+        const approxCharW = labelFontSize * 0.58;
+        const padX = 6;
+        const padY = 3;
+        const rectW = edge.label.length * approxCharW + padX * 2;
+        const rectH = labelFontSize + padY * 2;
+        const rectX = labelX - rectW / 2;
+        const rectY = labelY - labelFontSize + padY;
+        return (
+          <g
+            key={idx}
+            className="transition-opacity duration-500"
+            style={{ pointerEvents: "none" }}
+            aria-hidden="true"
+          >
+            <rect
+              x={rectX}
+              y={rectY}
+              width={rectW}
+              height={rectH}
+              rx={4}
+              ry={4}
+              fill="var(--edge-halo)"
+              opacity={0.92}
+            />
+            <text
+              x={labelX}
+              y={labelY}
+              style={{ fill: "var(--edge-label)" }}
+              fontSize={labelFontSize}
+              fontWeight={700}
+              textAnchor="middle"
+            >
+              {edge.label}
+            </text>
+          </g>
+        );
+      }
+
       return (
         <g
           key={idx}
@@ -1545,21 +1603,6 @@ export default function MLIPExplorer() {
             className={isSelected ? "opacity-100" : "opacity-90"}
             markerEnd="url(#edge-arrow)"
           />
-          {edge.label && edgeLabelsVisible && (
-            <text
-              x={labelX}
-              y={labelY}
-              style={{ fill: "var(--edge-label)", stroke: "var(--edge-halo)" }}
-              fontSize={18 * fontScale}
-              fontWeight={700}
-              textAnchor="middle"
-              paintOrder="stroke"
-              strokeWidth={4}
-              strokeLinejoin="round"
-            >
-              {edge.label}
-            </text>
-          )}
         </g>
       );
     });
@@ -2211,32 +2254,16 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
               />
             )}
 
-            {/* Edges — hit-target layer (below cards). Wide invisible
-                strokes that capture clicks on / near the line, but defer
-                to cards wherever they overlap so card clicks aren't
-                blocked. */}
+            {/* Edges — line layer (below cards). Halo + coloured stroke +
+                arrow markers; pointer events are disabled here so this layer
+                never blocks clicks on the cards above it. Drawing the line
+                below cards means an edge that visually crosses an unrelated
+                card is masked by that card, so the eye doesn't read the
+                stray segment as a connection. */}
             <svg
               className="absolute"
               style={{
-                zIndex: 5,
-                left: svgOriginX,
-                top: svgOriginY,
-                width: svgWidth,
-                height: svgHeight,
-                overflow: "visible",
-              }}
-              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
-            >
-              {renderEdges("hit")}
-            </svg>
-
-            {/* Edges — visible layer (above cards). Halo + coloured stroke
-                + label + arrow markers; pointer events are disabled here so
-                this layer never blocks clicks on the cards beneath it. */}
-            <svg
-              className="absolute"
-              style={{
-                zIndex: 11,
+                zIndex: 4,
                 left: svgOriginX,
                 top: svgOriginY,
                 width: svgWidth,
@@ -2259,7 +2286,45 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   <path d="M0,0 L0,6 L6,3 z" style={{ fill: "var(--edge-stroke)" }} />
                 </marker>
               </defs>
-              {renderEdges("visible")}
+              {renderEdges("lines")}
+            </svg>
+
+            {/* Edges — hit-target layer (below cards). Wide invisible
+                strokes that capture clicks on / near the line, but defer
+                to cards wherever they overlap so card clicks aren't
+                blocked. */}
+            <svg
+              className="absolute"
+              style={{
+                zIndex: 5,
+                left: svgOriginX,
+                top: svgOriginY,
+                width: svgWidth,
+                height: svgHeight,
+                overflow: "visible",
+              }}
+              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
+            >
+              {renderEdges("hit")}
+            </svg>
+
+            {/* Edges — label layer (above cards). Each label gets a
+                background rect so the words stay readable when the edge's
+                midpoint lands on top of a card. */}
+            <svg
+              className="absolute"
+              style={{
+                zIndex: 12,
+                left: svgOriginX,
+                top: svgOriginY,
+                width: svgWidth,
+                height: svgHeight,
+                overflow: "visible",
+                pointerEvents: "none",
+              }}
+              viewBox={`${svgOriginX} ${svgOriginY} ${svgWidth} ${svgHeight}`}
+            >
+              {renderEdges("labels")}
             </svg>
 
             {/* Nodes */}
@@ -2410,7 +2475,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             className={`${
               deviceType === "mobile"
                 ? "w-[92vw]"
-                : "w-48 sm:w-56"
+                : "w-64 sm:w-72 lg:w-80"
             }`}
           >
             {deviceType === "mobile" && (
