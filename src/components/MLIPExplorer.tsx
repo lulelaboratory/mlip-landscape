@@ -40,9 +40,16 @@ const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
 const CANVAS_PADDING = 160;
-const MIN_SCALE = 0.5;
-const MAX_SCALE = 1.5;
-const MIN_BASE_SCALE = 0.4;
+// Display zoom range — what the user can drive the % readout to. The −/+
+// buttons and wheel zoom both clamp the effective (baseScale × userScale)
+// scale to this range so 10% always means 10% on screen, regardless of
+// which layout the auto-fit landed on.
+const MIN_DISPLAY_SCALE = 0.1;
+const MAX_DISPLAY_SCALE = 1.5;
+// Auto-fit clamps for the per-layout baseScale. Kept loose so the auto-fit
+// can land wherever the layout naturally wants — the user can then zoom
+// inside the display range above.
+const MIN_BASE_SCALE = 0.1;
 const MAX_BASE_SCALE = 1.2;
 const SIDEBAR_WIDTH = 360;
 const TABLET_SIDEBAR_WIDTH = 320;
@@ -996,15 +1003,15 @@ export default function MLIPExplorer() {
     const widthScale = availableWidth / (graphWidth + CANVAS_PADDING * 2);
     const heightScale = availableHeight / (graphHeight + CANVAS_PADDING * 2);
     const fitScale = Math.min(widthScale, heightScale);
-    // Per-device floor: the auto-fit can drop very low for large graphs on
-    // small canvases, leaving cards too small to read at first glance.
-    // Desktops keep cards at ≥70% so labels stay legible — the user can
-    // still pan to see anything that overflows.
-    const deviceMinScale = deviceType === "mobile" ? MIN_BASE_SCALE : deviceType === "tablet" ? 0.55 : 0.7;
-    const nextBase = Math.max(deviceMinScale, Math.min(MAX_BASE_SCALE, fitScale));
+    const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, fitScale));
     setBaseScale(nextBase);
+    // Switching layouts changes graphWidth/graphHeight, which fires this
+    // effect — reset both the user zoom and pan so each layout opens at
+    // its centered auto-fit instead of inheriting the pan/zoom from the
+    // previous layout.
     setUserScale(1);
-  }, [availableHeight, availableWidth, deviceType, graphHeight, graphWidth]);
+    setUserPan({ x: 0, y: 0 });
+  }, [availableHeight, availableWidth, graphHeight, graphWidth]);
 
   const basePan = useMemo(() => {
     const paddedWidth = graphWidth + CANVAS_PADDING * 2;
@@ -1049,7 +1056,23 @@ export default function MLIPExplorer() {
     setUserPan({ x: targetUserPanX, y: targetUserPanY });
   }, [selectedNode, deviceType, availableWidthWithSidebar, availableHeight, basePan.x, basePan.y, effectiveScale, positionOf]);
 
-  const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+  // Clamp a userScale candidate so the resulting effective scale (baseScale
+  // × userScale) stays inside the allowed display range. Used by both the
+  // −/+ buttons and the wheel handler so the % readout always sits inside
+  // [MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE], regardless of the auto-fit base.
+  const clampUserScale = (value: number) => {
+    if (baseScale <= 0) return value;
+    const effective = baseScale * value;
+    const clamped = Math.min(MAX_DISPLAY_SCALE, Math.max(MIN_DISPLAY_SCALE, effective));
+    return clamped / baseScale;
+  };
+  // Step the effective (displayed) scale by `delta` and write the matching
+  // userScale. Lets the buttons read like "−10%, +10%" no matter what the
+  // baseScale auto-fit landed on.
+  const stepEffectiveScale = (delta: number) => {
+    const next = clampUserScale((effectiveScale + delta) / baseScale);
+    setUserScale(next);
+  };
 
   // Canvas panning via pointer events (mouse + touch)
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
@@ -1125,10 +1148,13 @@ export default function MLIPExplorer() {
       // vs. line vs. page) and pinch gestures, which can swing wildly.
       const sensitivity = e.ctrlKey ? 0.01 : 0.0015;
       const factor = Math.exp(-e.deltaY * sensitivity);
-      const nextUserScale = Math.min(
-        MAX_SCALE,
-        Math.max(MIN_SCALE, state.userScale * factor),
+      const requested = state.userScale * factor;
+      const requestedEffective = state.baseScale * requested;
+      const clampedEffective = Math.min(
+        MAX_DISPLAY_SCALE,
+        Math.max(MIN_DISPLAY_SCALE, requestedEffective),
       );
+      const nextUserScale = state.baseScale > 0 ? clampedEffective / state.baseScale : requested;
       if (nextUserScale === state.userScale) return;
       const nextEffective = state.baseScale * nextUserScale;
       // Anchor the zoom on the cursor so the point under the mouse stays
@@ -2820,23 +2846,26 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2">
                   <button
-                    onClick={() => setUserScale((s) => clampScale(s - 0.1))}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Zoom out"
+                    onClick={() => stepEffectiveScale(-0.1)}
+                    disabled={effectiveScale <= MIN_DISPLAY_SCALE + 1e-6}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                    aria-label={`Zoom out (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
                   >
                     -
                   </button>
                   <button
                     onClick={() => setUserScale(1)}
                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Reset zoom"
+                    aria-label={`Reset zoom to fit (${Math.round(baseScale * 100)}%)`}
+                    title={`Reset to auto-fit (${Math.round(baseScale * 100)}%)`}
                   >
-                    {Math.round(userScale * baseScale * 100)}%
+                    {Math.round(effectiveScale * 100)}%
                   </button>
                   <button
-                    onClick={() => setUserScale((s) => clampScale(s + 0.1))}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Zoom in"
+                    onClick={() => stepEffectiveScale(0.1)}
+                    disabled={effectiveScale >= MAX_DISPLAY_SCALE - 1e-6}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                    aria-label={`Zoom in (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
                   >
                     +
                   </button>
