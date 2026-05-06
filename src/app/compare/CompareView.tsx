@@ -305,12 +305,23 @@ export default function CompareView({
         </p>
       ) : (
         <>
-        <div className="mt-6 flex items-center justify-end">
+        <div className="mt-6 flex items-center justify-between gap-3">
+          {selected.length < MAX_COMPARE ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Add up to {MAX_COMPARE - selected.length} more model
+              {MAX_COMPARE - selected.length === 1 ? "" : "s"} to compare side
+              by side.
+            </p>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Comparison full — remove a model to add another.
+            </p>
+          )}
           <button
             type="button"
             onClick={downloadCsv}
             aria-label={`Download the current comparison of ${selected.length} models as a CSV file`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition shrink-0"
           >
             <Download size={14} aria-hidden="true" /> Download CSV
           </button>
