@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CopyButton from "@/components/CopyButton";
 import pkg from "../../../package.json";
 
 export const metadata: Metadata = {
@@ -56,16 +57,30 @@ export default function CitePage() {
 
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">Preferred citation</h2>
-        <pre className="whitespace-pre-wrap break-words bg-slate-100 dark:bg-slate-900 rounded-lg p-4 text-sm font-mono border border-slate-200 dark:border-slate-800">
+        <div className="relative">
+          <pre className="whitespace-pre-wrap break-words bg-slate-100 dark:bg-slate-900 rounded-lg p-4 pr-24 text-sm font-mono border border-slate-200 dark:border-slate-800">
 {plainCitation}
-        </pre>
+          </pre>
+          <CopyButton
+            value={plainCitation}
+            ariaLabel="Copy the preferred citation to the clipboard"
+            className="absolute top-2 right-2"
+          />
+        </div>
       </section>
 
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">BibTeX</h2>
-        <pre className="whitespace-pre overflow-x-auto bg-slate-100 dark:bg-slate-900 rounded-lg p-4 text-xs sm:text-sm font-mono border border-slate-200 dark:border-slate-800">
+        <div className="relative">
+          <pre className="whitespace-pre overflow-x-auto bg-slate-100 dark:bg-slate-900 rounded-lg p-4 pr-24 text-xs sm:text-sm font-mono border border-slate-200 dark:border-slate-800">
 {bibtex}
-        </pre>
+          </pre>
+          <CopyButton
+            value={bibtex}
+            ariaLabel="Copy the BibTeX entry to the clipboard"
+            className="absolute top-2 right-2"
+          />
+        </div>
       </section>
 
       <section className="space-y-3 mb-8">

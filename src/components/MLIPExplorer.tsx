@@ -2541,7 +2541,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       onBlur={() =>
                         window.setTimeout(() => setSearchFocused(false), 120)
                       }
-                      placeholder="Search name, tag, license, year…"
+                      placeholder="Search by model, organisation, tag, or year…"
                       aria-label="Search models by name, author, year, tag, license, framework, or domain"
                       autoComplete="off"
                       className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[0.8125em] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-700"
@@ -2672,12 +2672,15 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                                   } as typeof prev;
                                 });
                               }}
-                              className={`px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
                                 active
-                                  ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500"
-                                  : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                               }`}
                             >
+                              {active && (
+                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
+                              )}
                               {value}
                             </button>
                           );
@@ -2720,6 +2723,21 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <label
+                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={edgeLabelsVisible}
+                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
+                      aria-label="Show edge labels on the landscape graph"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                    />
+                    Show edge labels
+                  </label>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <div
                     className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
                     id="mliphub-layout-label"
@@ -2736,6 +2754,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       role="radio"
                       aria-checked={layout === "layered"}
                       onClick={() => updateLayout("layered")}
+                      title="Curated, hand-tuned arrangement (default — the version cited in the paper)."
                       className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
                         layout === "layered"
                           ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
@@ -2811,21 +2830,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <label
-                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={edgeLabelsVisible}
-                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
-                      aria-label="Show edge labels on the landscape graph"
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
-                    />
-                    Show edge labels
-                  </label>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <button
                     type="button"
                     onClick={copyViewCitation}
@@ -2844,66 +2848,72 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   </button>
                 </div>
 
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2">
-                  <button
-                    onClick={() => stepEffectiveScale(-0.1)}
-                    disabled={effectiveScale <= MIN_DISPLAY_SCALE + 1e-6}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label={`Zoom out (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
-                  >
-                    -
-                  </button>
-                  <button
-                    onClick={() => setUserScale(1)}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label={`Reset zoom to fit (${Math.round(baseScale * 100)}%)`}
-                    title={`Reset to auto-fit (${Math.round(baseScale * 100)}%)`}
-                  >
-                    {Math.round(effectiveScale * 100)}%
-                  </button>
-                  <button
-                    onClick={() => stepEffectiveScale(0.1)}
-                    disabled={effectiveScale >= MAX_DISPLAY_SCALE - 1e-6}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label={`Zoom in (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
-                  >
-                    +
-                  </button>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 flex gap-2 items-center">
-                  <button
-                    onClick={() => {
-                      const next = FONT_SCALES[Math.max(0, fontScaleIndex - 1)];
-                      updateFontScale(next);
-                    }}
-                    disabled={!canShrinkFont}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Decrease graph text size"
-                    title="Shrink text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
-                  >
-                    A−
-                  </button>
-                  <button
-                    onClick={() => updateFontScale(DEFAULT_FONT_SCALE)}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Reset graph text size"
-                    title={`Graph text size ${Math.round(fontScale * 100)}%`}
-                  >
-                    A
-                  </button>
-                  <button
-                    onClick={() => {
-                      const next = FONT_SCALES[Math.min(FONT_SCALES.length - 1, fontScaleIndex + 1)];
-                      updateFontScale(next);
-                    }}
-                    disabled={!canGrowFont}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[1em] border border-slate-200 dark:border-slate-700 w-full"
-                    aria-label="Increase graph text size"
-                    title="Grow text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
-                  >
-                    A+
-                  </button>
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Zoom &amp; text size
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => stepEffectiveScale(-0.1)}
+                      disabled={effectiveScale <= MIN_DISPLAY_SCALE + 1e-6}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label={`Zoom out (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
+                      title="Zoom out"
+                    >
+                      -
+                    </button>
+                    <button
+                      onClick={() => setUserScale(1)}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label={`Reset zoom to fit (${Math.round(baseScale * 100)}%)`}
+                      title={`Reset to auto-fit (${Math.round(baseScale * 100)}%)`}
+                    >
+                      {Math.round(effectiveScale * 100)}%
+                    </button>
+                    <button
+                      onClick={() => stepEffectiveScale(0.1)}
+                      disabled={effectiveScale >= MAX_DISPLAY_SCALE - 1e-6}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.875em] md:text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label={`Zoom in (current ${Math.round(effectiveScale * 100)}%, range ${Math.round(MIN_DISPLAY_SCALE * 100)}–${Math.round(MAX_DISPLAY_SCALE * 100)}%)`}
+                      title="Zoom in"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <button
+                      onClick={() => {
+                        const next = FONT_SCALES[Math.max(0, fontScaleIndex - 1)];
+                        updateFontScale(next);
+                      }}
+                      disabled={!canShrinkFont}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[0.75em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label="Decrease graph text size"
+                      title="Shrink text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
+                    >
+                      A−
+                    </button>
+                    <button
+                      onClick={() => updateFontScale(DEFAULT_FONT_SCALE)}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 text-[0.875em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label="Reset graph text size"
+                      title={`Graph text size ${Math.round(fontScale * 100)}%`}
+                    >
+                      A
+                    </button>
+                    <button
+                      onClick={() => {
+                        const next = FONT_SCALES[Math.min(FONT_SCALES.length - 1, fontScaleIndex + 1)];
+                        updateFontScale(next);
+                      }}
+                      disabled={!canGrowFont}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent rounded text-slate-600 dark:text-slate-300 text-[1em] border border-slate-200 dark:border-slate-700 w-full"
+                      aria-label="Increase graph text size"
+                      title="Grow text inside the graph (cards, edge labels, zone labels). Use your browser zoom for the rest of the page."
+                    >
+                      A+
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -26,7 +26,74 @@ export default function PolicyPage() {
         correction.
       </p>
 
-      <section className="space-y-3 mb-8">
+      <nav
+        aria-label="On this page"
+        className="mb-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 px-4 py-3 text-sm"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">
+          On this page
+        </p>
+        <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 list-disc list-inside marker:text-slate-300 dark:marker:text-slate-600">
+          <li>
+            <a
+              href="#qualifies"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              What qualifies as a node
+            </a>
+          </li>
+          <li>
+            <a
+              href="#variant"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Distinct model vs. variant
+            </a>
+          </li>
+          <li>
+            <a
+              href="#cadence"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Review cadence
+            </a>
+          </li>
+          <li>
+            <a
+              href="#maintained"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              What &ldquo;maintained&rdquo; means
+            </a>
+          </li>
+          <li>
+            <a
+              href="#capability-fields"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Required capability fields
+            </a>
+          </li>
+          <li>
+            <a
+              href="#corrections"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Corrections &amp; additions
+            </a>
+          </li>
+          <li>
+            <a
+              href="#coverage"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Metadata coverage
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <section id="qualifies" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">What qualifies as a node</h2>
         <p>
           Any published machine-learning interatomic potential with a public
@@ -37,7 +104,7 @@ export default function PolicyPage() {
         </p>
       </section>
 
-      <section className="space-y-3 mb-8">
+      <section id="variant" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">
           Distinct model vs. variant
         </h2>
@@ -49,7 +116,7 @@ export default function PolicyPage() {
         </p>
       </section>
 
-      <section className="space-y-3 mb-8">
+      <section id="cadence" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">Review cadence</h2>
         <p>
           Every entry carries a <code>lastReviewed</code> date. We aim to
@@ -60,7 +127,7 @@ export default function PolicyPage() {
         </p>
       </section>
 
-      <section className="space-y-3 mb-8">
+      <section id="maintained" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">
           What &ldquo;maintained&rdquo; means
         </h2>
@@ -84,7 +151,7 @@ export default function PolicyPage() {
         </ul>
       </section>
 
-      <section className="space-y-3 mb-8">
+      <section id="capability-fields" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">
           Required capability fields for new entries
         </h2>
@@ -119,7 +186,7 @@ export default function PolicyPage() {
         </p>
       </section>
 
-      <section className="space-y-3 mb-8">
+      <section id="corrections" className="space-y-3 mb-8 scroll-mt-24">
         <h2 className="text-xl font-semibold">Corrections &amp; additions</h2>
         <p>
           To report a broken link, stale description, or request a new model,
@@ -147,7 +214,7 @@ export default function PolicyPage() {
         </p>
       </section>
 
-      <section className="space-y-3">
+      <section id="coverage" className="space-y-3 scroll-mt-24">
         <h2 className="text-xl font-semibold">Metadata coverage</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           MLIP Hub is progressively filling richer metadata (domain coverage,
