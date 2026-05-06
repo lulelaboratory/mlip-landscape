@@ -1,13 +1,8 @@
 # MLIP Hub: Interatomic Potential Explorer
 
 [![CI](https://github.com/lulelaboratory/mlip-landscape/actions/workflows/ci.yml/badge.svg)](https://github.com/lulelaboratory/mlip-landscape/actions/workflows/ci.yml)
-<!-- DOI badge: replace <ZENODO_RECORD_ID> after the first Zenodo release mints a concept DOI.
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.<ZENODO_RECORD_ID>.svg)](https://doi.org/10.5281/zenodo.<ZENODO_RECORD_ID>)
--->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-
-[![DOI](https://zenodo.org/badge/1101966189.svg)](https://doi.org/10.5281/zenodo.19767545)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19767545.svg)](https://doi.org/10.5281/zenodo.19767545)
 
 **MLIP Hub** is a curated, interactive map of machine-learning interatomic
 potentials (MLIPs) — equivariant, invariant, descriptor, and transformer-style
@@ -55,9 +50,42 @@ the current site.
 - **Updated dataset snapshot** — `public/data/landscape-v2.0.0.json`
   pins the catalogue served by the live site.
 
-A DOI for the v2.0.0 archive will be minted via Zenodo on the next public
-release; the citation page and `CITATION.cff` will be updated once the DOI
-is available.
+### Improvements since v2.0.0
+
+The live site at [mliphub.com](https://www.mliphub.com) tracks `main` and
+ships several post-release improvements on top of the v2.0.0 archive:
+
+- **Multi-axis tag filters** — Equivariance (Constrained / Learnt /
+  Invariant), Architecture (Descriptor / GNN), Attention, and Long-Range
+  filters live alongside the category and search filters in the left
+  panel. Models with unverified tag values are dimmed when an axis is
+  active.
+- **Clickable lineage edges** — every edge has a halo + colored stroke
+  with an optional label; clicking an edge opens a connection panel that
+  describes the relationship and links to both endpoints.
+- **Larger filter panel + 10–150 % zoom range** — the filter panel was
+  widened so chip rows wrap cleanly, and the zoom controls / wheel zoom
+  span a flat 10 %–150 % effective range regardless of which auto-fit
+  the layout picks.
+- **Centered auto-fit per layout** — switching between Layered,
+  Force-directed, and Timeline now resets to a centered auto-fit instead
+  of inheriting the previous layout's pan and zoom.
+- **Edges read above the cards** — long edges that visually cross an
+  unrelated card are masked by that card, and edge labels gain a halo
+  + background rect so the words remain readable on top of any colour.
+- **Cross-referenced metadata** — the catalogue has been audited
+  against [Kulichenko et al. 2024 *Chem. Rev.*](https://doi.org/10.1021/acs.chemrev.4c00153)
+  and the `ModelMeta` coverage backfilled across the catalogue (license,
+  maintenance, training data, capability flags).
+- **Color buckets** — cards are coloured by primary architectural
+  bucket (Equivariant, Invariant GNN, Descriptor, Learnt equivariance,
+  Unclassified) so the colour tracks the dominant taxonomic split
+  rather than the four legacy categories alone.
+
+These improvements will roll into the next tagged release; pin to
+v2.0.0 (or the matching dataset snapshot under
+`public/data/landscape-v2.0.0.{json,csv}`) for the exact catalogue
+archived on Zenodo.
 
 ---
 
@@ -86,17 +114,30 @@ The app visualises the catalogue as an explorable graph with:
 
 - **Zones** for the four model families (Equivariant, Invariant, Transformer,
   Descriptor)
-- **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, …)
-- **Edges** capturing the conceptual / architectural lineage between them,
-  with hover tooltips describing the relationship and a label on/off toggle
+- **Nodes** for specific models (NequIP, Allegro, MACE, Orb-v3, CHGNet, …),
+  coloured by primary architectural bucket (Equivariant, Invariant GNN,
+  Descriptor, Learnt equivariance, Unclassified) so colour tracks the
+  dominant taxonomic split
+- **Clickable lineage edges** capturing the conceptual / architectural
+  link between models. Each edge has a halo + coloured stroke with an
+  optional label; clicking opens a connection panel describing the
+  relationship and linking to both endpoints. A label on/off toggle
+  hides the words when the graph gets dense.
 - A **layout switcher** with the curated *Layered* view as the default,
   an optional *Force-directed* view marked **Experimental** (built-in
-  deterministic simulation, no extra runtime dependency), and a new
+  deterministic simulation, no extra runtime dependency), and a
   *Timeline (Tree of Life)* view that arranges cards left-to-right by
   release year (with month ticks) across one lane per architecture
-  family. The chosen layout persists across navigation and reloads via
-  the `?layout=` query parameter and `localStorage`. The version cited
-  in the arXiv paper uses the layered layout.
+  family. Each layout opens at a centered auto-fit; zoom is driven by
+  the −/+ buttons and the mouse wheel / pinch gesture across a 10–150 %
+  effective range. The chosen layout persists across navigation and
+  reloads via the `?layout=` query parameter and `localStorage`. The
+  version cited in the arXiv paper uses the layered layout.
+- **Multi-axis tag filters** — Equivariance (Constrained / Learnt /
+  Invariant), Architecture (Descriptor / GNN), Attention, and
+  Long-Range filters in the left panel narrow the view independently of
+  the category and free-text filters. Models with unverified tag values
+  are dimmed when an axis is active.
 - A **Cite current selection** button that copies a citation for the
   current view (filters, layout, selected model) to the clipboard
 - A **detail sidebar** with links to code, papers, and a web search
