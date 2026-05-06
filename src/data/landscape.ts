@@ -1851,6 +1851,60 @@ export const INITIAL_NODES: AnyNode[] = [
     supportsSpins: null,
     elementsCovered: "—",
   },
+  {
+    id: "ark",
+    type: "node",
+    category: "Equivariant",
+    label: "ARK",
+    year: 2026,
+    author: "Lim, Choung, Moon et al. (Seoul National University)",
+    x: 3180,
+    y: 320,
+    desc:
+      "Angular Relational Knowledge (ARK) distillation framework that compresses pretrained equivariant GNN MLIPs by modelling each interatomic interaction as a relational vector and using a contrastive objective to train compact student models that preserve the geometric structure of the teacher's potential energy surface. Demonstrated with EquiformerV2/GemNet-OC teachers on the OC20, OMat24, and SPICE benchmarks for scalable catalyst exploration.",
+    githubUrl: "https://github.com/hyukjunlim/ARK",
+    paperUrl: "https://www.nature.com/articles/s41524-026-02062-5",
+    isNew: true,
+    coverage: ["catalysts", "general materials", "organic molecules"],
+    useCases: ["catalyst exploration", "compact-model distillation", "high-throughput screening"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch", "ASE"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-05-06",
+    trainingData: ["OC20", "OMat24", "SPICE"],
+    tags: ["equivariant", "knowledge distillation", "relational", "compact"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by OC20 / OMat24 / SPICE",
+  },
+  {
+    id: "soft_fqeq",
+    type: "node",
+    category: "Invariant",
+    label: "Soft-FQEq",
+    year: 2026,
+    author: "Peeketi et al.",
+    x: 2900,
+    y: 650,
+    desc:
+      "Soft Fragment-Constrained Charge Equilibration: a differentiable solver layer for charge-aware MLIPs that restores fragment-resolved charge conservation at electrochemical interfaces. Implemented as an extension of the hippynn / HIP-NN framework, it consumes per-atom electronegativity, source charge, short-range energy, and a soft bond connectivity from a shared atomic-feature network and returns equilibrated charges with per-fragment chemical potentials. Trained on DFT energies, forces, and DDEC6 charges for IrO2/H2O/Na+/ClO4- electrode-electrolyte interfaces.",
+    githubUrl: "https://github.com/lanl/hippynn",
+    paperUrl: "https://arxiv.org/abs/2604.27910",
+    isNew: true,
+    coverage: ["electrochemical interfaces", "oxide-water interfaces"],
+    useCases: ["electrochemical MD", "double-layer modelling", "reactive interface chemistry"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "PyTorch"],
+    license: "BSD-3-Clause",
+    maintenance: "experimental",
+    lastReviewed: "2026-05-06",
+    trainingData: ["custom DFT IrO2/H2O/Na+/ClO4-"],
+    tags: ["invariant", "charge-aware", "fragment-charge-equilibration", "electrochemistry"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "Ir, O, H, Na, Cl (electrochemical interface dataset)",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -1987,4 +2041,12 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "spookynet", to: "gems", label: "Biomolecular FF" },
   { from: "spookynet", to: "uma", label: "Charge-conditioned FF", dashed: true },
   { from: "spookynet", to: "mace_polar1", label: "Charge/Spin", dashed: true },
+
+  // May 2026 — ARK (Angular Relational Knowledge distillation; npj Comp Mat 2026)
+  { from: "eqv2", to: "ark", label: "Distillation" },
+  { from: "gemnet", to: "ark", label: "Teacher", dashed: true },
+
+  // April 2026 — Soft-FQEq (fragment-constrained charge equilibration on HIP-NN; arXiv:2604.27910)
+  { from: "hip_nn", to: "soft_fqeq", label: "+Fragment QEq" },
+  { from: "aimnet2", to: "soft_fqeq", label: "Charge-aware", dashed: true },
 ];
