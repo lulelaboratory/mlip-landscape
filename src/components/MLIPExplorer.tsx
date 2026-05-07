@@ -644,6 +644,19 @@ export default function MLIPExplorer() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragPointerId, setDragPointerId] = useState<number | null>(null);
 
+  // Two-finger pinch-zoom. We track every active pointer (mouse + touch)
+  // in a ref so the move handler can detect when two fingers are down and
+  // anchor the zoom on their midpoint — the same anchor logic the wheel
+  // handler uses for trackpad pinch and cursor zoom.
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStateRef = useRef<{
+    startDist: number;
+    startUserScale: number;
+    midGraphX: number;
+    midGraphY: number;
+  } | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
+
   // Per-node drag (force-directed layout only)
   const [nodeDragId, setNodeDragId] = useState<string | null>(null);
   const nodeDragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -1074,23 +1087,104 @@ export default function MLIPExplorer() {
     setUserScale(next);
   };
 
-  // Canvas panning via pointer events (mouse + touch)
+  // Canvas panning + pinch-zoom via pointer events (mouse + touch).
+  // Single pointer drives the original pan behaviour unchanged; a second
+  // pointer (always touch in practice — mice can't multi-touch) switches
+  // into pinch-zoom mode, anchoring the scale on the midpoint between the
+  // two fingers and reading freshness-critical state from `wheelStateRef`
+  // to dodge stale closures during the rapid event burst.
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     const target = e.target as Element;
     if (target.closest(".node-card")) return;
     if (target.closest("[data-edge='true']")) return;
+
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointersRef.current.size >= 2) {
+      // Two fingers down. Cancel any in-progress single-pointer pan and
+      // initialise pinch state from the current view so the gesture feels
+      // anchored to the spot between the two fingers.
+      if (dragPointerId !== null) {
+        try {
+          e.currentTarget.releasePointerCapture(dragPointerId);
+        } catch {
+          // ignore — capture may already have been released
+        }
+      }
+      setIsDragging(false);
+      setDragPointerId(null);
+
+      const pts = Array.from(pointersRef.current.values()).slice(0, 2);
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const midScreenX = (pts[0].x + pts[1].x) / 2 - rect.left;
+      const midScreenY = (pts[0].y + pts[1].y) / 2 - rect.top;
+      const state = wheelStateRef.current;
+      const effective = state.baseScale * state.userScale;
+      const midGraphX = effective > 0 ? (midScreenX - state.panX) / effective : 0;
+      const midGraphY = effective > 0 ? (midScreenY - state.panY) / effective : 0;
+
+      pinchStateRef.current = {
+        startDist: Math.max(dist, 1),
+        startUserScale: state.userScale,
+        midGraphX,
+        midGraphY,
+      };
+      setIsPinching(true);
+      return;
+    }
+
     setIsDragging(true);
     setDragPointerId(e.pointerId);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore — some browsers reject capture on synthetic pointers
+    }
   };
 
   const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (pointersRef.current.size >= 2 && pinchStateRef.current) {
+      const pts = Array.from(pointersRef.current.values()).slice(0, 2);
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const midScreenX = (pts[0].x + pts[1].x) / 2 - rect.left;
+      const midScreenY = (pts[0].y + pts[1].y) / 2 - rect.top;
+      const ratio = dist / pinchStateRef.current.startDist;
+      const requestedUserScale = pinchStateRef.current.startUserScale * ratio;
+      const state = wheelStateRef.current;
+      const requestedEffective = state.baseScale * requestedUserScale;
+      const clampedEffective = Math.min(
+        MAX_DISPLAY_SCALE,
+        Math.max(MIN_DISPLAY_SCALE, requestedEffective),
+      );
+      const nextUserScale =
+        state.baseScale > 0 ? clampedEffective / state.baseScale : requestedUserScale;
+      const nextEffective = state.baseScale * nextUserScale;
+      const newPanX = midScreenX - pinchStateRef.current.midGraphX * nextEffective;
+      const newPanY = midScreenY - pinchStateRef.current.midGraphY * nextEffective;
+      setUserScale(nextUserScale);
+      setUserPan({ x: newPanX - state.basePanX, y: newPanY - state.basePanY });
+      return;
+    }
+
     if (!isDragging || dragPointerId !== e.pointerId) return;
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
   const handlePointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    pointersRef.current.delete(e.pointerId);
+
+    if (pointersRef.current.size < 2) {
+      pinchStateRef.current = null;
+      if (isPinching) setIsPinching(false);
+    }
+
     if (dragPointerId !== null) {
       try {
         e.currentTarget.releasePointerCapture(dragPointerId);
@@ -2237,7 +2331,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
 
           <div
             className={`absolute origin-top-left ease-out ${
-              isDragging || isWheelZooming
+              isDragging || isWheelZooming || isPinching
                 ? "transition-none"
                 : "transition-transform duration-500"
             }`}
@@ -2522,8 +2616,10 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 // ~112 px and we want a small breathing margin top + bottom)
                 // and scroll its contents when sections like Layout, Color
                 // palette, and the zoom + font controls would otherwise run
-                // off the bottom of short laptop viewports.
-                className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain"
+                // off the bottom of short laptop viewports. The dvh fallback
+                // keeps the panel inside the visible region on mobile when
+                // the URL bar shows / hides.
+                className="bg-white/90 dark:bg-slate-900/85 backdrop-blur p-3 rounded-xl shadow-xl dark:shadow-slate-950/50 border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-8rem)] supports-[height:100dvh]:max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain"
               >
                 <label className="block mb-3">
                   <span className="sr-only">Search models</span>
@@ -2938,17 +3034,31 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             selectedNode || selectedEdge ? "translate-y-0" : "translate-y-full pointer-events-none"
           }`}
         >
-          <div className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-              <div className="text-[0.875em] font-semibold text-slate-700 dark:text-slate-200">
+          <div
+            className="absolute inset-0 bg-white dark:bg-slate-900 shadow-2xl dark:shadow-slate-950/70 overflow-y-auto overscroll-contain"
+            // Pad the bottom of the scroll area to the safe-area inset so
+            // long detail content (links, citation buttons) doesn't collide
+            // with the home indicator on iPhone X+. Insets are 0 on
+            // desktop, so this is a no-op on PCs.
+            style={{
+              paddingBottom: "env(safe-area-inset-bottom, 0)",
+            }}
+          >
+            <div
+              className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur"
+              style={{
+                paddingTop: "max(0.75rem, env(safe-area-inset-top, 0))",
+              }}
+            >
+              <div className="text-[0.9375rem] font-semibold text-slate-700 dark:text-slate-200">
                 {selectedEdge ? "Connection" : "Details"}
               </div>
               <button
                 onClick={closeDetails}
-                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700"
                 aria-label="Close details"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
             {(selectedNode || selectedEdge) && (

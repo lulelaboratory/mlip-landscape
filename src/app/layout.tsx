@@ -73,6 +73,15 @@ export const viewport: Viewport = {
   themeColor: "#2563eb",
   width: "device-width",
   initialScale: 1,
+  // Allow OS-level pinch zoom on long-form pages (Cite, Policy, Models, etc.)
+  // up to 5x. The Explore canvas has its own pinch gesture and consumes the
+  // touch events before they reach the browser, so this does not conflict.
+  maximumScale: 5,
+  userScalable: true,
+  // viewport-fit=cover lets us paint into the safe-area insets on notched
+  // devices; the safe-area-inset-* env vars below pad the floating buttons
+  // back inside the visible region.
+  viewportFit: "cover",
 };
 
 const THEME_INIT_SCRIPT = `(() => {

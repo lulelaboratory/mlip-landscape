@@ -40,9 +40,17 @@ export default function FeedbackButton() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback or report a correction"
-        className="fixed bottom-4 left-4 z-30 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur text-slate-700 dark:text-slate-200 shadow-lg shadow-slate-900/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+        // bottom / left are clamped to max(1rem, safe-area-inset) so the pill
+        // sits above the home indicator on notched phones in landscape but
+        // keeps its desktop position unchanged (insets are 0 on most PCs).
+        style={{
+          bottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+          left: "max(1rem, env(safe-area-inset-left, 1rem))",
+        }}
+        className="fixed z-30 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur text-slate-700 dark:text-slate-200 shadow-lg shadow-slate-900/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
-        <MessageSquare size={16} aria-hidden="true" /> Feedback
+        <MessageSquare size={16} aria-hidden="true" />
+        <span className="hidden sm:inline">Feedback</span>
       </button>
 
       {open && (
