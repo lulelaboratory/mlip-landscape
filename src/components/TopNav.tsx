@@ -17,7 +17,16 @@ const LINKS: NavLink[] = [
 export default function TopNav() {
   return (
     <header
-      className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-950/50 z-20"
+      // z-30 keeps the header (and its mobile dropdown nav) above the
+      // explore-page filter panel — that filter card sits at z-20 inside
+      // the canvas and was previously winning the tie because it comes
+      // later in the DOM. The dropdown's own z-30 lives inside the
+      // header's stacking context, so the parent z-index is what
+      // actually decides whether the menu can paint over the filter on
+      // small screens. We deliberately match (not exceed) the mobile
+      // detail drawer's z-30 so opening a model still slides the drawer
+      // over the header — same behaviour as before.
+      className="shrink-0 relative z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-950/50"
       // Honour the safe-area inset on landscape iPhone so the nav doesn't
       // hide behind the notch. Insets are 0 on desktops, so this is a
       // no-op on PCs and a fix on phones.
