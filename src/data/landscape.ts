@@ -2195,6 +2195,101 @@ export const INITIAL_NODES: AnyNode[] = [
     architecture: "gnn",
     usesAttention: true,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — auto-update sweep
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "hienet",
+    type: "node",
+    category: "Equivariant",
+    label: "HIENet",
+    year: 2025,
+    author: "Yan, Bohde et al. (Texas A&M, divelab/AIRS)",
+    x: 3180,
+    y: 320,
+    desc:
+      "Hybrid Invariant–Equivariant materials foundation potential that interleaves invariant and O(3)-equivariant message-passing layers to leverage invariant-layer scalability while reserving equivariant layers for high-order interactions. Force and stress are obtained as exact derivatives of a conservative energy, and the model achieves SOTA on Matbench Discovery while running ~90% faster than SevenNet-l3i5 and ~140% faster than EquiformerV2.",
+    githubUrl: "https://github.com/divelab/AIRS",
+    paperUrl: "https://arxiv.org/abs/2503.05771",
+    isNew: true,
+    coverage: ["general materials"],
+    useCases: ["materials discovery", "Matbench Discovery screening"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "PyTorch"],
+    license: "GPL-3.0",
+    maintenance: "active",
+    lastReviewed: "2026-05-07",
+    trainingData: ["MPTrj"],
+    tags: ["equivariant", "hybrid invariant-equivariant", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by MPTrj (~89 elements)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
+  {
+    id: "mace_mh1",
+    type: "node",
+    category: "Equivariant",
+    label: "MACE-MH-1",
+    year: 2026,
+    author: "Batatia, Lin, Hart, Kasoar, Elena, Norwood, Wolf, Csányi (Cambridge / ACEsuit)",
+    x: 4020,
+    y: 150,
+    desc:
+      "Cross-learning multi-head MACE foundation model that bridges molecular, surface, and inorganic crystal chemistry in a single MLIP. Enhances the MACE architecture with stronger element-weight sharing and non-linear tensor-decomposition product bases, then post-trains a multi-head replay scheme on OMAT-24 (PBE crystals), MPTraj, OMol (ωB97M-VV10), OC20 (surfaces), SPICE, RGD1, and MATPES-r2SCAN heads to unify electronic-structure theories.",
+    githubUrl: "https://github.com/ACEsuit/mace-foundations",
+    paperUrl: "https://arxiv.org/abs/2510.25380",
+    isNew: true,
+    coverage: ["general materials", "molecules", "surfaces", "molecular crystals"],
+    useCases: ["unified materials/molecular MLIP", "multi-fidelity foundation MD"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "LAMMPS", "PyTorch"],
+    maintenance: "active",
+    lastReviewed: "2026-05-07",
+    trainingData: ["OMAT-24", "MPTraj", "OMol", "OC20", "SPICE", "RGD1", "MATPES-r2SCAN"],
+    tags: ["equivariant", "MACE", "multi-head", "cross-domain", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements up to Z=89 (OMAT-24 / MPTraj coverage)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+  },
+  {
+    id: "mgnn",
+    type: "node",
+    category: "Invariant",
+    label: "MGNN",
+    year: 2025,
+    author: "Chang, Zhu (Wuhan University of Technology)",
+    x: 2340,
+    y: 900,
+    desc:
+      "Moment Graph Neural Network: rotation-invariant message-passing architecture whose node and edge updates operate on Cartesian moment representations of 3D molecular graphs, capturing high-order angular structure without explicit equivariant tensor products. Reaches SOTA on QM9 and revised MD17 (incl. MD17-ethanol) and generalises to 3BPA and 25-element high-entropy alloys, including amorphous-electrolyte MD.",
+    githubUrl: "https://github.com/JakechiC/MGNN",
+    paperUrl: "https://arxiv.org/abs/2409.15800",
+    isNew: true,
+    coverage: ["organic molecules", "high-entropy alloys", "amorphous electrolytes"],
+    useCases: ["molecular property prediction", "MD of complex alloys and electrolytes"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "PyTorch"],
+    maintenance: "maintained",
+    lastReviewed: "2026-05-07",
+    trainingData: ["QM9", "rMD17", "MD17", "3BPA"],
+    tags: ["invariant", "moment representation", "molecular potential"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "molecular CHNOFS plus 25-element high-entropy alloys",
+    equivariance: "invariant",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -2317,4 +2412,16 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "spookynet", to: "gems", label: "Biomolecular FF" , description: "GEMS is a SpookyNet-based biomolecular force-field framework, applying SpookyNet to proteins and condensed-phase biomolecular dynamics with top-down/bottom-up sampling." },
   { from: "spookynet", to: "uma", label: "Charge-conditioned FF", dashed: true , description: "UMA's charge/spin conditioning design pattern — global tokens for total charge and spin multiplicity — was pioneered by SpookyNet (and AIMNet-NSE). The link captures conceptual lineage of charge/spin-aware MLIPs." },
   { from: "spookynet", to: "mace_polar1", label: "Charge/Spin", dashed: true , description: "MACE-POLAR-1 inherits the explicit charge/spin-density / Fukui-equilibration design pattern that SpookyNet (and AIMNet-NSE) pioneered, applied within the MACE equivariant message-passing backbone." },
+
+  // May 2026 — HIENet (hybrid invariant–equivariant materials foundation model)
+  { from: "eqv2", to: "hienet", label: "Hybrid Inv-Eq", description: "HIENet is positioned in the same equivariant-transformer / foundation-model lineage as Equiformer V2 but interleaves cheap invariant message-passing layers with the equivariant ones, achieving SOTA on Matbench Discovery while running substantially faster than EquiformerV2." },
+  { from: "sevennet", to: "hienet", label: "Faster than SevenNet", dashed: true, description: "HIENet benchmarks against SevenNet-l3i5 as a SevenNet-family equivariant baseline and reports ~90% speedup at improved accuracy; the link captures the shared MPTrj-trained equivariant-foundation niche." },
+
+  // May 2026 — MACE-MH-1 (cross-learning multi-head MACE foundation model)
+  { from: "mace", to: "mace_mh1", label: "Multi-head Replay", description: "MACE-MH-1 enhances the MACE architecture (stronger element weight sharing, non-linear product-basis tensor decomposition) and adds a multi-head replay post-training scheme that unifies inorganic crystals, surfaces, organic chemistry, and molecular crystals in a single MACE foundation model." },
+  { from: "uma", to: "mace_mh1", label: "Cross-domain", dashed: true, description: "MACE-MH-1 targets the same unified molecular/surface/inorganic foundation niche that UMA established (and uses a similar multi-head, multi-dataset training recipe), but built on the MACE equivariant backbone." },
+
+  // May 2026 — MGNN (moment-graph invariant universal molecular potential)
+  { from: "schnet", to: "mgnn", label: "+Moments", description: "MGNN extends the SchNet-style invariant message-passing framework with Cartesian moment representations of 3D molecular graphs, capturing high-order angular structure without explicit equivariant tensor products." },
+  { from: "painn", to: "mgnn", label: "Vector → Moment", dashed: true, description: "PaiNN's scalar/vector message passing is the closest precedent for MGNN's moment-based representations; MGNN generalises that vectorial decomposition into a hierarchy of Cartesian moments while remaining strictly invariant." },
 ];
