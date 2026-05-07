@@ -24,15 +24,70 @@ html.dark {
   --zone-label-text: #64748b;
 }
 
+html {
+  /* Prevent iOS Safari from auto-inflating text on rotation; we control
+     text size explicitly via Tailwind utilities and the in-canvas font scale. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background-color: #f8fafc;
   color: #020617;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Suppress the dark blue tap-flash on iOS / Android Chrome — we paint our
+     own focus / hover affordances on every interactive element. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html.dark body {
   background-color: #020617;
   color: #e2e8f0;
+}
+
+/* Use the dynamic viewport unit on the body when supported so the explore
+   canvas reflows as the mobile URL bar shows / hides instead of leaving a
+   chunk of the page hidden behind the bar. The Tailwind h-screen above is
+   the static-100vh fallback for older browsers. */
+@supports (height: 100dvh) {
+  body.h-screen {
+    height: 100dvh;
+  }
+}
+
+/* Honour the safe-area insets on notched phones / displays so the floating
+   Feedback / Tour buttons don't slip under the home indicator. */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.safe-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+.safe-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Touch-device tweaks. Cards on the canvas keep a slightly heavier weight
+   so the smaller 0.85× font scale still reads. Avoids nested @media (which
+   PostCSS / older Tailwind builds may not flatten) by using two top-level
+   queries. */
+@media (pointer: coarse) {
+  .node-card {
+    font-weight: 500;
+  }
+}
+
+/* iOS auto-zooms inputs whose computed font-size is under 16 px, leaving
+   the user stranded mid-zoom. Pin to 16 px on phones so focus stays in
+   place; larger viewports keep the per-input text utility unchanged. */
+@media (max-width: 640px) and (pointer: coarse) {
+  input[type="search"],
+  input[type="text"],
+  input[type="email"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 * {

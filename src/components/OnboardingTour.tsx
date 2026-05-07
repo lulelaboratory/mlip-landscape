@@ -87,6 +87,13 @@ const STEPS: Step[] = [
         <li>Click a card to open its details panel.</li>
         <li>Drag the background to pan, use the zoom buttons to scale.</li>
         <li>
+          <span className="sm:hidden">Pinch with two fingers</span>
+          <span className="hidden sm:inline">
+            Mouse wheel or trackpad pinch
+          </span>{" "}
+          to zoom — pinch with two fingers on touch screens.
+        </li>
+        <li>
           <span className="inline-flex items-center gap-1 align-middle">
             <KeySquare size={14} aria-hidden="true" /> Tab into the graph and
             use arrow keys
@@ -146,9 +153,17 @@ export default function OnboardingTour() {
         type="button"
         onClick={reopen}
         aria-label="Open the guided tour"
-        className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur text-slate-700 dark:text-slate-200 shadow-lg shadow-slate-900/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+        // bottom / right honour the safe-area inset on notched phones; the
+        // 1rem fallback keeps the pill in its original spot on desktop and
+        // on devices that don't expose any inset.
+        style={{
+          bottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+          right: "max(1rem, env(safe-area-inset-right, 1rem))",
+        }}
+        className="fixed z-30 inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur text-slate-700 dark:text-slate-200 shadow-lg shadow-slate-900/10 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
-        <HelpCircle size={16} aria-hidden="true" /> Tour
+        <HelpCircle size={16} aria-hidden="true" />
+        <span className="hidden sm:inline">Tour</span>
       </button>
 
       {open && (

@@ -2,7 +2,16 @@ import Link from "next/link";
 
 export default function SiteFooter() {
   return (
-    <footer className="shrink-0 w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 py-3 px-4 flex flex-wrap justify-center items-center gap-x-4 gap-y-1">
+    <footer
+      className="shrink-0 w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 py-2.5 sm:py-3 px-4 flex flex-wrap justify-center items-center gap-x-4 gap-y-1"
+      // Pad to the safe-area insets on notched phones so the footer text
+      // doesn't slip under the home indicator. Insets are 0 on desktops.
+      style={{
+        paddingBottom: "max(0.625rem, env(safe-area-inset-bottom, 0))",
+        paddingLeft: "max(1rem, env(safe-area-inset-left, 0))",
+        paddingRight: "max(1rem, env(safe-area-inset-right, 0))",
+      }}
+    >
       <span>
         Questions or suggestions? Contact
         <a

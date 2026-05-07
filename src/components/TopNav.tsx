@@ -16,21 +16,30 @@ const LINKS: NavLink[] = [
 
 export default function TopNav() {
   return (
-    <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-950/50 z-20">
+    <header
+      className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-slate-950/50 z-20"
+      // Honour the safe-area inset on landscape iPhone so the nav doesn't
+      // hide behind the notch. Insets are 0 on desktops, so this is a
+      // no-op on PCs and a fix on phones.
+      style={{
+        paddingLeft: "env(safe-area-inset-left, 0)",
+        paddingRight: "env(safe-area-inset-right, 0)",
+      }}
+    >
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
         <Link
           href="/"
-          className="flex items-center gap-3 shrink-0 group"
+          className="flex items-center gap-3 shrink-0 min-w-0 group"
           aria-label="MLIP Hub home"
         >
-          <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200 dark:shadow-blue-900/40 group-hover:bg-blue-700 transition">
+          <div className="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-200 dark:shadow-blue-900/40 group-hover:bg-blue-700 transition shrink-0">
             <Layers size={20} />
           </div>
-          <div className="leading-tight">
-            <div className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
+          <div className="leading-tight min-w-0">
+            <div className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
               MLIP Hub
             </div>
-            <div className="text-[0.6875rem] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <div className="text-[0.6875rem] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
               Interatomic Potential Explorer
             </div>
           </div>

@@ -391,7 +391,13 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-slate-950/40"
+          // Position is clamped above the safe-area bottom inset on notched
+          // phones so the pill never sits under the home indicator.
+          // Desktop sees insets of 0 → falls back to the original 1rem.
+          style={{
+            bottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+          }}
+          className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-slate-950/40 max-w-[calc(100vw-2rem)]"
         >
           <span className="text-sm text-slate-700 dark:text-slate-200">
             {compareSelection.length} selected
