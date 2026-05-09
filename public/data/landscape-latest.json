@@ -3491,6 +3491,112 @@
       "architecture": "descriptor",
       "usesAttention": false,
       "longRange": true
+    },
+    {
+      "id": "petmad15",
+      "type": "node",
+      "category": "Transformer",
+      "label": "PET-MAD-1.5",
+      "year": 2026,
+      "author": "Mazitov, Bigi, Kellner, Pegolo, Tisi, Pozdnyakov, Loche, Kazeev, Fraux, Ceriotti et al. (EPFL / lab-cosmo)",
+      "x": 4020,
+      "y": 320,
+      "desc": "Successor to PET-MAD: a generally applicable r²SCAN universal interatomic potential that extends elemental coverage to 102 elements via the curated MAD-1.5 dataset (~217k structures). Same Point Edge Transformer (PET) backbone with rotation-invariance learnt from data, retrained at the r²SCAN meta-GGA level with targeted enrichment strategies (molecules, clusters, surfaces, low-dimensional structures, bulk crystals) and uncertainty-quantification-driven outlier removal. Reported as more robust, more accurate, and faster than the original PET-MAD across challenging molecular dynamics benchmarks.",
+      "githubUrl": "https://github.com/lab-cosmo/pet-mad",
+      "paperUrl": "https://arxiv.org/abs/2603.02089",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "molecules",
+        "clusters",
+        "surfaces",
+        "low-dimensional structures"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "r²SCAN molecular dynamics"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-09",
+      "trainingData": [
+        "MAD-1.5"
+      ],
+      "tags": [
+        "transformer",
+        "PET",
+        "foundation model",
+        "r²SCAN",
+        "102 elements"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "102 elements",
+      "equivariance": "learnt",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "numElements": 102,
+      "trainingSetSize": 217000
+    },
+    {
+      "id": "densnet",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "DenSNet",
+      "year": 2026,
+      "author": "Lewis-Atwell, Saiz Pardo, Rieu, Loche, Bocus, Cersonsky, Ceriotti et al.",
+      "x": 4300,
+      "y": 150,
+      "desc": "Density-first machine-learned electronic-structure framework that learns the Hohenberg-Kohn map from nuclear configurations to the ground-state electron density using an SE(3)-equivariant neural network predicting density coefficients of an atom-centred Gaussian basis, with a Δ-learning prior built from superposed atomic densities. A second equivariant network then maps the predicted density to the total energy, providing a unified framework for molecular dynamics, energies, forces, and electronic observables (dipole moments, polarizabilities, infrared spectra). Validated on ethanol, ethanethiol, resorcinol, and polythiophene oligomers (extrapolating from 1-6 to 12 monomers).",
+      "paperUrl": "https://arxiv.org/abs/2604.24563",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "molecular crystals",
+        "polymers"
+      ],
+      "useCases": [
+        "IR spectroscopy from MD",
+        "density-aware molecular dynamics",
+        "electronic-structure observables"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "dipole",
+        "polarizability"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-05-09",
+      "trainingData": [
+        "custom DFT (ethanol, ethanethiol, resorcinol, polythiophene)"
+      ],
+      "tags": [
+        "equivariant",
+        "SE(3)",
+        "electron density",
+        "Δ-learning",
+        "spectroscopy"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "—",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false
     }
   ],
   "groups": [
@@ -4044,6 +4150,32 @@
       "label": "Charge-aware sibling",
       "dashed": true,
       "description": "Sibling charge-aware MLIP design: qNEP injects environment-dependent partial charges into the NEP descriptor backbone with explicit electrostatics, while AIMNet-NSE injects total charge / spin states into a message-passing backbone via its Neural Spin Equilibration loop."
+    },
+    {
+      "from": "petmad",
+      "to": "petmad15",
+      "label": "MAD → MAD-1.5 / r²SCAN",
+      "description": "PET-MAD-1.5 is the direct successor to PET-MAD from the same EPFL lab-cosmo group: same Point Edge Transformer backbone, retrained at the r²SCAN level on the curated MAD-1.5 dataset that extends elemental coverage from 85 to 102 elements with targeted enrichment of molecules, clusters, surfaces, and low-dimensional structures."
+    },
+    {
+      "from": "mace_osaka26",
+      "to": "petmad15",
+      "label": "Broad-element uMLIP",
+      "dashed": true,
+      "description": "Sibling broad-element universal potentials: MACE-Osaka26 reaches 97 elements within the MACE equivariant family; PET-MAD-1.5 reaches 102 elements within the unconstrained PET transformer family. The link captures shared coverage-of-the-periodic-table goals rather than architectural descent."
+    },
+    {
+      "from": "nequip",
+      "to": "densnet",
+      "label": "SE(3)-equivariant",
+      "description": "DenSNet uses an SE(3)-equivariant message-passing network to predict density coefficients of an atom-centred Gaussian basis, sitting in the same E(3)/SE(3)-equivariant lineage as NequIP but with electron density (rather than energy) as the central learned quantity, from which a second equivariant network derives total energies for MD."
+    },
+    {
+      "from": "mace_polar1",
+      "to": "densnet",
+      "label": "Density / electrostatics",
+      "dashed": true,
+      "description": "Both target electronic / electrostatic observables on top of an MLIP: MACE-POLAR-1 augments MACE with non-self-consistent polarisable charge/spin densities for long-range electrostatics, while DenSNet replaces the energy-first paradigm with a density-first one to expose dipole moments, polarizabilities, and IR spectra directly."
     }
   ]
 }
