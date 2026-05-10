@@ -3597,6 +3597,177 @@
       "architecture": "gnn",
       "usesAttention": false,
       "longRange": false
+    },
+    {
+      "id": "pet_oam_xl",
+      "type": "node",
+      "category": "Transformer",
+      "label": "PET-OAM-XL",
+      "year": 2026,
+      "author": "Bigi, Pegolo, Mazitov, Ceriotti (EPFL / lab-cosmo)",
+      "x": 4300,
+      "y": 320,
+      "desc": "Extra-large variant of the Point Edge Transformer (PET) trained with an OMat24 + sAlex + MPtrj recipe (the OAM data mixture). Pushes the limits of unconstrained MLIPs by trading explicit E(3) symmetry constraints for capacity, depth, and data, achieving the top position on the Matbench Discovery leaderboard at release. Configuration: d_pet 640, d_node 2560, 5 GNN layers + 3 attention layers, 10 Å cutoff with adaptive 40-neighbour cap, distributed via the upet package alongside the wider PET-MAD / PET-OMat / PET-SPICE family.",
+      "githubUrl": "https://github.com/lab-cosmo/upet",
+      "paperUrl": "https://arxiv.org/abs/2601.16195",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "Matbench Discovery screening",
+        "high-throughput stability prediction"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "BSD-3-Clause",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-10",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "tags": [
+        "transformer",
+        "PET",
+        "unconstrained",
+        "foundation model",
+        "Matbench Discovery"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "learnt",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": false,
+      "numElements": 89
+    },
+    {
+      "id": "alphanet",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "AlphaNet",
+      "year": 2026,
+      "author": "Yin, Zhang, Yang et al.",
+      "x": 4580,
+      "y": 150,
+      "desc": "Local-frame-based equivariant interatomic potential that builds atom-centred frames with learnable geometric transitions, replacing the spherical-harmonic tensor products used by NequIP/MACE-style models with cheaper Cartesian-frame operations. Achieves SOTA accuracy and improved efficiency on Matbench Discovery and OC2M benchmarks across molecular reactions, crystal stability, and surface catalysis, with an OMat24-pretrained foundation variant (alphanet-v1-oam) released on the Matbench Discovery leaderboard.",
+      "githubUrl": "https://github.com/zmyybc/AlphaNet",
+      "paperUrl": "https://arxiv.org/abs/2501.07155",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "organic molecules",
+        "catalysts"
+      ],
+      "useCases": [
+        "materials discovery",
+        "catalyst screening",
+        "molecular MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-10",
+      "trainingData": [
+        "OMat24",
+        "MPtrj",
+        "OC2M"
+      ],
+      "tags": [
+        "equivariant",
+        "local frame",
+        "foundation model"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89
+    },
+    {
+      "id": "tace",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "TACE",
+      "year": 2026,
+      "author": "Xu et al.",
+      "x": 4580,
+      "y": 320,
+      "desc": "Tensor Atomic Cluster Expansion: a unified Cartesian-space framework that decomposes atomic environments into a complete hierarchy of irreducible Cartesian tensors, providing symmetry-consistent invariant and equivariant representations without spherical-harmonic Clebsch-Gordan overhead. Universal embeddings expose computational level, total charge, magnetic moments, and external-field perturbations as conditioning inputs, while a Latent Ewald Summation module handles long-range electrostatics. Released with an OMat24-pretrained foundation variant (tace-v1-oam-m) on the Matbench Discovery leaderboard, with TorchSim, LAMMPS-ML-IAP, and ASE calculators.",
+      "githubUrl": "https://github.com/xvzemin/tace",
+      "paperUrl": "https://arxiv.org/abs/2509.14961",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "organic molecules",
+        "magnetic systems",
+        "charged systems"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "tensorial property prediction",
+        "external-field response"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress",
+        "dipole",
+        "magnetic_moment",
+        "polarizability"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-10",
+      "trainingData": [
+        "OMat24",
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "ACE",
+        "Cartesian tensors",
+        "long-range",
+        "charge-aware",
+        "magnetic",
+        "foundation model"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": true,
+      "numElements": 89
     }
   ],
   "groups": [
@@ -4176,6 +4347,52 @@
       "label": "Density / electrostatics",
       "dashed": true,
       "description": "Both target electronic / electrostatic observables on top of an MLIP: MACE-POLAR-1 augments MACE with non-self-consistent polarisable charge/spin densities for long-range electrostatics, while DenSNet replaces the energy-first paradigm with a density-first one to expose dipole moments, polarizabilities, and IR spectra directly."
+    },
+    {
+      "from": "petmad",
+      "to": "pet_oam_xl",
+      "label": "OAM training mix",
+      "description": "PET-OAM-XL keeps the unconstrained Point Edge Transformer backbone introduced by PET / PET-MAD and scales it to extra-large capacity, retraining on the OMat24 + sAlex + MPtrj (OAM) data mixture to top the Matbench Discovery leaderboard."
+    },
+    {
+      "from": "petmad15",
+      "to": "pet_oam_xl",
+      "label": "PET family",
+      "dashed": true,
+      "description": "Sibling 2026 PET releases from the EPFL lab-cosmo group: PET-MAD-1.5 emphasises broad elemental coverage at r²SCAN level, while PET-OAM-XL emphasises raw stability-prediction accuracy via OMat24 pre-training and is positioned as the Matbench Discovery reference model."
+    },
+    {
+      "from": "nequip",
+      "to": "alphanet",
+      "label": "Local frames",
+      "description": "AlphaNet swaps the spherical-harmonic tensor-product machinery used by NequIP-style E(3)-equivariant MLIPs for atom-centred local frames with learnable geometric transitions, retaining equivariance while reducing per-step cost."
+    },
+    {
+      "from": "mace",
+      "to": "alphanet",
+      "label": "Frame vs CG tensors",
+      "dashed": true,
+      "description": "AlphaNet targets the same Matbench Discovery / OC2M foundation niche as MACE-style equivariant potentials, replacing Clebsch-Gordan tensor products with cheaper local-frame operations to improve scalability."
+    },
+    {
+      "from": "ace",
+      "to": "tace",
+      "label": "Cartesian ACE",
+      "description": "TACE reformulates the Atomic Cluster Expansion entirely in Cartesian space, decomposing atomic environments into a hierarchy of irreducible Cartesian tensors that recover the same symmetry-consistent invariants and equivariants as the spherical-harmonic ACE without Clebsch-Gordan coefficients."
+    },
+    {
+      "from": "grace",
+      "to": "tace",
+      "label": "Foundation-scale ACE",
+      "dashed": true,
+      "description": "Sibling foundation-scale ACE-family MLIPs: GRACE realises a graph implementation of spherical-harmonic ACE while TACE realises an irreducible-Cartesian-tensor implementation of ACE, both released as universal potentials on the Matbench Discovery OAM track."
+    },
+    {
+      "from": "mace_polar1",
+      "to": "tace",
+      "label": "Tensorial properties",
+      "dashed": true,
+      "description": "Like MACE-POLAR-1, TACE exposes tensorial electronic observables (charges, magnetic moments, external-field response) on top of an ACE-family backbone, additionally including a Latent Ewald Summation module for explicit long-range electrostatics."
     }
   ]
 }
