@@ -66,14 +66,13 @@ const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 const LAYERED_SPACING_X = 1.2;
 const LAYERED_SPACING_Y = 1.15;
 
-// Layered grid metrics (curated raw column gap is 280, raw row gap is 430).
-// Multiplied by the layered spacing factors so they continue to describe
-// the same visual landmarks after the cards get fanned out.
+// Layered grid metrics. Column gap (curated raw 280) drives both the
+// compact-layout column spacing and the edge router's "adjacent column"
+// threshold, so it has to stay a module-level constant. The vertical
+// landmarks (top-band boundary, inter-zone gap, same-column threshold)
+// used to be hard-coded too, but now move with the wrapped layout —
+// see `computeCompactLayeredLayout` and the `compactLayeredLayout` memo.
 const LAYERED_COLUMN_GAP = 280 * LAYERED_SPACING_X;
-const LAYERED_ROW_GAP_Y = 430 * LAYERED_SPACING_Y;
-const LAYERED_TOP_BAND_BOUNDARY = 200 * LAYERED_SPACING_Y;
-const LAYERED_ZONE_GAP_TOP = 450 * LAYERED_SPACING_Y;
-const LAYERED_ZONE_GAP_BOT = 480 * LAYERED_SPACING_Y;
 const LAYERED_SAME_COL_GAP = 200 * LAYERED_SPACING_Y;
 
 // Default palette tuned for general legibility. Pairs each category with a
@@ -599,6 +598,211 @@ function TimelineAxis({
   );
 }
 
+// Compact layered layout. The curated (x, y) coordinates in landscape.ts
+// grew unwieldy as the catalogue passed ~90 models — the raw layout
+// spans ~6 000 px horizontally with only six vertical rows, which forces
+// the auto-fit to shrink to ~10 % on a desktop screen and the user has
+// to pan a long horizontal strip just to scan one band.
+//
+// This routine repacks each curated band by:
+//   1. Treating each unique x as a logical column so cards the curator
+//      placed in the same vertical line (a small lineage / sibling
+//      family) stay together.
+//   2. Wrapping the columns into N-wide blocks so each band stops
+//      growing horizontally and starts adding rows once it exceeds the
+//      target width.
+//   3. Stacking the wrapped blocks vertically with a small gap, so each
+//      band reads as a multi-row rectangle instead of a single long
+//      strip.
+//
+// The vertical sub-row offsets the curator chose (e.g. the deliberate
+// extra gap between SchNet and PaiNN in the bottom band) are preserved
+// inside each wrapped block, so the local rhythm survives the wrap. The
+// output is in absolute render coordinates — already includes the
+// LAYERED_SPACING_Y factor — so it can be consumed directly without
+// extra scaling.
+function computeCompactLayeredLayout(
+  modelNodes: ModelNode[],
+  groupNodes: GroupNode[],
+  maxColumnsPerBlock: number,
+): {
+  positions: Record<string, Vec2>;
+  groupBounds: Record<string, { x: number; y: number; width: number; height: number }>;
+  topBandBoundary: number;
+  zoneGapTop: number;
+  zoneGapBot: number;
+  rowGapY: number;
+  graphWidth: number;
+  graphHeight: number;
+} {
+  const COLUMN_W = LAYERED_COLUMN_GAP;     // matches the edge router's adjacent-column threshold
+  const SIDE_PAD = 60;                      // left padding before column 0
+  const TOP_PAD = 60;                       // top padding before band 0
+  const BAND_GAP = 120;                     // vertical gap between bands
+  const WRAPPED_BLOCK_GAP = 90;             // vertical gap between wrapped blocks within a band
+  // Sub-row gap is the vertical pitch between two stacked sub-rows
+  // inside one wrapped block. Has to clear CARD_HEIGHT (72) plus the
+  // edge router's 48 px DETOUR so a same-row bow from the lower sub-row
+  // doesn't slice through the card above. 122 leaves a small safety
+  // margin without making the bottom band excessively tall.
+  const SUB_ROW_GAP = 122;
+  const ZONE_PAD_X = 28;
+  const ZONE_PAD_Y_TOP = 36;
+  const ZONE_PAD_Y_BOT = 28;
+
+  const positions: Record<string, Vec2> = {};
+  const groupBounds: Record<string, {
+    x: number; y: number; width: number; height: number;
+  }> = {};
+
+  if (modelNodes.length === 0 || groupNodes.length === 0) {
+    return {
+      positions,
+      groupBounds,
+      topBandBoundary: 200 * LAYERED_SPACING_Y,
+      zoneGapTop: 450 * LAYERED_SPACING_Y,
+      zoneGapBot: 480 * LAYERED_SPACING_Y,
+      rowGapY: 430 * LAYERED_SPACING_Y,
+      graphWidth: CARD_WIDTH,
+      graphHeight: CARD_HEIGHT,
+    };
+  }
+
+  // Bands are sorted top-to-bottom by their curated y so the first one
+  // ends up rendering at the top of the canvas.
+  const sortedBands = [...groupNodes].sort((a, b) => a.y - b.y);
+
+  // Match each model to a band: prefer the curated rectangle, fall
+  // back to the closest band Y bracket so a card placed slightly
+  // outside the official zone box still ends up grouped sensibly.
+  const findBandIdx = (n: ModelNode): number => {
+    for (let i = 0; i < sortedBands.length; i += 1) {
+      const g = sortedBands[i];
+      if (
+        n.x + CARD_WIDTH > g.x &&
+        n.x < g.x + g.width &&
+        n.y + CARD_HEIGHT > g.y &&
+        n.y < g.y + g.height
+      ) {
+        return i;
+      }
+    }
+    let best = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < sortedBands.length; i += 1) {
+      const g = sortedBands[i];
+      const yMid = g.y + g.height / 2;
+      const d = Math.abs(yMid - n.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  };
+
+  const byBand: ModelNode[][] = sortedBands.map(() => []);
+  for (const n of modelNodes) byBand[findBandIdx(n)].push(n);
+
+  let cursorY = TOP_PAD;
+  let topBandBoundary = TOP_PAD + 100;
+  let zoneGapTop = TOP_PAD;
+  let zoneGapBot = TOP_PAD;
+  let maxRightX = SIDE_PAD;
+
+  sortedBands.forEach((band, bandIdx) => {
+    const cards = byBand[bandIdx];
+    if (cards.length === 0) {
+      groupBounds[band.id] = {
+        x: SIDE_PAD - ZONE_PAD_X,
+        y: cursorY - ZONE_PAD_Y_TOP,
+        width: 0,
+        height: 0,
+      };
+      return;
+    }
+
+    // Logical columns and sub-rows from the curator's coordinates.
+    const uniqueX = Array.from(new Set(cards.map((c) => c.x))).sort((a, b) => a - b);
+    const uniqueY = Array.from(new Set(cards.map((c) => c.y))).sort((a, b) => a - b);
+    const colIdx = new Map<number, number>();
+    uniqueX.forEach((x, i) => colIdx.set(x, i));
+    const subRowIdx = new Map<number, number>();
+    uniqueY.forEach((y, i) => subRowIdx.set(y, i));
+
+    // Uniform sub-row gap inside a wrapped block. The curator's raw y
+    // values used to encode different gaps (e.g. 100/100/150 px in the
+    // bottom band), but at 90+ models that visual rhythm becomes a
+    // height tax that flattens the auto-fit zoom. A single SUB_ROW_GAP
+    // reads as a tidier grid and lets the wrap target a more square
+    // overall aspect ratio.
+    const subRowOffsets = uniqueY.map((_, i) => i * SUB_ROW_GAP);
+    const wrappedBlockHeight = subRowOffsets[subRowOffsets.length - 1] + CARD_HEIGHT;
+
+    const numCols = uniqueX.length;
+    const colsPerBlockEffective = Math.min(numCols, maxColumnsPerBlock);
+
+    let bandMaxY = cursorY;
+    let bandMaxX = SIDE_PAD;
+    for (const card of cards) {
+      const ci = colIdx.get(card.x)!;
+      const blockIdx = Math.floor(ci / maxColumnsPerBlock);
+      const colInBlock = ci % maxColumnsPerBlock;
+      const sri = subRowIdx.get(card.y)!;
+
+      const x = SIDE_PAD + colInBlock * COLUMN_W;
+      const y = cursorY + blockIdx * (wrappedBlockHeight + WRAPPED_BLOCK_GAP) + subRowOffsets[sri];
+      positions[card.id] = { x, y };
+      bandMaxY = Math.max(bandMaxY, y + CARD_HEIGHT);
+      bandMaxX = Math.max(bandMaxX, x + CARD_WIDTH);
+    }
+
+    const bandTotalHeight = bandMaxY - cursorY;
+    const bandTotalWidth = colsPerBlockEffective * COLUMN_W;
+
+    if (bandIdx === 0) {
+      // Threshold for "is this card in the topmost sub-row of any
+      // wrapped block?" Used by the edge router to decide whether a
+      // same-row bow can safely go above the card without clipping.
+      const sub0Y = cursorY + subRowOffsets[0];
+      const sub1Y = cursorY + (subRowOffsets[1] ?? subRowOffsets[0] + 100);
+      topBandBoundary = (sub0Y + sub1Y) / 2;
+      zoneGapTop = bandMaxY;
+    }
+    if (bandIdx === sortedBands.length - 1 && bandIdx > 0) {
+      zoneGapBot = cursorY;
+    }
+
+    groupBounds[band.id] = {
+      x: SIDE_PAD - ZONE_PAD_X,
+      y: cursorY - ZONE_PAD_Y_TOP,
+      width: bandTotalWidth + ZONE_PAD_X * 2,
+      height: bandTotalHeight + ZONE_PAD_Y_TOP + ZONE_PAD_Y_BOT,
+    };
+
+    maxRightX = Math.max(maxRightX, bandMaxX);
+    cursorY += bandTotalHeight + BAND_GAP;
+  });
+
+  const rowGapY = (zoneGapTop + zoneGapBot) / 2;
+  // Final graph extents are the right edge of the rightmost card and the
+  // bottom of the lowest band (cursorY was advanced by BAND_GAP after
+  // every band; back that off so the height ends exactly at the last card).
+  const graphWidth = maxRightX;
+  const graphHeight = cursorY - BAND_GAP;
+
+  return {
+    positions,
+    groupBounds,
+    topBandBoundary,
+    zoneGapTop,
+    zoneGapBot,
+    rowGapY,
+    graphWidth,
+    graphHeight,
+  };
+}
+
 export default function MLIPExplorer() {
   const [nodes] = useState<AnyNode[]>(INITIAL_NODES);
   const [edges] = useState<Edge[]>(INITIAL_EDGES);
@@ -892,9 +1096,48 @@ export default function MLIPExplorer() {
   }, [nodes]);
   const timelinePositions = timelineLayout.positions;
 
+  // How many columns each wrapped block in the layered layout should
+  // hold before spilling onto the next row. Tuned to land the
+  // auto-fitted graph close to the available canvas at a reasonable
+  // zoom. Phase changes in the catalogue (top band 22 cols, bottom 13)
+  // mean the height drops sharply at N=11 (top band → 2 wrapped blocks)
+  // and N=7 (bottom band → 2 wrapped blocks); we honour those so wider
+  // screens get a flatter, less-zoomed-out layout.
+  const layeredColumnsPerBlock = useMemo(() => {
+    const w = viewport.width;
+    if (w >= 1500) return 11;
+    if (w >= 1280) return 9;
+    if (w >= 1024) return 7;
+    if (w >= 768) return 6;
+    if (w >= 480) return 5;
+    return 4;
+  }, [viewport.width]);
+
+  // Compact layered layout — wraps each curated band into multiple
+  // stacked blocks so the graph keeps a reasonable aspect ratio as the
+  // catalogue grows. See the standalone helper above for the full
+  // rationale; the memo just wires in the live viewport-derived wrap
+  // width and the model + group node lists.
+  const compactLayeredLayout = useMemo(() => {
+    const modelItems = nodes.filter(
+      (n): n is ModelNode => n.type === "node",
+    );
+    const groupItems = nodes.filter(
+      (n): n is GroupNode => n.type === "group",
+    );
+    return computeCompactLayeredLayout(
+      modelItems,
+      groupItems,
+      layeredColumnsPerBlock,
+    );
+  }, [nodes, layeredColumnsPerBlock]);
+
   // Resolves a model's effective (x, y) for the current layout. In force
   // mode any user-dragged overrides take precedence over the simulation
-  // output; in layered mode we always use the curated coordinates.
+  // output; in layered mode we use the wrapped compact layout, falling
+  // back to the curator's raw coordinates for any new entry the
+  // compactor doesn't yet know about (defensive — shouldn't happen in
+  // practice).
   const positionOf = useCallback(
     (node: ModelNode): { x: number; y: number } => {
       if (layout === "force") {
@@ -907,12 +1150,14 @@ export default function MLIPExplorer() {
         const tp = timelinePositions[node.id];
         if (tp) return tp;
       }
+      const compact = compactLayeredLayout.positions[node.id];
+      if (compact) return compact;
       return {
         x: node.x * LAYERED_SPACING_X,
         y: node.y * LAYERED_SPACING_Y,
       };
     },
-    [layout, forceOverrides, forcePositions, timelinePositions],
+    [layout, forceOverrides, forcePositions, timelinePositions, compactLayeredLayout],
   );
 
   const positionedModels = useMemo(() => {
@@ -921,61 +1166,28 @@ export default function MLIPExplorer() {
       .map((n) => ({ ...n, ...positionOf(n) }));
   }, [nodes, positionOf]);
 
-  // Auto-fit each layered zone around the cards that fall inside it. The
-  // hard-coded zone width/height in landscape.ts can become outdated as
-  // new models extend a lane to the right; recomputing the bounds at
-  // render time keeps the dashed zone box hugging its cards no matter how
-  // many entries we add later. Zones are only shown in the layered
-  // layout — force and timeline layouts hide them since the cards no
-  // longer respect the lane partitioning there.
+  // Zone boxes in the compact layered layout — the wrap routine emits
+  // pre-computed bounds for each band (already padded to hug the cards
+  // it placed) so we just hand those through. Zones are only shown in
+  // the layered layout — force and timeline layouts hide them since the
+  // cards no longer respect the lane partitioning there.
   const fittedGroups = useMemo(() => {
     if (layout !== "layered") return [];
     const groups = nodes.filter((n): n is GroupNode => n.type === "group");
-    const layered = nodes.filter((n): n is ModelNode => n.type === "node");
-    const ZONE_PAD_X = 28;
-    const ZONE_PAD_Y_TOP = 36;
-    const ZONE_PAD_Y_BOT = 28;
-    return groups.map((g) => {
-      // Match each card to the curated zone whose declared rectangle
-      // contains its layered (x, y). Falls back to the declared zone
-      // size if no cards match (defensive: shouldn't happen in practice).
-      // Matching happens in raw (un-spaced) coordinates so the curated
-      // zone rectangles in landscape.ts continue to identify which cards
-      // belong to which band; the result is then scaled to render-space
-      // so the dashed box aligns with the spaced-out cards.
-      const inside = layered.filter(
-        (n) =>
-          n.x + CARD_WIDTH > g.x &&
-          n.x < g.x + g.width &&
-          n.y + CARD_HEIGHT > g.y &&
-          n.y < g.y + g.height,
-      );
-      if (inside.length === 0) {
+    return groups
+      .map((g) => {
+        const bounds = compactLayeredLayout.groupBounds[g.id];
+        if (!bounds || bounds.width === 0 || bounds.height === 0) return null;
         return {
           ...g,
-          x: g.x * LAYERED_SPACING_X,
-          y: g.y * LAYERED_SPACING_Y,
-          width: g.width * LAYERED_SPACING_X,
-          height: g.height * LAYERED_SPACING_Y,
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
         };
-      }
-      const minX = Math.min(...inside.map((n) => n.x));
-      const minY = Math.min(...inside.map((n) => n.y));
-      const maxX = Math.max(...inside.map((n) => n.x + CARD_WIDTH));
-      const maxY = Math.max(...inside.map((n) => n.y + CARD_HEIGHT));
-      const scaledMinX = minX * LAYERED_SPACING_X - ZONE_PAD_X;
-      const scaledMinY = minY * LAYERED_SPACING_Y - ZONE_PAD_Y_TOP;
-      const scaledMaxX = maxX * LAYERED_SPACING_X + ZONE_PAD_X;
-      const scaledMaxY = maxY * LAYERED_SPACING_Y + ZONE_PAD_Y_BOT;
-      return {
-        ...g,
-        x: scaledMinX,
-        y: scaledMinY,
-        width: scaledMaxX - scaledMinX,
-        height: scaledMaxY - scaledMinY,
-      };
-    });
-  }, [nodes, layout]);
+      })
+      .filter((g): g is GroupNode => g !== null);
+  }, [nodes, layout, compactLayeredLayout]);
 
   const bounds = useMemo(() => {
     if (positionedModels.length === 0) {
@@ -1362,6 +1574,10 @@ export default function MLIPExplorer() {
     const sourceGroups: Record<string, Group[]> = {};
     const targetGroups: Record<string, Group[]> = {};
 
+    const topBandBoundary = compactLayeredLayout.topBandBoundary;
+    const zoneGapTop = compactLayeredLayout.zoneGapTop;
+    const zoneGapBot = compactLayeredLayout.zoneGapBot;
+
     const classify = (
       from: ModelNode,
       to: ModelNode,
@@ -1372,7 +1588,7 @@ export default function MLIPExplorer() {
       const sameCol = Math.abs(dx) < 20;
 
       if (sameRow && Math.abs(dx) > LAYERED_COLUMN_GAP + CARD_WIDTH) {
-        const bowAbove = from.y > LAYERED_TOP_BAND_BOUNDARY;
+        const bowAbove = from.y > topBandBoundary;
         return {
           corridor: `row-${bowAbove ? "up" : "down"}-${from.y}`,
           source: `${from.id}:${bowAbove ? "top" : "bot"}`,
@@ -1390,7 +1606,7 @@ export default function MLIPExplorer() {
       }
       if (!sameRow && !sameCol) {
         const goingDown = dy > 0;
-        const crossZone = (from.y < LAYERED_ZONE_GAP_TOP && to.y > LAYERED_ZONE_GAP_BOT) || (from.y > LAYERED_ZONE_GAP_BOT && to.y < LAYERED_ZONE_GAP_TOP);
+        const crossZone = (from.y < zoneGapTop && to.y > zoneGapBot) || (from.y > zoneGapBot && to.y < zoneGapTop);
         return {
           corridor: crossZone ? `diag-zone-gap` : `diag-${from.y}-${to.y}`,
           source: `${from.id}:${goingDown ? "bot" : "top"}`,
@@ -1438,7 +1654,7 @@ export default function MLIPExplorer() {
     });
 
     return { corridorOffset, sourceStagger, targetStagger };
-  }, [edges, positionedModels]);
+  }, [edges, positionedModels, compactLayeredLayout]);
 
   const buildEdgePath = (
     fromNode: ModelNode,
@@ -1460,6 +1676,10 @@ export default function MLIPExplorer() {
 
     const sameRow = Math.abs(dy) < 20;
     const sameCol = Math.abs(dx) < 20;
+    const topBandBoundary = compactLayeredLayout.topBandBoundary;
+    const zoneGapTop = compactLayeredLayout.zoneGapTop;
+    const zoneGapBot = compactLayeredLayout.zoneGapBot;
+    const rowGapY = compactLayeredLayout.rowGapY;
 
     // Case 1: same row, adjacent columns -> straight horizontal side-to-side
     if (sameRow && Math.abs(dx) <= LAYERED_COLUMN_GAP + CARD_WIDTH) {
@@ -1474,7 +1694,7 @@ export default function MLIPExplorer() {
 
     // Case 2: same row, skipping columns -> U-bow above the row (or below for top row)
     if (sameRow) {
-      const bowAbove = fy > LAYERED_TOP_BAND_BOUNDARY;
+      const bowAbove = fy > topBandBoundary;
       const bowY = bowAbove
         ? fy - DETOUR - corridorOffset
         : fy + CARD_HEIGHT + DETOUR + corridorOffset;
@@ -1518,8 +1738,8 @@ export default function MLIPExplorer() {
     const goingDown = dy > 0;
     const sy = goingDown ? fy + CARD_HEIGHT : fy;
     const ey = goingDown ? ty : ty + CARD_HEIGHT;
-    const crossZone = (fy < LAYERED_ZONE_GAP_TOP && ty > LAYERED_ZONE_GAP_BOT) || (fy > LAYERED_ZONE_GAP_BOT && ty < LAYERED_ZONE_GAP_TOP);
-    const baseBendY = crossZone ? LAYERED_ROW_GAP_Y : (sy + ey) / 2;
+    const crossZone = (fy < zoneGapTop && ty > zoneGapBot) || (fy > zoneGapBot && ty < zoneGapTop);
+    const baseBendY = crossZone ? rowGapY : (sy + ey) / 2;
     const bendY = baseBendY + corridorOffset;
     const sxMid = fcx + sourceStagger;
     const exMid = tcx + targetStagger;
