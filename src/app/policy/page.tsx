@@ -228,24 +228,51 @@ export default function PolicyPage() {
               <tr>
                 <th className="px-3 py-2 font-medium">Field</th>
                 <th className="px-3 py-2 font-medium">Filled</th>
-                <th className="px-3 py-2 font-medium">Coverage</th>
+                <th className="px-3 py-2 font-medium w-1/2">Coverage</th>
               </tr>
             </thead>
             <tbody>
-              {coverage.map((c) => (
-                <tr
-                  key={c.field}
-                  className="border-t border-slate-200 dark:border-slate-800"
-                >
-                  <td className="px-3 py-2 font-mono">{c.field}</td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                    {c.filled}/{c.total}
-                  </td>
-                  <td className="px-3 py-2 text-slate-600 dark:text-slate-400">
-                    {c.pct}%
-                  </td>
-                </tr>
-              ))}
+              {coverage.map((c) => {
+                const barColor =
+                  c.pct >= 90
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : c.pct >= 60
+                      ? "bg-amber-500 dark:bg-amber-400"
+                      : "bg-rose-500 dark:bg-rose-400";
+                return (
+                  <tr
+                    key={c.field}
+                    className="border-t border-slate-200 dark:border-slate-800"
+                  >
+                    <td className="px-3 py-2 font-mono align-middle">
+                      {c.field}
+                    </td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400 align-middle whitespace-nowrap">
+                      {c.filled}/{c.total}
+                    </td>
+                    <td className="px-3 py-2 align-middle">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="relative h-2 flex-1 min-w-[60px] overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+                          role="progressbar"
+                          aria-valuenow={c.pct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`${c.field} coverage ${c.pct}%`}
+                        >
+                          <div
+                            className={`h-full rounded-full transition-all ${barColor}`}
+                            style={{ width: `${c.pct}%` }}
+                          />
+                        </div>
+                        <span className="tabular-nums text-slate-600 dark:text-slate-400 w-10 text-right">
+                          {c.pct}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
