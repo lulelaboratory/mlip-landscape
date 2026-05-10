@@ -2,7 +2,14 @@ import type { MetadataRoute } from "next";
 
 const SITE_URL = "https://www.mliphub.com";
 
-const STATIC_PATHS = ["/", "/cite", "/policy", "/contributors", "/contribute"];
+const STATIC_PATHS = [
+  "/",
+  "/learn",
+  "/cite",
+  "/policy",
+  "/contributors",
+  "/contribute",
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

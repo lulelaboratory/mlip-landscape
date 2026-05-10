@@ -8,6 +8,7 @@ const LINKS: NavLink[] = [
   { href: "/", label: "Explore" },
   { href: "/models", label: "Table" },
   { href: "/compare", label: "Compare" },
+  { href: "/learn", label: "Learn MLIPs" },
   { href: "/cite", label: "Cite" },
   { href: "/contributors", label: "Contributors" },
   { href: "/contribute", label: "Contribute" },
