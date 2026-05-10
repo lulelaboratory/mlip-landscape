@@ -7,6 +7,7 @@ import FeedbackButton from "@/components/FeedbackButton";
 import { INITIAL_NODES, type ModelNode } from "@/data/landscape";
 import pkg from "../../package.json";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const SITE_URL = "https://www.mliphub.com";
 const SITE_NAME = "MLIP Hub";
@@ -188,6 +189,7 @@ export default function RootLayout({
         <SiteFooter />
         <FeedbackButton />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
