@@ -3847,6 +3847,58 @@
       "numElements": 89
     },
     {
+      "id": "transip",
+      "type": "node",
+      "category": "Transformer",
+      "label": "TransIP",
+      "year": 2026,
+      "author": "Elhag, Raja, Morehead, Blau, Zhao, Tyrchan, Nittinger, Morris, Bronstein (Oxford / LBNL / AstraZeneca / AITHYRA)",
+      "x": 6260,
+      "y": 150,
+      "desc": "Transformer-based interatomic potential built on a generic, non-equivariant backbone that learns SO(3)-equivariance implicitly through a latent equivariance training objective rather than via architectural constraints. Replaces graph-based inductive biases and Clebsch-Gordan tensor products with a scalable embedding-space alignment loss, achieving 40–60% improvement over a data-augmentation baseline across varying OMol25 training-set sizes. Released with a TransIP-L checkpoint on Hugging Face and built on top of the fairchem framework.",
+      "githubUrl": "https://github.com/Ahmed-A-A-Elhag/TransIP",
+      "paperUrl": "https://arxiv.org/abs/2510.00027",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "electrolytes",
+        "metal complexes",
+        "biomolecules"
+      ],
+      "useCases": [
+        "drug discovery",
+        "molecular MD",
+        "scalable MLIP training"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-11",
+      "trainingData": [
+        "OMol25"
+      ],
+      "tags": [
+        "transformer",
+        "non-equivariant",
+        "latent equivariance",
+        "fairchem"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "elementsCovered": "elements present in OMol25 (organic + electrolyte + metal-complex chemistry)",
+      "equivariance": "learnt",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": false
+    },
+    {
       "id": "dtnn",
       "type": "node",
       "category": "Invariant",
@@ -5302,6 +5354,27 @@
       "label": "Tensorial properties",
       "dashed": true,
       "description": "Like MACE-POLAR-1, TACE exposes tensorial electronic observables (charges, magnetic moments, external-field response) on top of an ACE-family backbone, additionally including a Latent Ewald Summation module for explicit long-range electrostatics."
+    },
+    {
+      "from": "orbmol",
+      "to": "transip",
+      "label": "OMol25 dataset",
+      "dashed": true,
+      "description": "Sibling non-equivariant molecular MLIPs trained on the OMol25 dataset: OrbMol uses the Orb graph-network backbone with learnt rotation-invariance via augmentation, while TransIP uses a generic Transformer backbone that acquires SO(3)-equivariance through a latent embedding-space objective rather than via data augmentation."
+    },
+    {
+      "from": "nequip",
+      "to": "transip",
+      "label": "Latent vs constrained eq.",
+      "dashed": true,
+      "description": "TransIP contrasts with NequIP-style E(3)-equivariant MLIPs by removing all explicit architectural equivariance constraints (no spherical harmonics, no Clebsch-Gordan tensor products) and instead training a generic Transformer to satisfy SO(3)-equivariance through an embedding-space alignment objective."
+    },
+    {
+      "from": "uma",
+      "to": "transip",
+      "label": "fairchem foundation",
+      "dashed": true,
+      "description": "TransIP builds on top of the fairchem framework introduced alongside Meta FAIR's UMA family, and follows UMA's OMol25-centred molecular foundation-model recipe while replacing the constrained-equivariant Mixture-of-Linear-Experts backbone with an unconstrained Transformer."
     },
     {
       "from": "dtnn",
