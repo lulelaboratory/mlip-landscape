@@ -2616,6 +2616,35 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+  {
+    id: "geodite",
+    type: "node",
+    category: "Equivariant",
+    label: "Geodite-MP",
+    year: 2026,
+    author: "Reschützegger, Aykent, Perin, Nunes, Cipcigan, Ferreira, Steiner, Thiemann (IBM Research)",
+    x: 6540,
+    y: 320,
+    desc:
+      "Tensor-product-free equivariant message-passing interatomic potential derived from a GotenNet backbone with built-in physical priors (short-range repulsion, smoothness constraints). Replaces Clebsch-Gordan tensor products with inner products of steerable features to preserve full rotational equivariance at substantially lower compute, enabling deeper networks, larger cutoffs, and higher angular resolution. The Geodite-MP variant is trained on the Materials Project trajectory (MPtrj) dataset and reaches accuracy competitive with leading equivariant MLIPs on Matbench Discovery materials stability, thermal conductivity, and phonon-derived benchmarks while running 3–5× faster than similarly accurate baselines.",
+    paperUrl: "https://arxiv.org/abs/2601.15492",
+    isNew: true,
+    coverage: ["general materials", "periodic crystals"],
+    useCases: ["materials discovery", "Matbench Discovery screening", "phonon / thermal conductivity"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-12",
+    trainingData: ["MPTrj"],
+    tags: ["equivariant", "message-passing", "tensor-product-free", "GotenNet-derived", "physical priors"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by MPTrj (~89 elements)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
   // ---------------------------------------------------------------------------
   // HISTORICAL MLIPS (2017-2024) — added in May 2026 to fill earlier-era gaps
   // ---------------------------------------------------------------------------
@@ -3302,6 +3331,11 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orbmol", to: "transip", label: "OMol25 dataset", dashed: true, description: "Sibling non-equivariant molecular MLIPs trained on the OMol25 dataset: OrbMol uses the Orb graph-network backbone with learnt rotation-invariance via augmentation, while TransIP uses a generic Transformer backbone that acquires SO(3)-equivariance through a latent embedding-space objective rather than via data augmentation." },
   { from: "nequip", to: "transip", label: "Latent vs constrained eq.", dashed: true, description: "TransIP contrasts with NequIP-style E(3)-equivariant MLIPs by removing all explicit architectural equivariance constraints (no spherical harmonics, no Clebsch-Gordan tensor products) and instead training a generic Transformer to satisfy SO(3)-equivariance through an embedding-space alignment objective." },
   { from: "uma", to: "transip", label: "fairchem foundation", dashed: true, description: "TransIP builds on top of the fairchem framework introduced alongside Meta FAIR's UMA family, and follows UMA's OMol25-centred molecular foundation-model recipe while replacing the constrained-equivariant Mixture-of-Linear-Experts backbone with an unconstrained Transformer." },
+
+  // January 2026 — Geodite-MP (tensor-product-free equivariant MLIP from IBM Research)
+  { from: "nequip", to: "geodite", label: "Drops CG tensor prods", description: "Geodite replaces the explicit Clebsch-Gordan tensor products that NequIP and its E(3)-equivariant descendants rely on with inner products of steerable features, preserving full rotational equivariance while substantially lowering compute and enabling deeper networks, larger cutoffs, and higher angular resolution." },
+  { from: "alphanet", to: "geodite", label: "Tensor-product-free", dashed: true, description: "Sibling tensor-product-free equivariant MLIPs released in 2026: AlphaNet swaps spherical-harmonic tensor products for atom-centred local frames, while Geodite swaps them for inner products of steerable features with built-in physical priors. Both target the speed/expressivity trade-off of CG-based equivariant potentials." },
+  { from: "hienet", to: "geodite", label: "MPtrj equivariant FM", dashed: true, description: "Sibling MPtrj-trained equivariant materials foundation models from 2026: HIENet interleaves invariant and equivariant message passing for speed, while Geodite-MP drops the CG tensor products and adds short-range / smoothness priors. Both report Matbench-Discovery-competitive accuracy at significantly higher throughput than EquiformerV2/SevenNet baselines." },
 
   // ---------------------------------------------------------------------------
   // HISTORICAL EDGES — added in May 2026 alongside the 2017–2024 backfill
