@@ -2616,6 +2616,73 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — second sweep (E2Former, UBio-MolFM)
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "e2former",
+    type: "node",
+    category: "Transformer",
+    label: "E2Former",
+    year: 2025,
+    author: "Li, Huang, Ding, Wang, Wei, Yang, Wang, Liu, Shi, Jin, Zhang, Gerstein, Qin (Microsoft Research / Yale)",
+    x: 6540,
+    y: 150,
+    desc:
+      "Efficient and equivariant transformer that replaces conventional SO(3) spherical-tensor-product convolutions with a Wigner 6j convolution (Wigner 6j Conv), shifting the dominant compute from edges to nodes and reducing tensor-product complexity from O(|E|) to O(|V|) while preserving E(3) equivariance and expressive power. Achieves a 7×–30× speedup over standard SO(3) convolutions on benchmark interatomic-potential tasks (OC20, OC22, SPICE, MD17/MD22) at chemical accuracy. Released as a NeurIPS 2025 Spotlight and serves as the architectural foundation for the later E2Former-V2 / UBio-MolFM line.",
+    githubUrl: "https://github.com/liyy2/E2Former",
+    paperUrl: "https://arxiv.org/abs/2501.19216",
+    isNew: true,
+    coverage: ["catalysts", "surfaces", "organic molecules"],
+    useCases: ["scalable equivariant MLIP", "catalyst screening", "molecular MD"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-05-14",
+    trainingData: ["OC20", "OC22", "SPICE", "MD17", "MD22"],
+    tags: ["transformer", "equivariant", "attention", "Wigner 6j", "linear-scaling"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (OC20 / OC22 / SPICE coverage)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: true,
+    longRange: false,
+  },
+  {
+    id: "ubio_molfm",
+    type: "node",
+    category: "Transformer",
+    label: "UBio-MolFM",
+    year: 2026,
+    author: "Huang, Jiang, Liu, Wang, Zhao, Wang, Lu, Huang, Cheng, Du, Zhang (UBio Team, IQuest Research)",
+    x: 6820,
+    y: 150,
+    desc:
+      "Universal molecular foundation model engineered for biomolecular systems, combining three components: (i) UBio-Mol26, a ~17M-configuration bio-specific dataset built via a multi-fidelity two-pronged strategy that combines systematic bottom-up enumeration with top-down sampling of native protein environments up to ~1,200 atoms (proteins, nucleic acids, lipids, drug-like molecules, biologically important ions and metals); (ii) E2Former-V2, a linear-scaling equivariant transformer integrating Equivariant Axis-Aligned Sparsification (EAAS) and Long-Short Range (LSR) modelling for ~4× higher inference throughput on large systems; and (iii) a three-stage curriculum-learning protocol going from energy initialisation to energy-force consistency and multi-fidelity refinement. Targets ab-initio-level fidelity on out-of-distribution biomolecular systems up to ~1,500 atoms.",
+    githubUrl: "https://github.com/IQuestLab/UBio-MolFM",
+    paperUrl: "https://arxiv.org/abs/2602.17709",
+    isNew: true,
+    coverage: ["biomolecules", "proteins", "nucleic acids", "lipids", "drug-like molecules", "explicit solvent"],
+    useCases: ["biomolecular MD", "DFT-fidelity bio-system simulation", "drug discovery"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-14",
+    trainingData: ["UBio-Mol26"],
+    tags: ["transformer", "equivariant", "attention", "bio-systems", "foundation model", "E2Former-V2"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "biological organic chemistry (CHNOPS + halogens) plus biologically important ions and metals",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: true,
+    longRange: true,
+  },
+
   // ---------------------------------------------------------------------------
   // HISTORICAL MLIPS (2017-2024) — added in May 2026 to fill earlier-era gaps
   // ---------------------------------------------------------------------------
@@ -3482,4 +3549,12 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "geodite", label: "No tensor products", description: "Geodite removes the Clebsch-Gordan tensor products that drive the cost of MACE/NequIP-style E(3)-equivariant message passing, replacing them with cheaper geometric operations while keeping equivariance, and adds ZBL + smooth attenuation priors for a well-behaved potential energy surface." },
   { from: "nequip", to: "geodite", label: "Equivariant precursor", dashed: true, description: "Geodite is part of the NequIP/MACE E(3)-equivariant message-passing lineage but explicitly removes Clebsch-Gordan tensor products, sitting as a tensor-product-free cousin of NequIP." },
   { from: "mace_mp0", to: "geodite", label: "MPtrj foundation", dashed: true, description: "Geodite-MP is trained on the same Materials Project trajectory dataset (MPtrj) that defined the MACE-MP-0 universal-MLIP recipe, sharing the foundation-model niche while using a tensor-product-free equivariant backbone." },
+
+  // E2Former (2025) — efficient equivariant transformer via Wigner 6j convolution
+  { from: "eqv2", to: "e2former", label: "+Wigner 6j", description: "E2Former is an efficient equivariant transformer in the Equiformer-V2 line that replaces the expensive SO(3) spherical-tensor-product convolution with a Wigner 6j convolution, shifting compute from edges to nodes and lowering tensor-product complexity from O(|E|) to O(|V|) while preserving E(3) equivariance." },
+  { from: "se3t", to: "e2former", label: "Equivariant transformer lineage", dashed: true, description: "E2Former and SE(3)-Transformer share the equivariant-attention-on-spherical-tensor-features design; E2Former modernises that lineage with Wigner 6j convolutions for near-linear-scaling tensor products." },
+
+  // UBio-MolFM (2026) — bio-systems foundation MLIP built on E2Former-V2
+  { from: "e2former", to: "ubio_molfm", label: "E2Former-V2 backbone", description: "UBio-MolFM is built on E2Former-V2, a direct successor to E2Former that extends the Wigner 6j-based equivariant transformer with Equivariant Axis-Aligned Sparsification (EAAS) and Long-Short Range modelling, and applies it as a foundation MLIP for biomolecular systems." },
+  { from: "ubio_molfm", to: "mace_off", label: "Bio/organic foundation", dashed: true, description: "UBio-MolFM and MACE-OFF both target organic / biomolecular chemistry at near-DFT accuracy; UBio-MolFM specialises in solvated bio-systems up to ~1,500 atoms via E2Former-V2 and the bio-specific UBio-Mol26 dataset, while MACE-OFF covers SPICE-style drug-like molecules." },
 ];
