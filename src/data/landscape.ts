@@ -2616,6 +2616,37 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+  {
+    id: "fennix_bio1",
+    type: "node",
+    category: "Equivariant",
+    label: "FeNNix-Bio1",
+    year: 2026,
+    author: "Plé, Adjoua, Benali, Posenitskiy, Villot, Lagardère, Piquemal (Sorbonne Université / Qubit Pharmaceuticals)",
+    x: 6260,
+    y: 320,
+    desc:
+      "Force-field-enhanced foundation MLIP for drug design built on the FENNIX hybrid framework: an Allegro E(3)-equivariant local embedding (256 scalar features, 16 equivariant channels up to l_max=2, three interaction layers, 5.3 Å cutoff) coupled with physics-grounded energy terms — short-range ZBL repulsion, Coulomb electrostatics with fluctuating atom-centred charges, and explicit dispersion. Trained on an extended SPICE2 synthetic-QM dataset and integrated with Tinker-HP for reactive molecular dynamics including quantum nuclear effects. Sets a new sub-kcal/mol standard on the Freesolv hydration-free-energy benchmark and supports protein folding, protein-ligand binding free energies, and chemical reactions.",
+    githubUrl: "https://github.com/thomasple/FeNNol",
+    paperUrl: "https://doi.org/10.26434/chemrxiv-2025-f1hgn",
+    isNew: true,
+    coverage: ["organic molecules", "biomolecules", "proteins", "electrolytes"],
+    useCases: ["drug discovery", "hydration free energies", "protein folding", "protein-ligand binding", "reactive MD"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "PyTorch"],
+    license: "LGPL-3.0",
+    maintenance: "active",
+    lastReviewed: "2026-05-15",
+    trainingData: ["SPICE2", "extended SPICE2"],
+    tags: ["equivariant", "force-field-enhanced", "biomolecular", "drug design", "foundation model", "JAX", "charge-aware"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "biomolecular elements (H, C, N, O, F, P, S, Cl, Br, I) plus Li, Na, K, Mg, Zn",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
+  },
   // ---------------------------------------------------------------------------
   // HISTORICAL MLIPS (2017-2024) — added in May 2026 to fill earlier-era gaps
   // ---------------------------------------------------------------------------
@@ -3302,6 +3333,11 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orbmol", to: "transip", label: "OMol25 dataset", dashed: true, description: "Sibling non-equivariant molecular MLIPs trained on the OMol25 dataset: OrbMol uses the Orb graph-network backbone with learnt rotation-invariance via augmentation, while TransIP uses a generic Transformer backbone that acquires SO(3)-equivariance through a latent embedding-space objective rather than via data augmentation." },
   { from: "nequip", to: "transip", label: "Latent vs constrained eq.", dashed: true, description: "TransIP contrasts with NequIP-style E(3)-equivariant MLIPs by removing all explicit architectural equivariance constraints (no spherical harmonics, no Clebsch-Gordan tensor products) and instead training a generic Transformer to satisfy SO(3)-equivariance through an embedding-space alignment objective." },
   { from: "uma", to: "transip", label: "fairchem foundation", dashed: true, description: "TransIP builds on top of the fairchem framework introduced alongside Meta FAIR's UMA family, and follows UMA's OMol25-centred molecular foundation-model recipe while replacing the constrained-equivariant Mixture-of-Linear-Experts backbone with an unconstrained Transformer." },
+
+  // May 2026 — FeNNix-Bio1 (force-field-enhanced biomolecular foundation MLIP, Sorbonne / Qubit)
+  { from: "allegro", to: "fennix_bio1", label: "Allegro embedding", description: "FeNNix-Bio1 uses an Allegro strictly-local E(3)-equivariant embedding (scalar + equivariant channels up to l_max=2, three interaction layers, 5.3 Å cutoff) as the neural backbone of its FENNIX hybrid ML + force-field architecture." },
+  { from: "mace_off", to: "fennix_bio1", label: "Biomolecular FF", dashed: true, description: "FeNNix-Bio1 targets the same SPICE-trained, transferable-organic-MLIP niche as MACE-OFF, but layers explicit force-field physics (ZBL repulsion, fluctuating-charge Coulomb, dispersion) on top of an Allegro embedding rather than relying on a pure short-range MACE backbone." },
+  { from: "aimnet2", to: "fennix_bio1", label: "Charge-aware FF", dashed: true, description: "FeNNix-Bio1 inherits the charge-aware MLIP design pattern AIMNet2 popularised for organic chemistry — fluctuating atom-centred partial charges plus an explicit long-range Coulomb energy term — and combines it with explicit dispersion and ZBL repulsion inside the FENNIX hybrid framework." },
 
   // ---------------------------------------------------------------------------
   // HISTORICAL EDGES — added in May 2026 alongside the 2017–2024 backfill
