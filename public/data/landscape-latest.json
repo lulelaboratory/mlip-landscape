@@ -158,7 +158,7 @@
       "category": "Equivariant",
       "label": "MACE",
       "year": 2022,
-      "author": "Cambridge (Csányi) / UBC (Ortner) — Batatia et al.",
+      "author": "Cambridge (Cs\u00e1nyi) / UBC (Ortner) \u2014 Batatia et al.",
       "x": 660,
       "y": 150,
       "desc": "Higher-order equivariant message passing (4-body messages) that reaches SOTA accuracy with only 1-2 layers; later extended into the universal MACE-MP foundation model family.",
@@ -443,7 +443,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -490,7 +490,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": true,
@@ -505,7 +505,7 @@
       "author": "Shoghi et al. (CMU / Meta)",
       "x": 1510,
       "y": 320,
-      "desc": "Joint Multi-domain Pre-training: a strategy that trains one shared GemNet-OC backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x (~120M systems), demonstrating multi-dataset pretraining for transferable potentials — a precursor to the universal MLIP foundation models that followed.",
+      "desc": "Joint Multi-domain Pre-training: a strategy that trains one shared GemNet-OC backbone simultaneously on OC20, OC22, ANI-1x and Transition-1x (~120M systems), demonstrating multi-dataset pretraining for transferable potentials \u2014 a precursor to the universal MLIP foundation models that followed.",
       "githubUrl": "https://github.com/facebookresearch/JMP",
       "paperUrl": "https://arxiv.org/abs/2310.16802",
       "coverage": [
@@ -755,7 +755,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "learnt",
       "architecture": "gnn",
       "usesAttention": true,
@@ -876,7 +876,7 @@
       "author": "ACEsuit (Kovacs, Batatia, Csanyi et al.)",
       "x": 2060,
       "y": 150,
-      "desc": "Polarisable electrostatic foundation model that augments MACE with a non-self-consistent polarisable field formalism, learning atomic charge and spin densities (Gaussian-type multipoles) directly from energies/forces; global charge/spin constraints are enforced via learnable Fukui equilibration functions. Trained on OMol25 (~100M structures at ωB97M-V), released in M (12 A) and L (18 A) receptive-field variants for molecular chemistry and non-covalent interactions.",
+      "desc": "Polarisable electrostatic foundation model that augments MACE with a non-self-consistent polarisable field formalism, learning atomic charge and spin densities (Gaussian-type multipoles) directly from energies/forces; global charge/spin constraints are enforced via learnable Fukui equilibration functions. Trained on OMol25 (~100M structures at \u03c9B97M-V), released in M (12 A) and L (18 A) receptive-field variants for molecular chemistry and non-covalent interactions.",
       "githubUrl": "https://github.com/ACEsuit/mace-foundations",
       "paperUrl": "https://arxiv.org/abs/2602.19411",
       "isNew": true,
@@ -930,7 +930,7 @@
       "author": "Kuroda, Ishihara, Shiota, Mizukami (Osaka Univ. / QIQB)",
       "x": 2340,
       "y": 150,
-      "desc": "Multi-domain universal MACE-architecture potential extending the MACE-Osaka series to 97 elements — the broadest elemental coverage to date — by integrating MACE-Osaka24's inorganic + organic data with the newly constructed HE26 heavy-element dataset of minor actinides assembled from experimental and computational literature. Targets nuclear and actinide chemistry while retaining strong performance on the inorganic MPtrj and organic OFF23 test sets.",
+      "desc": "Multi-domain universal MACE-architecture potential extending the MACE-Osaka series to 97 elements \u2014 the broadest elemental coverage to date \u2014 by integrating MACE-Osaka24's inorganic + organic data with the newly constructed HE26 heavy-element dataset of minor actinides assembled from experimental and computational literature. Targets nuclear and actinide chemistry while retaining strong performance on the inorganic MPtrj and organic OFF23 test sets.",
       "githubUrl": "https://github.com/qiqb-osaka/mace-osaka26",
       "paperUrl": "https://arxiv.org/abs/2603.03223",
       "isNew": true,
@@ -1021,7 +1021,7 @@
       ],
       "supportsCharges": true,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": true,
@@ -1068,7 +1068,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -1135,7 +1135,7 @@
       "category": "Equivariant",
       "label": "MACE-Magnetic",
       "year": 2026,
-      "author": "Ho, van der Oord, Darby, Csányi, Ortner et al. (Cambridge / UBC / ACEsuit)",
+      "author": "Ho, van der Oord, Darby, Cs\u00e1nyi, Ortner et al. (Cambridge / UBC / ACEsuit)",
       "x": 2900,
       "y": 150,
       "desc": "Equivariant many-body message-passing interatomic potential extending the MACE framework to magnetic materials by embedding atomic magnetic moments as explicit degrees of freedom alongside positions. Learns physically consistent and transferable representations of magnetic behaviour beyond collinear approximations and can incorporate spin-orbit coupling, achieving near density-functional-theory accuracy with strong data efficiency by fine-tuning from a pre-trained foundation model. Targets structural transformations, finite-temperature magnetic phenomena, and high-throughput screening of strongly spin-orbit coupled materials.",
@@ -1171,7 +1171,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": true,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -1221,7 +1221,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -1236,7 +1236,7 @@
       "author": "Yin, Ouyang, Fan, Lin, Hu, Lv, Cao, Xiao, Chen, Ren (ByteDance Seed / Tsinghua / Peking University)",
       "x": 3180,
       "y": 150,
-      "desc": "Hessian-informed machine learning interatomic potential trained with the Hessian-INformed Training (HINT) protocol — Hessian pre-training, configuration sampling, curriculum learning, and a stochastic projected Hessian loss — to attain Hessian-level accuracy with two to four orders of magnitude fewer high-fidelity Hessian labels than standard training. Substantially improves transition-state search and brings Gibbs free-energy predictions close to chemical accuracy in data-scarce regimes, and reproduces phonon renormalization and superconducting Tc of strongly anharmonic hydrides in close agreement with experiment.",
+      "desc": "Hessian-informed machine learning interatomic potential trained with the Hessian-INformed Training (HINT) protocol \u2014 Hessian pre-training, configuration sampling, curriculum learning, and a stochastic projected Hessian loss \u2014 to attain Hessian-level accuracy with two to four orders of magnitude fewer high-fidelity Hessian labels than standard training. Substantially improves transition-state search and brings Gibbs free-energy predictions close to chemical accuracy in data-scarce regimes, and reproduces phonon renormalization and superconducting Tc of strongly anharmonic hydrides in close agreement with experiment.",
       "paperUrl": "https://arxiv.org/abs/2603.25373",
       "isNew": true,
       "coverage": [
@@ -1270,7 +1270,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -1282,10 +1282,10 @@
       "category": "Transformer",
       "label": "SpookyNet",
       "year": 2021,
-      "author": "Unke, Chmiela, Gastegger, Schütt, Sauceda, Müller",
+      "author": "Unke, Chmiela, Gastegger, Sch\u00fctt, Sauceda, M\u00fcller",
       "x": 3460,
       "y": 150,
-      "desc": "MLIP that explicitly captures electronic degrees of freedom and nonlocal effects, modelled via self-attention in a transformer architecture. Total charge and spin multiplicity are injected as global tokens that condition the local atomic embeddings — a direct conceptual ancestor of charge/spin-conditioned foundation models such as UMA and MACE-POLAR-1.",
+      "desc": "MLIP that explicitly captures electronic degrees of freedom and nonlocal effects, modelled via self-attention in a transformer architecture. Total charge and spin multiplicity are injected as global tokens that condition the local atomic embeddings \u2014 a direct conceptual ancestor of charge/spin-conditioned foundation models such as UMA and MACE-POLAR-1.",
       "githubUrl": "https://github.com/OUnke/SpookyNet",
       "paperUrl": "https://www.nature.com/articles/s41467-021-27504-0",
       "coverage": [
@@ -1322,7 +1322,7 @@
       ],
       "supportsCharges": true,
       "supportsSpins": true,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": true,
@@ -1334,7 +1334,7 @@
       "category": "Transformer",
       "label": "GEMS",
       "year": 2024,
-      "author": "Unke, Stöhr, Ganscha, Unterthiner, Maennel, Kashubin, Ahlin, Gastegger, Sandonas, Berryman, Tkatchenko, Müller",
+      "author": "Unke, St\u00f6hr, Ganscha, Unterthiner, Maennel, Kashubin, Ahlin, Gastegger, Sandonas, Berryman, Tkatchenko, M\u00fcller",
       "x": 3460,
       "y": 320,
       "desc": "SpookyNet-based biomolecular force-field framework that combines top-down (whole-protein) and bottom-up (fragment) sampling to train transferable, quantum-accurate ML potentials for proteins and condensed-phase biomolecular dynamics.",
@@ -1368,7 +1368,7 @@
       ],
       "supportsCharges": true,
       "supportsSpins": true,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": true,
@@ -1383,7 +1383,7 @@
       "author": "Behler & Parrinello",
       "x": 100,
       "y": 650,
-      "desc": "The Behler–Parrinello high-dimensional neural network potential — the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
+      "desc": "The Behler\u2013Parrinello high-dimensional neural network potential \u2014 the 2007 paper that introduced symmetry functions and the atomic-decomposition framework underlying essentially every modern MLIP.",
       "githubUrl": "https://github.com/CompPhysVienna/n2p2",
       "paperUrl": "https://doi.org/10.1103/PhysRevLett.98.146401",
       "coverage": [
@@ -1417,7 +1417,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -1466,7 +1466,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -1478,7 +1478,7 @@
       "category": "Descriptor",
       "label": "GAP",
       "year": 2010,
-      "author": "Bartók, Payne, Kondor, Csányi (Cambridge)",
+      "author": "Bart\u00f3k, Payne, Kondor, Cs\u00e1nyi (Cambridge)",
       "x": 100,
       "y": 550,
       "desc": "Gaussian Approximation Potentials: a kernel-based MLIP fit to ab-initio energies and forces using SOAP-like many-body descriptors; the canonical kernel reference for descriptor-based potentials.",
@@ -1516,7 +1516,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -1566,7 +1566,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -1618,7 +1618,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": true,
@@ -1670,7 +1670,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "architecture": "descriptor",
       "equivariance": "invariant",
       "usesAttention": true,
@@ -1883,7 +1883,7 @@
       "author": "Zhou et al. (CAS / ICT, HPC-AI-Team)",
       "x": 1790,
       "y": 650,
-      "desc": "Billion-parameter Mixture-of-Experts extension of MatRIS that inserts sparse expert modules around the self-attention layer — a message-update MoE for message construction and a feature-update MoE for post-attention refinement — with element-type routing that keeps the activated expert set time-independent and the potential energy surface continuous. Released in M (2.47B) and L (11.50B) variants and trained on heterogeneous domains (molecules, materials, catalysis, MOFs, and direct air capture) via the new Janus hybrid-parallel framework, attaining 1.0–1.2 EFLOPS at >90% parallel efficiency and compressing billion-parameter uMLIP training from weeks to hours on Exascale supercomputers.",
+      "desc": "Billion-parameter Mixture-of-Experts extension of MatRIS that inserts sparse expert modules around the self-attention layer \u2014 a message-update MoE for message construction and a feature-update MoE for post-attention refinement \u2014 with element-type routing that keeps the activated expert set time-independent and the potential energy surface continuous. Released in M (2.47B) and L (11.50B) variants and trained on heterogeneous domains (molecules, materials, catalysis, MOFs, and direct air capture) via the new Janus hybrid-parallel framework, attaining 1.0\u20131.2 EFLOPS at >90% parallel efficiency and compressing billion-parameter uMLIP training from weeks to hours on Exascale supercomputers.",
       "githubUrl": "https://github.com/HPC-AI-Team/MatRIS",
       "paperUrl": "https://arxiv.org/abs/2604.15821",
       "isNew": true,
@@ -1974,7 +1974,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -2023,7 +2023,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -2035,7 +2035,7 @@
       "category": "Descriptor",
       "label": "sGDML",
       "year": 2017,
-      "author": "Chmiela, Sauceda, Poltavsky, Müller, Tkatchenko",
+      "author": "Chmiela, Sauceda, Poltavsky, M\u00fcller, Tkatchenko",
       "x": 2340,
       "y": 550,
       "desc": "Symmetric Gradient-Domain Machine Learning: a kernel ridge regression force field fit directly in the gradient domain, with energy obtained by closed-form integration. Strong on small molecules where rigorous symmetry handling is critical.",
@@ -2070,7 +2070,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -2119,7 +2119,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "descriptor",
       "usesAttention": false,
@@ -2165,7 +2165,7 @@
       ],
       "supportsCharges": true,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": false,
@@ -2213,7 +2213,7 @@
       ],
       "supportsCharges": true,
       "supportsSpins": true,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": false,
@@ -2262,7 +2262,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": false,
@@ -2516,10 +2516,10 @@
       "category": "Equivariant",
       "label": "AceFF",
       "year": 2026,
-      "author": "Farr, Doerr, Mirarchi, Sabanés Zariquiey & De Fabritiis (Acellera Labs / UPF Barcelona)",
+      "author": "Farr, Doerr, Mirarchi, Saban\u00e9s Zariquiey & De Fabritiis (Acellera Labs / UPF Barcelona)",
       "x": 2060,
       "y": 750,
-      "desc": "Drug-discovery-oriented MLIP built on the TensorNet2 architecture — a refined vector–scalar equivariant TensorNet that adds scalar partial-charge features, performs neutral charge equilibration, and includes a long-range Coulomb energy term. Pretrained on a large dataset of drug-like compounds covering H, B, C, N, O, F, Si, P, S, Cl, Br, I in neutral and charged states; balances DFT-level accuracy on torsion scans, MD trajectories, and batched minimisations with high-throughput inference suitable for FEP and lead-optimisation workflows.",
+      "desc": "Drug-discovery-oriented MLIP built on the TensorNet2 architecture \u2014 a refined vector\u2013scalar equivariant TensorNet that adds scalar partial-charge features, performs neutral charge equilibration, and includes a long-range Coulomb energy term. Pretrained on a large dataset of drug-like compounds covering H, B, C, N, O, F, Si, P, S, Cl, Br, I in neutral and charged states; balances DFT-level accuracy on torsion scans, MD trajectories, and batched minimisations with high-throughput inference suitable for FEP and lead-optimisation workflows.",
       "githubUrl": "https://huggingface.co/Acellera/AceFF-2.0",
       "paperUrl": "https://arxiv.org/abs/2601.00581",
       "isNew": true,
@@ -2567,7 +2567,7 @@
       "category": "Invariant",
       "label": "SchNet",
       "year": 2017,
-      "author": "Schütt et al.",
+      "author": "Sch\u00fctt et al.",
       "x": 380,
       "y": 750,
       "desc": "Continuous-filter convolutional network that introduced smooth, translation-invariant filters for molecules; the baseline for many later invariant message-passing potentials. Predicts energies and forces with all-atom symmetry preserved.",
@@ -2713,7 +2713,7 @@
       "category": "Equivariant",
       "label": "PaiNN",
       "year": 2021,
-      "author": "Schütt et al.",
+      "author": "Sch\u00fctt et al.",
       "x": 380,
       "y": 900,
       "desc": "Polarizable Atom Interaction Neural Network: uses coupled scalar/vector features to capture forces and dipoles with E(3) equivariance at lower cost than full tensors.",
@@ -2894,7 +2894,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "invariant",
       "architecture": "gnn",
       "usesAttention": false,
@@ -3113,7 +3113,7 @@
       "author": "Chen et al. (NEP framework)",
       "x": 1510,
       "y": 900,
-      "desc": "Universal organic force field for C, H, O, N, S, P built within the Neuroevolution Potential (NEP) framework. Trained on a chemically rich dataset assembled through a unified top-down/bottom-up sampling strategy, providing a balanced description of bond breaking/formation, aromatic growth, hydrogen bonding, van der Waals interactions, and π-stacking; reaches near-DFT force accuracy while running ~200x faster than ReaxFF on identical hardware, enabling hundreds-of-nanoseconds reactive MD.",
+      "desc": "Universal organic force field for C, H, O, N, S, P built within the Neuroevolution Potential (NEP) framework. Trained on a chemically rich dataset assembled through a unified top-down/bottom-up sampling strategy, providing a balanced description of bond breaking/formation, aromatic growth, hydrogen bonding, van der Waals interactions, and \u03c0-stacking; reaches near-DFT force accuracy while running ~200x faster than ReaxFF on identical hardware, enabling hundreds-of-nanoseconds reactive MD.",
       "githubUrl": "https://github.com/brucefan1983/GPUMD",
       "paperUrl": "https://arxiv.org/abs/2604.05769",
       "isNew": true,
@@ -3261,7 +3261,7 @@
       "author": "Elsharkawy, Mikuni, Bhimji, Nachman (LBNL / NERSC)",
       "x": 2060,
       "y": 900,
-      "desc": "Transformer-based small-molecule MLIP that adapts the Omnilearned Point-Edge-Transformer (PET) foundation model — pre-trained on ~1 billion LHC particle jets — to molecular dynamics via cross-domain transfer learning. Uses an interaction-matrix attention bias to inject pairwise atomic physics into transformer attention; on the OMol25 dataset OmniMol-M outperforms a 1B-parameter baseline transformer with ~20× fewer parameters, demonstrating the first cross-discipline transfer for scientific point-cloud foundation models.",
+      "desc": "Transformer-based small-molecule MLIP that adapts the Omnilearned Point-Edge-Transformer (PET) foundation model \u2014 pre-trained on ~1 billion LHC particle jets \u2014 to molecular dynamics via cross-domain transfer learning. Uses an interaction-matrix attention bias to inject pairwise atomic physics into transformer attention; on the OMol25 dataset OmniMol-M outperforms a 1B-parameter baseline transformer with ~20\u00d7 fewer parameters, demonstrating the first cross-discipline transfer for scientific point-cloud foundation models.",
       "paperUrl": "https://arxiv.org/abs/2601.10791",
       "isNew": true,
       "coverage": [
@@ -3290,7 +3290,7 @@
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "learnt",
       "architecture": "gnn",
       "usesAttention": true,
@@ -3305,7 +3305,7 @@
       "author": "Yan, Bohde et al. (Texas A&M, divelab/AIRS)",
       "x": 3180,
       "y": 320,
-      "desc": "Hybrid Invariant–Equivariant materials foundation potential that interleaves invariant and O(3)-equivariant message-passing layers to leverage invariant-layer scalability while reserving equivariant layers for high-order interactions. Force and stress are obtained as exact derivatives of a conservative energy, and the model achieves SOTA on Matbench Discovery while running ~90% faster than SevenNet-l3i5 and ~140% faster than EquiformerV2.",
+      "desc": "Hybrid Invariant\u2013Equivariant materials foundation potential that interleaves invariant and O(3)-equivariant message-passing layers to leverage invariant-layer scalability while reserving equivariant layers for high-order interactions. Force and stress are obtained as exact derivatives of a conservative energy, and the model achieves SOTA on Matbench Discovery while running ~90% faster than SevenNet-l3i5 and ~140% faster than EquiformerV2.",
       "githubUrl": "https://github.com/divelab/AIRS",
       "paperUrl": "https://arxiv.org/abs/2503.05771",
       "isNew": true,
@@ -3350,10 +3350,10 @@
       "category": "Equivariant",
       "label": "MACE-MH-1",
       "year": 2026,
-      "author": "Batatia, Lin, Hart, Kasoar, Elena, Norwood, Wolf, Csányi (Cambridge / ACEsuit)",
+      "author": "Batatia, Lin, Hart, Kasoar, Elena, Norwood, Wolf, Cs\u00e1nyi (Cambridge / ACEsuit)",
       "x": 4020,
       "y": 150,
-      "desc": "Cross-learning multi-head MACE foundation model that bridges molecular, surface, and inorganic crystal chemistry in a single MLIP. Enhances the MACE architecture with stronger element-weight sharing and non-linear tensor-decomposition product bases, then post-trains a multi-head replay scheme on OMAT-24 (PBE crystals), MPTraj, OMol (ωB97M-VV10), OC20 (surfaces), SPICE, RGD1, and MATPES-r2SCAN heads to unify electronic-structure theories.",
+      "desc": "Cross-learning multi-head MACE foundation model that bridges molecular, surface, and inorganic crystal chemistry in a single MLIP. Enhances the MACE architecture with stronger element-weight sharing and non-linear tensor-decomposition product bases, then post-trains a multi-head replay scheme on OMAT-24 (PBE crystals), MPTraj, OMol (\u03c9B97M-VV10), OC20 (surfaces), SPICE, RGD1, and MATPES-r2SCAN heads to unify electronic-structure theories.",
       "githubUrl": "https://github.com/ACEsuit/mace-foundations",
       "paperUrl": "https://arxiv.org/abs/2510.25380",
       "isNew": true,
@@ -3577,7 +3577,7 @@
       "author": "Mazitov, Bigi, Kellner, Pegolo, Tisi, Pozdnyakov, Loche, Kazeev, Fraux, Ceriotti et al. (EPFL / lab-cosmo)",
       "x": 4020,
       "y": 320,
-      "desc": "Successor to PET-MAD: a generally applicable r²SCAN universal interatomic potential that extends elemental coverage to 102 elements via the curated MAD-1.5 dataset (~217k structures). Same Point Edge Transformer (PET) backbone with rotation-invariance learnt from data, retrained at the r²SCAN meta-GGA level with targeted enrichment strategies (molecules, clusters, surfaces, low-dimensional structures, bulk crystals) and uncertainty-quantification-driven outlier removal. Reported as more robust, more accurate, and faster than the original PET-MAD across challenging molecular dynamics benchmarks.",
+      "desc": "Successor to PET-MAD: a generally applicable r\u00b2SCAN universal interatomic potential that extends elemental coverage to 102 elements via the curated MAD-1.5 dataset (~217k structures). Same Point Edge Transformer (PET) backbone with rotation-invariance learnt from data, retrained at the r\u00b2SCAN meta-GGA level with targeted enrichment strategies (molecules, clusters, surfaces, low-dimensional structures, bulk crystals) and uncertainty-quantification-driven outlier removal. Reported as more robust, more accurate, and faster than the original PET-MAD across challenging molecular dynamics benchmarks.",
       "githubUrl": "https://github.com/lab-cosmo/pet-mad",
       "paperUrl": "https://arxiv.org/abs/2603.02089",
       "isNew": true,
@@ -3590,7 +3590,7 @@
       ],
       "useCases": [
         "universal MLIP",
-        "r²SCAN molecular dynamics"
+        "r\u00b2SCAN molecular dynamics"
       ],
       "properties": [
         "energy",
@@ -3611,7 +3611,7 @@
         "transformer",
         "PET",
         "foundation model",
-        "r²SCAN",
+        "r\u00b2SCAN",
         "102 elements"
       ],
       "supportsCharges": false,
@@ -3633,7 +3633,7 @@
       "author": "Lewis-Atwell, Saiz Pardo, Rieu, Loche, Bocus, Cersonsky, Ceriotti et al.",
       "x": 4300,
       "y": 150,
-      "desc": "Density-first machine-learned electronic-structure framework that learns the Hohenberg-Kohn map from nuclear configurations to the ground-state electron density using an SE(3)-equivariant neural network predicting density coefficients of an atom-centred Gaussian basis, with a Δ-learning prior built from superposed atomic densities. A second equivariant network then maps the predicted density to the total energy, providing a unified framework for molecular dynamics, energies, forces, and electronic observables (dipole moments, polarizabilities, infrared spectra). Validated on ethanol, ethanethiol, resorcinol, and polythiophene oligomers (extrapolating from 1-6 to 12 monomers).",
+      "desc": "Density-first machine-learned electronic-structure framework that learns the Hohenberg-Kohn map from nuclear configurations to the ground-state electron density using an SE(3)-equivariant neural network predicting density coefficients of an atom-centred Gaussian basis, with a \u0394-learning prior built from superposed atomic densities. A second equivariant network then maps the predicted density to the total energy, providing a unified framework for molecular dynamics, energies, forces, and electronic observables (dipole moments, polarizabilities, infrared spectra). Validated on ethanol, ethanethiol, resorcinol, and polythiophene oligomers (extrapolating from 1-6 to 12 monomers).",
       "paperUrl": "https://arxiv.org/abs/2604.24563",
       "isNew": true,
       "coverage": [
@@ -3664,12 +3664,12 @@
         "equivariant",
         "SE(3)",
         "electron density",
-        "Δ-learning",
+        "\u0394-learning",
         "spectroscopy"
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "—",
+      "elementsCovered": "\u2014",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
@@ -3684,7 +3684,7 @@
       "author": "Bigi, Pegolo, Mazitov, Ceriotti (EPFL / lab-cosmo)",
       "x": 4300,
       "y": 320,
-      "desc": "Extra-large variant of the Point Edge Transformer (PET) trained with an OMat24 + sAlex + MPtrj recipe (the OAM data mixture). Pushes the limits of unconstrained MLIPs by trading explicit E(3) symmetry constraints for capacity, depth, and data, achieving the top position on the Matbench Discovery leaderboard at release. Configuration: d_pet 640, d_node 2560, 5 GNN layers + 3 attention layers, 10 Å cutoff with adaptive 40-neighbour cap, distributed via the upet package alongside the wider PET-MAD / PET-OMat / PET-SPICE family.",
+      "desc": "Extra-large variant of the Point Edge Transformer (PET) trained with an OMat24 + sAlex + MPtrj recipe (the OAM data mixture). Pushes the limits of unconstrained MLIPs by trading explicit E(3) symmetry constraints for capacity, depth, and data, achieving the top position on the Matbench Discovery leaderboard at release. Configuration: d_pet 640, d_node 2560, 5 GNN layers + 3 attention layers, 10 \u00c5 cutoff with adaptive 40-neighbour cap, distributed via the upet package alongside the wider PET-MAD / PET-OMat / PET-SPICE family.",
       "githubUrl": "https://github.com/lab-cosmo/upet",
       "paperUrl": "https://arxiv.org/abs/2601.16195",
       "isNew": true,
@@ -3855,7 +3855,7 @@
       "author": "Elhag, Raja, Morehead, Blau, Zhao, Tyrchan, Nittinger, Morris, Bronstein (Oxford / LBNL / AstraZeneca / AITHYRA)",
       "x": 6260,
       "y": 150,
-      "desc": "Transformer-based interatomic potential built on a generic, non-equivariant backbone that learns SO(3)-equivariance implicitly through a latent equivariance training objective rather than via architectural constraints. Replaces graph-based inductive biases and Clebsch-Gordan tensor products with a scalable embedding-space alignment loss, achieving 40–60% improvement over a data-augmentation baseline across varying OMol25 training-set sizes. Released with a TransIP-L checkpoint on Hugging Face and built on top of the fairchem framework.",
+      "desc": "Transformer-based interatomic potential built on a generic, non-equivariant backbone that learns SO(3)-equivariance implicitly through a latent equivariance training objective rather than via architectural constraints. Replaces graph-based inductive biases and Clebsch-Gordan tensor products with a scalable embedding-space alignment loss, achieving 40\u201360% improvement over a data-augmentation baseline across varying OMol25 training-set sizes. Released with a TransIP-L checkpoint on Hugging Face and built on top of the fairchem framework.",
       "githubUrl": "https://github.com/Ahmed-A-A-Elhag/TransIP",
       "paperUrl": "https://arxiv.org/abs/2510.00027",
       "isNew": true,
@@ -3907,7 +3907,7 @@
       "author": "Li, Huang, Ding, Wang, Wei, Yang, Wang, Liu, Shi, Jin, Zhang, Gerstein, Qin (Microsoft Research / Yale)",
       "x": 6540,
       "y": 150,
-      "desc": "Efficient and equivariant transformer that replaces conventional SO(3) spherical-tensor-product convolutions with a Wigner 6j convolution (Wigner 6j Conv), shifting the dominant compute from edges to nodes and reducing tensor-product complexity from O(|E|) to O(|V|) while preserving E(3) equivariance and expressive power. Achieves a 7×–30× speedup over standard SO(3) convolutions on benchmark interatomic-potential tasks (OC20, OC22, SPICE, MD17/MD22) at chemical accuracy. Released as a NeurIPS 2025 Spotlight and serves as the architectural foundation for the later E2Former-V2 / UBio-MolFM line.",
+      "desc": "Efficient and equivariant transformer that replaces conventional SO(3) spherical-tensor-product convolutions with a Wigner 6j convolution (Wigner 6j Conv), shifting the dominant compute from edges to nodes and reducing tensor-product complexity from O(|E|) to O(|V|) while preserving E(3) equivariance and expressive power. Achieves a 7\u00d7\u201330\u00d7 speedup over standard SO(3) convolutions on benchmark interatomic-potential tasks (OC20, OC22, SPICE, MD17/MD22) at chemical accuracy. Released as a NeurIPS 2025 Spotlight and serves as the architectural foundation for the later E2Former-V2 / UBio-MolFM line.",
       "githubUrl": "https://github.com/liyy2/E2Former",
       "paperUrl": "https://arxiv.org/abs/2501.19216",
       "isNew": true,
@@ -3962,7 +3962,7 @@
       "author": "Huang, Jiang, Liu, Wang, Zhao, Wang, Lu, Huang, Cheng, Du, Zhang (UBio Team, IQuest Research)",
       "x": 6820,
       "y": 150,
-      "desc": "Universal molecular foundation model engineered for biomolecular systems, combining three components: (i) UBio-Mol26, a ~17M-configuration bio-specific dataset built via a multi-fidelity two-pronged strategy that combines systematic bottom-up enumeration with top-down sampling of native protein environments up to ~1,200 atoms (proteins, nucleic acids, lipids, drug-like molecules, biologically important ions and metals); (ii) E2Former-V2, a linear-scaling equivariant transformer integrating Equivariant Axis-Aligned Sparsification (EAAS) and Long-Short Range (LSR) modelling for ~4× higher inference throughput on large systems; and (iii) a three-stage curriculum-learning protocol going from energy initialisation to energy-force consistency and multi-fidelity refinement. Targets ab-initio-level fidelity on out-of-distribution biomolecular systems up to ~1,500 atoms.",
+      "desc": "Universal molecular foundation model engineered for biomolecular systems, combining three components: (i) UBio-Mol26, a ~17M-configuration bio-specific dataset built via a multi-fidelity two-pronged strategy that combines systematic bottom-up enumeration with top-down sampling of native protein environments up to ~1,200 atoms (proteins, nucleic acids, lipids, drug-like molecules, biologically important ions and metals); (ii) E2Former-V2, a linear-scaling equivariant transformer integrating Equivariant Axis-Aligned Sparsification (EAAS) and Long-Short Range (LSR) modelling for ~4\u00d7 higher inference throughput on large systems; and (iii) a three-stage curriculum-learning protocol going from energy initialisation to energy-force consistency and multi-fidelity refinement. Targets ab-initio-level fidelity on out-of-distribution biomolecular systems up to ~1,500 atoms.",
       "githubUrl": "https://github.com/IQuestLab/UBio-MolFM",
       "paperUrl": "https://arxiv.org/abs/2602.17709",
       "isNew": true,
@@ -4008,15 +4008,73 @@
       "longRange": true
     },
     {
+      "id": "fennix_bio1",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "FeNNix-Bio1",
+      "year": 2026,
+      "author": "Pl\u00e9, Adjoua, Benali, Posenitskiy, Villot, Lagard\u00e8re, Piquemal (Sorbonne Universit\u00e9 / Qubit Pharmaceuticals)",
+      "x": 6260,
+      "y": 320,
+      "desc": "Force-field-enhanced foundation MLIP for drug design built on the FENNIX hybrid framework: an Allegro E(3)-equivariant local embedding (256 scalar features, 16 equivariant channels up to l_max=2, three interaction layers, 5.3 \u00c5 cutoff) coupled with physics-grounded energy terms \u2014 short-range ZBL repulsion, Coulomb electrostatics with fluctuating atom-centred charges, and explicit dispersion. Trained on an extended SPICE2 synthetic-QM dataset and integrated with Tinker-HP for reactive molecular dynamics including quantum nuclear effects. Sets a new sub-kcal/mol standard on the Freesolv hydration-free-energy benchmark and supports protein folding, protein-ligand binding free energies, and chemical reactions.",
+      "githubUrl": "https://github.com/thomasple/FeNNol",
+      "paperUrl": "https://doi.org/10.26434/chemrxiv-2025-f1hgn",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "biomolecules",
+        "proteins",
+        "electrolytes"
+      ],
+      "useCases": [
+        "drug discovery",
+        "hydration free energies",
+        "protein folding",
+        "protein-ligand binding",
+        "reactive MD"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "LGPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-05-15",
+      "trainingData": [
+        "SPICE2",
+        "extended SPICE2"
+      ],
+      "tags": [
+        "equivariant",
+        "force-field-enhanced",
+        "biomolecular",
+        "drug design",
+        "foundation model",
+        "JAX",
+        "charge-aware"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": false,
+      "elementsCovered": "biomolecular elements (H, C, N, O, F, P, S, Cl, Br, I) plus Li, Na, K, Mg, Zn",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": true
+    },
+    {
       "id": "dtnn",
       "type": "node",
       "category": "Invariant",
       "label": "DTNN",
       "year": 2017,
-      "author": "Schütt, Arbabzadah, Chmiela, Müller, Tkatchenko",
+      "author": "Sch\u00fctt, Arbabzadah, Chmiela, M\u00fcller, Tkatchenko",
       "x": 2900,
       "y": 550,
-      "desc": "Deep Tensor Neural Network — the direct precursor to SchNet that introduced learned per-element embeddings refined by tensorised pairwise interaction blocks for quantum-chemical energies on QM9-style organic molecules.",
+      "desc": "Deep Tensor Neural Network \u2014 the direct precursor to SchNet that introduced learned per-element embeddings refined by tensorised pairwise interaction blocks for quantum-chemical energies on QM9-style organic molecules.",
       "githubUrl": "https://github.com/atomistic-machine-learning/dtnn",
       "paperUrl": "https://www.nature.com/articles/ncomms13890",
       "coverage": [
@@ -4062,7 +4120,7 @@
       "author": "Xie & Grossman (MIT)",
       "x": 2900,
       "y": 900,
-      "desc": "Crystal Graph Convolutional Neural Network — the first GNN built explicitly on periodic crystal graphs with multi-edge bond convolutions. Foundational ancestor of nearly every later universal materials GNN (MEGNet / M3GNet / CHGNet) and a workhorse for materials property prediction.",
+      "desc": "Crystal Graph Convolutional Neural Network \u2014 the first GNN built explicitly on periodic crystal graphs with multi-edge bond convolutions. Foundational ancestor of nearly every later universal materials GNN (MEGNet / M3GNet / CHGNet) and a workhorse for materials property prediction.",
       "githubUrl": "https://github.com/txie-93/cgcnn",
       "paperUrl": "https://arxiv.org/abs/1710.10324",
       "coverage": [
@@ -4159,7 +4217,7 @@
       "author": "Chen, Ye, Zuo, Zheng, Ong (UCSD / Materials Virtual Lab)",
       "x": 3180,
       "y": 650,
-      "desc": "MatErials Graph Network — universal graph network with global state attributes that unifies molecules and crystals in one framework. Direct architectural ancestor of M3GNet/CHGNet from the same group; widely used for materials property prediction.",
+      "desc": "MatErials Graph Network \u2014 universal graph network with global state attributes that unifies molecules and crystals in one framework. Direct architectural ancestor of M3GNet/CHGNet from the same group; widely used for materials property prediction.",
       "githubUrl": "https://github.com/materialsvirtuallab/megnet",
       "paperUrl": "https://pubs.acs.org/doi/10.1021/acs.chemmater.9b01294",
       "coverage": [
@@ -4208,7 +4266,7 @@
       "author": "Anderson, Hy, Kondor (Chicago)",
       "x": 4860,
       "y": 320,
-      "desc": "Covariant Molecular Neural Network — an early end-to-end SO(3)-equivariant architecture using Clebsch-Gordan tensor products on irreducible representations of irreducible spherical tensors. Predates and informs the TFN/NequIP-style equivariant message-passing potential family.",
+      "desc": "Covariant Molecular Neural Network \u2014 an early end-to-end SO(3)-equivariant architecture using Clebsch-Gordan tensor products on irreducible representations of irreducible spherical tensors. Predates and informs the TFN/NequIP-style equivariant message-passing potential family.",
       "githubUrl": "https://github.com/risilab/cormorant",
       "paperUrl": "https://arxiv.org/abs/1906.04015",
       "coverage": [
@@ -4303,7 +4361,7 @@
       "author": "Fan, Wang, Ying et al. (Aalto / GPUMD)",
       "x": 3180,
       "y": 750,
-      "desc": "Original Neuroevolution Potential — a per-element neural network on local descriptors trained with separable natural-evolution strategies rather than gradient descent. Designed for raw GPU throughput in the GPUMD code; ancestor of NEP89, qNEP, and ORION.",
+      "desc": "Original Neuroevolution Potential \u2014 a per-element neural network on local descriptors trained with separable natural-evolution strategies rather than gradient descent. Designed for raw GPU throughput in the GPUMD code; ancestor of NEP89, qNEP, and ORION.",
       "githubUrl": "https://github.com/brucefan1983/GPUMD",
       "paperUrl": "https://arxiv.org/abs/2107.08119",
       "coverage": [
@@ -4351,7 +4409,7 @@
       "author": "Takamoto et al. (Preferred Networks)",
       "x": 3180,
       "y": 900,
-      "desc": "Original Preferred Potential — first universal NNP covering 45 elements and the foundation of the commercial Matlantis SaaS platform. Predated the academic universal MLIP wave (M3GNet, CHGNet, MACE-MP) by over a year and demonstrated viable industrial-scale deployment.",
+      "desc": "Original Preferred Potential \u2014 first universal NNP covering 45 elements and the foundation of the commercial Matlantis SaaS platform. Predated the academic universal MLIP wave (M3GNet, CHGNet, MACE-MP) by over a year and demonstrated viable industrial-scale deployment.",
       "paperUrl": "https://www.nature.com/articles/s41467-022-30687-9",
       "coverage": [
         "general materials",
@@ -4400,7 +4458,7 @@
       "author": "Liao & Smidt (MIT Atomic Architects)",
       "x": 5140,
       "y": 150,
-      "desc": "Original Equivariant Graph Attention Transformer — combines graph attention with TFN-style E(3)-equivariant tensor representations and depthwise tensor-product MLPs. Direct ancestor of Equiformer V2 and V3; influential for attention-based equivariant MLIPs.",
+      "desc": "Original Equivariant Graph Attention Transformer \u2014 combines graph attention with TFN-style E(3)-equivariant tensor representations and depthwise tensor-product MLPs. Direct ancestor of Equiformer V2 and V3; influential for attention-based equivariant MLIPs.",
       "githubUrl": "https://github.com/atomicarchitects/equiformer",
       "paperUrl": "https://arxiv.org/abs/2206.11990",
       "coverage": [
@@ -4451,7 +4509,7 @@
       "author": "Zitnick, Das, Goyal et al. (Meta FAIR)",
       "x": 5140,
       "y": 320,
-      "desc": "Spherical Channels Network — represents atomic environments as multichannel spherical signals rotated into edge-aligned local frames, enabling efficient high-degree representations for OC20-class catalyst modelling. Direct precursor to eSCN and the Meta FAIR equivariant-transformer line.",
+      "desc": "Spherical Channels Network \u2014 represents atomic environments as multichannel spherical signals rotated into edge-aligned local frames, enabling efficient high-degree representations for OC20-class catalyst modelling. Direct precursor to eSCN and the Meta FAIR equivariant-transformer line.",
       "githubUrl": "https://github.com/Open-Catalyst-Project/ocp",
       "paperUrl": "https://arxiv.org/abs/2206.14331",
       "coverage": [
@@ -4496,7 +4554,7 @@
       "category": "Equivariant",
       "label": "SO3krates",
       "year": 2022,
-      "author": "Frank, Unke, Müller (TU Berlin)",
+      "author": "Frank, Unke, M\u00fcller (TU Berlin)",
       "x": 5420,
       "y": 150,
       "desc": "SO(3)-equivariant attention on arbitrary length scales: factorises equivariant tensor products into invariant scalar attention plus an equivariant filter, enabling long-range-capable equivariant transformers. Foundation of the later SO3LR molecular response model.",
@@ -4596,7 +4654,7 @@
       "author": "Zhang, Bi et al. (DeepModeling)",
       "x": 3460,
       "y": 550,
-      "desc": "First-generation Deep Potential with Attention — pretrained Deep Potential descriptor model that introduces an attention layer to the DeepMD framework, enabling cross-domain transfer learning. Direct bridge between DeepMD and DPA-2 in the DeepModeling lineage.",
+      "desc": "First-generation Deep Potential with Attention \u2014 pretrained Deep Potential descriptor model that introduces an attention layer to the DeepMD framework, enabling cross-domain transfer learning. Direct bridge between DeepMD and DPA-2 in the DeepModeling lineage.",
       "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
       "paperUrl": "https://arxiv.org/abs/2208.08236",
       "coverage": [
@@ -4673,7 +4731,7 @@
       ],
       "tags": [
         "equivariant",
-        "SO(3)→SO(2)",
+        "SO(3)\u2192SO(2)",
         "high-degree"
       ],
       "supportsCharges": false,
@@ -4691,7 +4749,7 @@
       "category": "Equivariant",
       "label": "MACE-OFF",
       "year": 2023,
-      "author": "Kovács, Moore, Browning, Batatia, Horton et al.",
+      "author": "Kov\u00e1cs, Moore, Browning, Batatia, Horton et al.",
       "x": 5980,
       "y": 150,
       "desc": "Transferable MACE force field for organic molecules covering 10 elements (H, C, N, O, F, P, S, Cl, Br, I) trained on SPICE quantum-chemistry data. The molecular sibling of MACE-MP-0 and template for later GRACE-OFF; widely used as a drop-in replacement for classical biomolecular force fields.",
@@ -4746,7 +4804,7 @@
       "author": "Merchant, Batzner, Schoenholz, Aykol, Cheon, Cubuk (Google DeepMind)",
       "x": 3460,
       "y": 650,
-      "desc": "Graph Networks for Materials Exploration — published in Nature 624, 80 (2023), demonstrated discovery of 2.2M new crystal structures (380k stable) via active-learning-coupled NNP-driven materials search. Established graph-network MLIPs as a viable engine for autonomous crystal discovery at scale.",
+      "desc": "Graph Networks for Materials Exploration \u2014 published in Nature 624, 80 (2023), demonstrated discovery of 2.2M new crystal structures (380k stable) via active-learning-coupled NNP-driven materials search. Established graph-network MLIPs as a viable engine for autonomous crystal discovery at scale.",
       "paperUrl": "https://www.nature.com/articles/s41586-023-06735-9",
       "githubUrl": "https://github.com/google-deepmind/materials_discovery",
       "coverage": [
@@ -4792,10 +4850,10 @@
       "category": "Equivariant",
       "label": "MACE-MP-0",
       "year": 2024,
-      "author": "Batatia, Benner, Chiang, Elena, Kovács et al.",
+      "author": "Batatia, Benner, Chiang, Elena, Kov\u00e1cs et al.",
       "x": 5700,
       "y": 320,
-      "desc": "First MACE foundation model — a single MACE-architecture potential trained on the Materials Project trajectory dataset (MPtrj) covering 89 elements. Demonstrated broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals; the reference universal MACE model and ancestor of MACE-Osaka26 / MACE-MH-1 / MACE-Magnetic / MACE-POLAR-1.",
+      "desc": "First MACE foundation model \u2014 a single MACE-architecture potential trained on the Materials Project trajectory dataset (MPtrj) covering 89 elements. Demonstrated broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals; the reference universal MACE model and ancestor of MACE-Osaka26 / MACE-MH-1 / MACE-Magnetic / MACE-POLAR-1.",
       "githubUrl": "https://github.com/ACEsuit/mace-foundations",
       "paperUrl": "https://arxiv.org/abs/2401.00096",
       "coverage": [
@@ -4845,7 +4903,7 @@
       "category": "Invariant",
       "label": "MPNICE",
       "year": 2025,
-      "author": "Weber et al. (Schrödinger Inc. / Columbia University)",
+      "author": "Weber et al. (Schr\u00f6dinger Inc. / Columbia University)",
       "x": 4020,
       "y": 750,
       "desc": "Message Passing Network with Iterative Charge Equilibration: an invariant message-passing MLFF that decomposes the total energy into atom-centred contributions and, after every message-passing block, predicts atomic partial charges via a charge-equilibration (Qeq) approximation that feeds back into the next block. Explicit long-range Coulomb electrostatics on top of the equilibrated charges captures polarisation, charge transfer, and multiple oxidation states while remaining 5-20x faster than comparable-accuracy models. Released with pre-trained MPNICE models spanning 89 elements for organic liquids, molecular crystals, and bulk inorganic systems.",
@@ -4947,7 +5005,7 @@
       "category": "Equivariant",
       "label": "Geodite",
       "year": 2026,
-      "author": "Reschützegger, Aykent, Perin, Nunes, Cipcigan, Ferreira, Steiner et al. (IBM Research / U. São Paulo / Politecnico Milano)",
+      "author": "Resch\u00fctzegger, Aykent, Perin, Nunes, Cipcigan, Ferreira, Steiner et al. (IBM Research / U. S\u00e3o Paulo / Politecnico Milano)",
       "x": 5980,
       "y": 320,
       "desc": "Equivariant message-passing interatomic potential that replaces Clebsch-Gordan tensor products with cheaper geometric operations while keeping E(3) equivariance, and bakes in physical priors (ZBL short-range repulsion, smooth attenuation) so the learned potential energy surface stays smooth and well-behaved across the entire bond-length range. The Geodite-MP variant is trained on the Materials Project trajectory dataset (~160k inorganic crystal structures) and matches the accuracy of leading tensor-product foundation potentials on stability prediction, phonon-derived properties, thermal conductivity, and nanosecond MD, while running 3-5x faster than models with comparable accuracy.",
@@ -5061,7 +5119,7 @@
     {
       "from": "orb_v2",
       "to": "orb",
-      "label": "v2 → v3",
+      "label": "v2 \u2192 v3",
       "description": "Orb-v3 is the direct successor to Orb-v2 from Orbital Materials, sharing the same non-equivariant backbone with refinements to training data and conservativity."
     },
     {
@@ -5092,7 +5150,7 @@
       "from": "gemnet",
       "to": "jmp",
       "label": "GemNet-OC backbone",
-      "description": "JMP uses a GemNet-OC backbone shared across all training datasets — GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top."
+      "description": "JMP uses a GemNet-OC backbone shared across all training datasets \u2014 GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top."
     },
     {
       "from": "jmp",
@@ -5105,7 +5163,7 @@
       "from": "bpnn",
       "to": "gap",
       "label": "Kernels",
-      "description": "GAP (Bartók et al., 2010) was developed as a kernel-based alternative to the Behler-Parrinello descriptor framework, sharing the local-environment / atomic-energy decomposition but replacing the per-element neural network with Gaussian process regression on SOAP descriptors."
+      "description": "GAP (Bart\u00f3k et al., 2010) was developed as a kernel-based alternative to the Behler-Parrinello descriptor framework, sharing the local-environment / atomic-energy decomposition but replacing the per-element neural network with Gaussian process regression on SOAP descriptors."
     },
     {
       "from": "bpnn",
@@ -5119,7 +5177,7 @@
       "to": "grace",
       "label": "Graph ACE",
       "dashed": true,
-      "description": "GRACE is a graph-network implementation of the Atomic Cluster Expansion — explicit in its name (Graph ACE) and in its description as a foundation-scale ACE."
+      "description": "GRACE is a graph-network implementation of the Atomic Cluster Expansion \u2014 explicit in its name (Graph ACE) and in its description as a foundation-scale ACE."
     },
     {
       "from": "gap",
@@ -5143,7 +5201,7 @@
       "from": "gap",
       "to": "sgdml",
       "label": "Kernel ML",
-      "description": "sGDML is a kernel-ridge-regression force field fit in the gradient domain — a kernel-method sibling to GAP rather than a direct descendant; the link captures the shared kernel-ML lineage."
+      "description": "sGDML is a kernel-ridge-regression force field fit in the gradient domain \u2014 a kernel-method sibling to GAP rather than a direct descendant; the link captures the shared kernel-ML lineage."
     },
     {
       "from": "bpnn",
@@ -5231,13 +5289,13 @@
       "from": "dimenet",
       "to": "gemnet",
       "label": "Spherical",
-      "description": "GemNet from the same group (Klicpera/Gasteiger) generalises DimeNet's directional message passing with spherical-harmonic two-hop interactions and quadruplet messages — explicitly framed as the GemNet successor."
+      "description": "GemNet from the same group (Klicpera/Gasteiger) generalises DimeNet's directional message passing with spherical-harmonic two-hop interactions and quadruplet messages \u2014 explicitly framed as the GemNet successor."
     },
     {
       "from": "dimenet",
       "to": "alignn",
       "label": "Line Graph",
-      "description": "ALIGNN augments the atomic graph with a line graph so that bond angles become first-class nodes in the message-passing scheme — a graph-theoretic alternative to DimeNet's spherical-Bessel encoding of the same angular information."
+      "description": "ALIGNN augments the atomic graph with a line graph so that bond angles become first-class nodes in the message-passing scheme \u2014 a graph-theoretic alternative to DimeNet's spherical-Bessel encoding of the same angular information."
     },
     {
       "from": "m3gnet",
@@ -5255,7 +5313,7 @@
       "from": "bpnn",
       "to": "nep89",
       "label": "Evolution NN",
-      "description": "NEP89 is a Neuroevolution Potential — a per-element neural network on top of local descriptors trained with separable natural evolution strategies — sitting squarely in the Behler-Parrinello HDNNP descriptor + NN family."
+      "description": "NEP89 is a Neuroevolution Potential \u2014 a per-element neural network on top of local descriptors trained with separable natural evolution strategies \u2014 sitting squarely in the Behler-Parrinello HDNNP descriptor + NN family."
     },
     {
       "from": "eqv2",
@@ -5336,14 +5394,14 @@
       "from": "grace",
       "to": "grace_off",
       "label": "GRACE for organics",
-      "description": "GRACE-OFF is a GRACE-architecture MLIP specialised for organic liquids, trained on SPICE v2.0 — the organic-liquids analogue of MACE-OFF for the GRACE family."
+      "description": "GRACE-OFF is a GRACE-architecture MLIP specialised for organic liquids, trained on SPICE v2.0 \u2014 the organic-liquids analogue of MACE-OFF for the GRACE family."
     },
     {
       "from": "petmad",
       "to": "omnimol",
       "label": "PET architecture",
       "dashed": true,
-      "description": "OmniMol adapts the Omnilearned Point-Edge Transformer (PET) architecture — the same PET backbone family that PET-MAD popularised in MLIPs — to molecular dynamics via cross-domain transfer learning."
+      "description": "OmniMol adapts the Omnilearned Point-Edge Transformer (PET) architecture \u2014 the same PET backbone family that PET-MAD popularised in MLIPs \u2014 to molecular dynamics via cross-domain transfer learning."
     },
     {
       "from": "uma",
@@ -5363,7 +5421,7 @@
       "to": "aceff",
       "label": "Charge-aware FF",
       "dashed": true,
-      "description": "AceFF includes scalar partial-charge features, neutral charge equilibration, and a long-range Coulomb energy term — the same charge-aware MLIP design pattern AIMNet2 popularised for organic chemistry."
+      "description": "AceFF includes scalar partial-charge features, neutral charge equilibration, and a long-range Coulomb energy term \u2014 the same charge-aware MLIP design pattern AIMNet2 popularised for organic chemistry."
     },
     {
       "from": "mace",
@@ -5388,14 +5446,14 @@
       "from": "nequip",
       "to": "equiewald",
       "label": "+Reciprocal Ewald",
-      "description": "EquiEwald embeds an Ewald-inspired reciprocal-space formulation inside an irreducible SO(3)-equivariant message-passing framework — i.e. NequIP-style equivariant message passing extended into reciprocal space."
+      "description": "EquiEwald embeds an Ewald-inspired reciprocal-space formulation inside an irreducible SO(3)-equivariant message-passing framework \u2014 i.e. NequIP-style equivariant message passing extended into reciprocal space."
     },
     {
       "from": "mace_polar1",
       "to": "equiewald",
       "label": "Long-range MLIP",
       "dashed": true,
-      "description": "Both target long-range physical effects — MACE-POLAR-1 via polarisable charge/spin densities, EquiEwald via reciprocal-space Ewald summation — making them sibling long-range equivariant MLIPs released in the same period."
+      "description": "Both target long-range physical effects \u2014 MACE-POLAR-1 via polarisable charge/spin densities, EquiEwald via reciprocal-space Ewald summation \u2014 making them sibling long-range equivariant MLIPs released in the same period."
     },
     {
       "from": "eqv2",
@@ -5408,7 +5466,7 @@
       "to": "allscaip",
       "label": "OMol25 leaderboard",
       "dashed": true,
-      "description": "AllScAIP tops the OMol25 leaderboard at release (the same dataset that UMA popularised) while remaining competitive on OMat24 and OC20 — datasets all introduced/used by UMA. The link is shared evaluation/training-data ecosystem."
+      "description": "AllScAIP tops the OMol25 leaderboard at release (the same dataset that UMA popularised) while remaining competitive on OMat24 and OC20 \u2014 datasets all introduced/used by UMA. The link is shared evaluation/training-data ecosystem."
     },
     {
       "from": "mace",
@@ -5421,7 +5479,7 @@
       "to": "mace_mag",
       "label": "MACE family",
       "dashed": true,
-      "description": "Co-membership in the MACE family — both are 2026 MACE extensions to additional physical degrees of freedom (charge/spin densities for POLAR-1, magnetic moments and SOC for Magnetic)."
+      "description": "Co-membership in the MACE family \u2014 both are 2026 MACE extensions to additional physical degrees of freedom (charge/spin densities for POLAR-1, magnetic moments and SOC for Magnetic)."
     },
     {
       "from": "allegro",
@@ -5472,7 +5530,7 @@
       "to": "uma",
       "label": "Charge-conditioned FF",
       "dashed": true,
-      "description": "UMA's charge/spin conditioning design pattern — global tokens for total charge and spin multiplicity — was pioneered by SpookyNet (and AIMNet-NSE). The link captures conceptual lineage of charge/spin-aware MLIPs."
+      "description": "UMA's charge/spin conditioning design pattern \u2014 global tokens for total charge and spin multiplicity \u2014 was pioneered by SpookyNet (and AIMNet-NSE). The link captures conceptual lineage of charge/spin-aware MLIPs."
     },
     {
       "from": "spookynet",
@@ -5516,7 +5574,7 @@
     {
       "from": "painn",
       "to": "mgnn",
-      "label": "Vector → Moment",
+      "label": "Vector \u2192 Moment",
       "dashed": true,
       "description": "PaiNN's scalar/vector message passing is the closest precedent for MGNN's moment-based representations; MGNN generalises that vectorial decomposition into a hierarchy of Cartesian moments while remaining strictly invariant."
     },
@@ -5549,8 +5607,8 @@
     {
       "from": "petmad",
       "to": "petmad15",
-      "label": "MAD → MAD-1.5 / r²SCAN",
-      "description": "PET-MAD-1.5 is the direct successor to PET-MAD from the same EPFL lab-cosmo group: same Point Edge Transformer backbone, retrained at the r²SCAN level on the curated MAD-1.5 dataset that extends elemental coverage from 85 to 102 elements with targeted enrichment of molecules, clusters, surfaces, and low-dimensional structures."
+      "label": "MAD \u2192 MAD-1.5 / r\u00b2SCAN",
+      "description": "PET-MAD-1.5 is the direct successor to PET-MAD from the same EPFL lab-cosmo group: same Point Edge Transformer backbone, retrained at the r\u00b2SCAN level on the curated MAD-1.5 dataset that extends elemental coverage from 85 to 102 elements with targeted enrichment of molecules, clusters, surfaces, and low-dimensional structures."
     },
     {
       "from": "mace_osaka26",
@@ -5583,7 +5641,7 @@
       "to": "pet_oam_xl",
       "label": "PET family",
       "dashed": true,
-      "description": "Sibling 2026 PET releases from the EPFL lab-cosmo group: PET-MAD-1.5 emphasises broad elemental coverage at r²SCAN level, while PET-OAM-XL emphasises raw stability-prediction accuracy via OMat24 pre-training and is positioned as the Matbench Discovery reference model."
+      "description": "Sibling 2026 PET releases from the EPFL lab-cosmo group: PET-MAD-1.5 emphasises broad elemental coverage at r\u00b2SCAN level, while PET-OAM-XL emphasises raw stability-prediction accuracy via OMat24 pre-training and is positioned as the Matbench Discovery reference model."
     },
     {
       "from": "nequip",
@@ -5643,7 +5701,7 @@
       "from": "dtnn",
       "to": "schnet",
       "label": "Continuous filters",
-      "description": "SchNet is the direct successor to DTNN from the same Schütt/Tkatchenko/Müller group, replacing DTNN's tensorised pairwise interaction blocks with continuous-filter convolutions while keeping the per-element embedding and energy-decomposition framework."
+      "description": "SchNet is the direct successor to DTNN from the same Sch\u00fctt/Tkatchenko/M\u00fcller group, replacing DTNN's tensorised pairwise interaction blocks with continuous-filter convolutions while keeping the per-element embedding and energy-decomposition framework."
     },
     {
       "from": "cgcnn",
@@ -5675,7 +5733,7 @@
       "from": "physnet",
       "to": "spookynet",
       "label": "Charge/Dipole",
-      "description": "SpookyNet inherits PhysNet's modular charge/dipole/electrostatic energy decomposition (both from collaborators in the Unke/Müller circle) and adds self-attention with explicit total-charge and spin-multiplicity tokens."
+      "description": "SpookyNet inherits PhysNet's modular charge/dipole/electrostatic energy decomposition (both from collaborators in the Unke/M\u00fcller circle) and adds self-attention with explicit total-charge and spin-multiplicity tokens."
     },
     {
       "from": "physnet",
@@ -5709,7 +5767,7 @@
       "from": "bpnn",
       "to": "nep_orig",
       "label": "HDNNP + NES",
-      "description": "NEP sits in the Behler-Parrinello high-dimensional NN potential family — per-element neural networks on local descriptors — but replaces gradient-based training with a separable natural-evolution strategy for raw GPU throughput in GPUMD."
+      "description": "NEP sits in the Behler-Parrinello high-dimensional NN potential family \u2014 per-element neural networks on local descriptors \u2014 but replaces gradient-based training with a separable natural-evolution strategy for raw GPU throughput in GPUMD."
     },
     {
       "from": "nep_orig",
@@ -5734,7 +5792,7 @@
     {
       "from": "pfp_orig",
       "to": "pfp_v8",
-      "label": "v1 → v8",
+      "label": "v1 \u2192 v8",
       "description": "PFP v8 is the eighth generation of the Preferred Potential, descending directly from the original PFP introduced in 2022 with successive accuracy / coverage / speed improvements and a switch to r2SCAN reference data."
     },
     {
@@ -5760,13 +5818,13 @@
     {
       "from": "equiformer_v1",
       "to": "eqv2",
-      "label": "v1 → v2",
+      "label": "v1 \u2192 v2",
       "description": "Equiformer V2 is the direct higher-degree successor to Equiformer V1 from the same MIT Atomic Architects / Meta FAIR collaboration, scaling the equivariant attention to higher-degree spherical representations using eSCN convolutions."
     },
     {
       "from": "scn",
       "to": "escn",
-      "label": "SO(3)→SO(2)",
+      "label": "SO(3)\u2192SO(2)",
       "description": "eSCN is a direct refinement of SCN that reduces SO(3) tensor-product convolutions to SO(2) by aligning each pair to a common rotation axis, dramatically lowering the cost of high-degree equivariant convolutions."
     },
     {
@@ -5810,7 +5868,7 @@
     {
       "from": "dpa1",
       "to": "dpa2",
-      "label": "v1 → v2",
+      "label": "v1 \u2192 v2",
       "description": "DPA-2 is the direct second-generation successor to DPA-1 from the DeepModeling team, retaining DPA-1's pretrained descriptor + attention design while expanding to multi-task heads and broader cross-domain pretraining."
     },
     {
@@ -5864,7 +5922,7 @@
       "to": "grace_off",
       "label": "Organic foundation analog",
       "dashed": true,
-      "description": "GRACE-OFF is the GRACE-architecture analog of MACE-OFF for organic liquids — a direct conceptual sibling using the same SPICE-style organic universal-MLIP recipe within the GRACE rather than MACE family."
+      "description": "GRACE-OFF is the GRACE-architecture analog of MACE-OFF for organic liquids \u2014 a direct conceptual sibling using the same SPICE-style organic universal-MLIP recipe within the GRACE rather than MACE family."
     },
     {
       "from": "m3gnet",
@@ -5884,7 +5942,7 @@
       "from": "aimnet2",
       "to": "mpnice",
       "label": "Charge-aware MP",
-      "description": "MPNICE extends the charge-aware message-passing MLIP design popularised by AIMNet2 — invariant local messaging with an explicit iterative charge-equilibration step and long-range Coulomb electrostatics — to an 89-element pretrained model family from Schrödinger."
+      "description": "MPNICE extends the charge-aware message-passing MLIP design popularised by AIMNet2 \u2014 invariant local messaging with an explicit iterative charge-equilibration step and long-range Coulomb electrostatics \u2014 to an 89-element pretrained model family from Schr\u00f6dinger."
     },
     {
       "from": "bpnn",
@@ -5950,6 +6008,26 @@
       "label": "Bio/organic foundation",
       "dashed": true,
       "description": "UBio-MolFM and MACE-OFF both target organic / biomolecular chemistry at near-DFT accuracy; UBio-MolFM specialises in solvated bio-systems up to ~1,500 atoms via E2Former-V2 and the bio-specific UBio-Mol26 dataset, while MACE-OFF covers SPICE-style drug-like molecules."
+    },
+    {
+      "from": "allegro",
+      "to": "fennix_bio1",
+      "label": "Allegro embedding",
+      "description": "FeNNix-Bio1 uses an Allegro strictly-local E(3)-equivariant embedding (scalar + equivariant channels up to l_max=2, three interaction layers, 5.3 \u00c5 cutoff) as the neural backbone of its FENNIX hybrid ML + force-field architecture."
+    },
+    {
+      "from": "mace_off",
+      "to": "fennix_bio1",
+      "label": "Biomolecular FF",
+      "dashed": true,
+      "description": "FeNNix-Bio1 targets the same SPICE-trained, transferable-organic-MLIP niche as MACE-OFF, but layers explicit force-field physics (ZBL repulsion, fluctuating-charge Coulomb, dispersion) on top of an Allegro embedding rather than relying on a pure short-range MACE backbone."
+    },
+    {
+      "from": "aimnet2",
+      "to": "fennix_bio1",
+      "label": "Charge-aware FF",
+      "dashed": true,
+      "description": "FeNNix-Bio1 inherits the charge-aware MLIP design pattern AIMNet2 popularised for organic chemistry \u2014 fluctuating atom-centred partial charges plus an explicit long-range Coulomb energy term \u2014 and combines it with explicit dispersion and ZBL repulsion inside the FENNIX hybrid framework."
     }
   ]
 }
