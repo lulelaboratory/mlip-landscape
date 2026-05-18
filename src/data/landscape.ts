@@ -3326,6 +3326,36 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
   },
+  {
+    id: "mace4ir",
+    type: "node",
+    category: "Equivariant",
+    label: "MACE4IR",
+    year: 2025,
+    author: "Bhatia, Krejci, Botti, Rinke, Marques (Aalto / Friedrich Schiller University Jena / Ruhr University Bochum)",
+    x: 6540,
+    y: 320,
+    desc:
+      "Foundation model for molecular infrared spectroscopy built on the MACE E(3)-equivariant message-passing architecture. The model consists of two parallel MACE networks — one for energies and forces, one for atomic dipole moments — trained on ~16 million molecular geometries with DFT energies, forces, and dipole moments from the QCML dataset (≈80 elements, organic molecules, inorganic species, and metal complexes). The MACE4IRmol variant (v2) wraps an ensemble of these networks for uncertainty quantification and delivers nuclear-quantum-effects-aware infrared spectra with DFT-level accuracy at a fraction of the cost. Released with model weights on Hugging Face and the QCML-derived AIMD trajectories on Zenodo.",
+    paperUrl: "https://arxiv.org/abs/2508.19118",
+    isNew: true,
+    coverage: ["organic molecules", "inorganic species", "metal complexes"],
+    useCases: ["infrared spectra", "dipole moment prediction", "molecular MD", "uncertainty quantification"],
+    properties: ["energy", "forces", "dipole"],
+    frameworks: ["ASE", "PyTorch"],
+    maintenance: "active",
+    lastReviewed: "2026-05-18",
+    trainingData: ["QCML"],
+    tags: ["equivariant", "MACE family", "IR spectroscopy", "dipole moments", "foundation model", "uncertainty quantification"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "~80 elements (QCML coverage)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+    numElements: 80,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3580,6 +3610,10 @@ export const INITIAL_EDGES: Edge[] = [
   // OMNI-P1 (2025) — Multi-fidelity universal organic ANI-family potential
   { from: "ani", to: "omni_p1", label: "Multi-fidelity", description: "OMNI-P1 is the All-in-One ANI (AIO-ANI) network from the Dral group: a single ANI-family invariant-descriptor potential simultaneously trained on multiple quantum-chemical levels (semi-empirical, DFT, CCSD(T)/CBS) so one model spans QC fidelities for organic chemistry." },
   { from: "omni_p1", to: "omni_p2x", label: "OMNI family", description: "OMNI-P2x is the excited-state successor to OMNI-P1 in the Dral-group OMNI series; both share the MS-ANI / AIO-ANI invariant-descriptor backbone, with P1 covering ground-state multi-fidelity learning and P2x extending the design to molecular excited states." },
+
+  // MACE4IR / MACE4IRmol (2025) — MACE foundation model for IR spectroscopy
+  { from: "mace", to: "mace4ir", label: "+Dipole head", description: "MACE4IR pairs two MACE E(3)-equivariant networks — one predicting energies/forces, one predicting atomic dipole moments — to deliver foundation-scale molecular infrared spectra; MACE supplies the underlying equivariant message-passing backbone." },
+  { from: "mace_off", to: "mace4ir", label: "Molecular MACE foundation", dashed: true, description: "MACE-OFF and MACE4IR are sibling molecular MACE foundation models trained on quantum-chemistry data covering ~80 elements; MACE-OFF emphasises transferable energies/forces on SPICE, MACE4IR adds an explicit dipole-moment head trained on the QCML dataset for infrared spectroscopy." },
 
   // Geodite (2026) — Equivariant MP without Clebsch-Gordan tensor products
   { from: "mace", to: "geodite", label: "No tensor products", description: "Geodite removes the Clebsch-Gordan tensor products that drive the cost of MACE/NequIP-style E(3)-equivariant message passing, replacing them with cheaper geometric operations while keeping equivariance, and adds ZBL + smooth attenuation priors for a well-behaved potential energy surface." },
