@@ -3326,6 +3326,38 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
   },
+  {
+    id: "mattersim_mt",
+    type: "node",
+    category: "Equivariant",
+    label: "MatterSim-MT",
+    year: 2026,
+    author: "Yang, Liu, Hu, Zhou, Shi, C. Liu, Tan, Li, Wang, Zhu, Chen, Thiemann, Zeni, Horton, Pinsler, Fowler, Zügner, Xie, Sun, Chen, Kong, Bai, Gunceler, Noé, Hao, Lu et al. (Microsoft Research)",
+    x: 7100,
+    y: 150,
+    desc:
+      "Multi-task extension of the MatterSim foundation MLIP that predicts energies, forces, and stress jointly with electronic and tensorial materials properties — Bader charges, magnetic moments, Born effective charges, and full dielectric matrices — from a single shared atomistic backbone. Pretrained on 35M+ first-principles-labelled structures spanning 89 elements, temperatures up to 5000 K, and pressures up to 1000 GPa, then fine-tuned on the property-specific heads. Demonstrated on vibrational spectroscopy, ferroelectric switching, and electrochemical redox processes — workflows that conventional potential-energy-surface MLIPs cannot resolve out of the box.",
+    githubUrl: "https://github.com/microsoft/mattersim",
+    paperUrl: "https://arxiv.org/abs/2605.07927",
+    isNew: true,
+    coverage: ["general materials", "ferroelectrics", "dielectrics", "magnetic materials"],
+    useCases: ["multi-task property prediction", "vibrational spectroscopy", "ferroelectric switching", "electrochemical redox"],
+    properties: ["energy", "forces", "stress", "magnetic_moment", "polarizability"],
+    frameworks: ["ASE", "PyTorch"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-05-19",
+    trainingData: ["custom MatterSim DFT"],
+    tags: ["transformer", "foundation model", "multi-task", "Born effective charges", "Bader charges", "dielectric tensor"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "all elements up to Z=89",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: true,
+    longRange: false,
+    numElements: 89,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3494,6 +3526,10 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orbmol", to: "transip", label: "OMol25 dataset", dashed: true, description: "Sibling non-equivariant molecular MLIPs trained on the OMol25 dataset: OrbMol uses the Orb graph-network backbone with learnt rotation-invariance via augmentation, while TransIP uses a generic Transformer backbone that acquires SO(3)-equivariance through a latent embedding-space objective rather than via data augmentation." },
   { from: "nequip", to: "transip", label: "Latent vs constrained eq.", dashed: true, description: "TransIP contrasts with NequIP-style E(3)-equivariant MLIPs by removing all explicit architectural equivariance constraints (no spherical harmonics, no Clebsch-Gordan tensor products) and instead training a generic Transformer to satisfy SO(3)-equivariance through an embedding-space alignment objective." },
   { from: "uma", to: "transip", label: "fairchem foundation", dashed: true, description: "TransIP builds on top of the fairchem framework introduced alongside Meta FAIR's UMA family, and follows UMA's OMol25-centred molecular foundation-model recipe while replacing the constrained-equivariant Mixture-of-Linear-Experts backbone with an unconstrained Transformer." },
+
+  // May 2026 — MatterSim-MT (multi-task extension of the MatterSim foundation MLIP)
+  { from: "mattersim", to: "mattersim_mt", label: "+Multi-task heads", description: "MatterSim-MT extends the MatterSim foundation MLIP from Microsoft Research with multi-task prediction heads for Bader charges, magnetic moments, Born effective charges, and dielectric matrices on top of the same shared 89-element, 0-5000 K, 0-1000 GPa atomistic backbone — keeping MatterSim as the underlying potential-energy-surface predictor." },
+  { from: "uma", to: "mattersim_mt", label: "Multi-domain foundation", dashed: true, description: "Sibling multi-task atomistic foundation models: UMA uses a Mixture-of-Linear-Experts backbone trained jointly across OC20 / OMat24 / OMol25 / ODAC23 / OMC25 with charge/spin conditioning, while MatterSim-MT adds explicit multi-task heads for electronic and tensorial materials properties on top of the MatterSim backbone. Both target unified foundation-model coverage beyond a single PES." },
 
   // May 2026 — FeNNix-Bio1 (force-field-enhanced biomolecular foundation MLIP, Sorbonne / Qubit)
   { from: "allegro", to: "fennix_bio1", label: "Allegro embedding", description: "FeNNix-Bio1 uses an Allegro strictly-local E(3)-equivariant embedding (scalar + equivariant channels up to l_max=2, three interaction layers, 5.3 Å cutoff) as the neural backbone of its FENNIX hybrid ML + force-field architecture." },
