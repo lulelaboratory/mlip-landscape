@@ -3451,6 +3451,42 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — auto-update sweep (PolyMLP descriptor backfill)
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "polymlp",
+    type: "node",
+    category: "Descriptor",
+    label: "PolyMLP",
+    year: 2023,
+    author: "Seko (Kyoto University)",
+    x: 3740,
+    y: 550,
+    desc:
+      "Polynomial machine learning potential representing the atomic energy as a polynomial function of linearly independent polynomial invariants of the O(3) group built from local structural features. A systematically improvable linear/polynomial descriptor MLIP in the SNAP/MTP/ACE family, distributed via the pypolymlp toolkit and the curated Polynomial MLP Repository, and shipped to OpenKIM in March 2026 as a portable model driver with 837 elemental and alloy parameterizations for LAMMPS-scale simulations.",
+    githubUrl: "https://github.com/sekocha/pypolymlp",
+    paperUrl: "https://doi.org/10.1063/5.0129045",
+    isNew: true,
+    coverage: ["metals", "alloys", "general materials"],
+    useCases: ["industrial-scale linear MLIP", "high-throughput MD", "phonon calculations", "alloy systems"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["LAMMPS", "ASE", "OpenKIM"],
+    license: "BSD-3-Clause",
+    maintenance: "active",
+    lastReviewed: "2026-05-20",
+    trainingData: ["custom DFT"],
+    tags: ["descriptor", "linear", "polynomial", "O(3) invariants", "pypolymlp", "OpenKIM"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "broad elemental and alloy coverage via the OpenKIM PolyMLP model driver (837 parameterizations)",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: false,
+    longRange: false,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3736,4 +3772,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "nequip", to: "nemp", label: "Edge → node MP", description: "NEMP reformulates the edge-equivariant message passing used by NequIP/MACE/Allegro into node-equivariant message passing: a single tensor product per central node against a virtual summed neighbour node, rather than one per neighbour edge, while preserving the same E(3)-equivariant guarantees as NequIP." },
   { from: "allegro", to: "nemp", label: "Efficient equivariant MLIP", dashed: true, description: "Sibling equivariant-MLIP efficiency optimisations: Allegro removes message passing entirely for strict locality and parallelism; NEMP keeps message passing but moves the equivariant tensor product from edges to nodes, reducing memory and compute by 1–2 orders of magnitude over edge-equivariant baselines." },
   { from: "mace", to: "nemp", label: "Cost reduction", dashed: true, description: "NEMP targets the same equivariant-MLIP cost bottleneck that MACE-style edge tensor products produce, replacing per-edge tensor products with per-node tensor products against a summed virtual neighbour node while matching MACE-family accuracy across MD17/MD22 and universal-potential benchmarks." },
+
+  // 2023/2026 — PolyMLP (polynomial rotation-invariant descriptor MLIP, OpenKIM driver in 2026)
+  { from: "mtp", to: "polymlp", label: "Polynomial invariants", description: "PolyMLP extends the moment-tensor-style polynomial descriptor philosophy of MTP into a systematic polynomial regression over linearly independent O(3) polynomial invariants of the local environment, sitting squarely in the MTP/SNAP linear-descriptor lineage." },
+  { from: "snap", to: "polymlp", label: "Linear invariants", dashed: true, description: "PolyMLP and SNAP are sibling linear/polynomial descriptor MLIPs designed for LAMMPS-scale industrial throughput: SNAP fits a linear regression in the SOAP/bispectrum descriptor space, PolyMLP fits a polynomial regression in O(3)-invariant polynomial features." },
+  { from: "ace", to: "polymlp", label: "Polynomial basis", dashed: true, description: "ACE and PolyMLP are concurrent systematically improvable polynomial-basis MLIP families: both expand the local energy in O(3)-invariant polynomial features and rely on linear/polynomial regression rather than neural networks, with PolyMLP shipped as an OpenKIM portable model driver covering 837 elemental and alloy parameterizations." },
 ];
