@@ -3457,6 +3457,38 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
 
   {
+    id: "reaxnet",
+    type: "node",
+    category: "Equivariant",
+    label: "ReaxNet",
+    year: 2025,
+    author: "Gao, Yam, Mao, S. Chen, G. Chen, Hu (University of Hong Kong / Hong Kong Quantum AI Lab / UESTC Shenzhen / MattVerse)",
+    x: 7380,
+    y: 320,
+    desc:
+      "Foundation MLIP that integrates explicit polarizable long-range physics with an E(3)-equivariant graph-neural-network potential. ReaxNet employs a physically motivated polarizable charge-equilibration scheme that directly optimises electrostatic interaction energies rather than partial charges, capturing polarisation effects under external electric fields and orientation-dependent long-range interactions that standard cutoff-based message-passing MLIPs miss. Trained across the periodic table up to Pu (Z=94), the foundation model reaches 18 meV/atom MAE for energies, 0.065 eV/Å for forces, and 0.301 GPa for stress on the test set, and has been applied to mechanical properties, ionic diffusivity in solid-state electrolytes, ferroelectric phase transitions, and reactive dynamics at electrode-electrolyte interfaces. Implemented in JAX/Flax/e3nn-jax on top of JAX-MD and published in Nature Communications 16, 10484 (2025).",
+    githubUrl: "https://github.com/reaxnet/reaxnet",
+    paperUrl: "https://www.nature.com/articles/s41467-025-65496-3",
+    isNew: true,
+    coverage: ["general materials", "solid-state electrolytes", "ferroelectrics", "electrochemical interfaces"],
+    useCases: ["long-range electrostatics-aware MD", "ionic diffusivity", "ferroelectric phase transitions", "reactive electrochemistry"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "JAX-MD"],
+    license: "GPL-3.0",
+    maintenance: "active",
+    lastReviewed: "2026-05-21",
+    trainingData: ["MPtrj"],
+    tags: ["equivariant", "foundation model", "long-range-electrostatics", "polarizable charge equilibration", "JAX", "e3nn"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "all elements up to Z=94 (Pu)",
+    numElements: 94,
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
+  },
+  {
     id: "polymlp",
     type: "node",
     category: "Descriptor",
@@ -3772,6 +3804,12 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "nequip", to: "nemp", label: "Edge → node MP", description: "NEMP reformulates the edge-equivariant message passing used by NequIP/MACE/Allegro into node-equivariant message passing: a single tensor product per central node against a virtual summed neighbour node, rather than one per neighbour edge, while preserving the same E(3)-equivariant guarantees as NequIP." },
   { from: "allegro", to: "nemp", label: "Efficient equivariant MLIP", dashed: true, description: "Sibling equivariant-MLIP efficiency optimisations: Allegro removes message passing entirely for strict locality and parallelism; NEMP keeps message passing but moves the equivariant tensor product from edges to nodes, reducing memory and compute by 1–2 orders of magnitude over edge-equivariant baselines." },
   { from: "mace", to: "nemp", label: "Cost reduction", dashed: true, description: "NEMP targets the same equivariant-MLIP cost bottleneck that MACE-style edge tensor products produce, replacing per-edge tensor products with per-node tensor products against a summed virtual neighbour node while matching MACE-family accuracy across MD17/MD22 and universal-potential benchmarks." },
+
+  // 2025 — ReaxNet (polarizable long-range foundation MLIP on top of E(3)-equivariant GNN)
+  { from: "nequip", to: "reaxnet", label: "+Polarisable Qeq", description: "ReaxNet integrates a polarizable charge-equilibration scheme and explicit long-range electrostatics on top of an E(3)-equivariant graph-neural-network potential in the NequIP message-passing lineage, propagating physically motivated charges that directly optimise electrostatic interaction energies rather than partial charges." },
+  { from: "mace_polar1", to: "reaxnet", label: "Polarisable foundation analog", dashed: true, description: "Sibling polarisable foundation MLIPs released in the same period: MACE-POLAR-1 augments the MACE backbone with non-self-consistent polarisable charge/spin densities and Fukui equilibration for molecular chemistry on OMol25, while ReaxNet attaches a polarizable charge-equilibration head to an E(3)-equivariant GNN trained across the periodic table up to Pu on MPtrj." },
+  { from: "lorem", to: "reaxnet", label: "Long-range equivariant foundation", dashed: true, description: "Sibling long-range equivariant MLIPs: LOREM promotes the long-range carrier from scalar to equivariant charges in a NequIP-style real-space message-passing framework, while ReaxNet bolts an explicit polarizable charge-equilibration scheme onto an E(3)-equivariant GNN backbone. Both target orientation-dependent long-range physics in JAX/e3nn implementations." },
+  { from: "mpnice", to: "reaxnet", label: "Polarisable Qeq foundation", dashed: true, description: "ReaxNet and MPNICE both predict atomic partial charges via a charge-equilibration approximation that feeds back into long-range Coulomb electrostatics, but ReaxNet uses an E(3)-equivariant graph backbone while MPNICE uses an invariant message-passing backbone in the AIMNet2 tradition. Both are foundation-scale MLIPs covering ~89-94 elements with explicit polarisable physics." },
 
   // 2023/2026 — PolyMLP (polynomial rotation-invariant descriptor MLIP, OpenKIM driver in 2026)
   { from: "mtp", to: "polymlp", label: "Polynomial invariants", description: "PolyMLP extends the moment-tensor-style polynomial descriptor philosophy of MTP into a systematic polynomial regression over linearly independent O(3) polynomial invariants of the local environment, sitting squarely in the MTP/SNAP linear-descriptor lineage." },
