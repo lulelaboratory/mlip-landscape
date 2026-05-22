@@ -3487,6 +3487,101 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: false,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — auto-update sweep (ACNN, EMFF-2025, NEP-CG)
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "acnn",
+    type: "node",
+    category: "Descriptor",
+    label: "ACNN",
+    year: 2026,
+    author: "Li, Feng, Luo, Jiang, Zheng, Song, Lv, Butler, Liu, Xie, Xie, Ma (Jilin University / CALYPSO)",
+    x: 4580,
+    y: 550,
+    desc:
+      "Attention-Coupled Neural Network potential: an expert MLIP architecture built from four modules — a local descriptor, an elemental embedding, a stack of optional multi-head attention modules, and an MLP-based fitting head. Stacking attention modules implicitly introduces an aggregative effect analogous to graph neural networks, extending the effective interaction range among atoms and enabling adaptive switching between network configurations based on the simulation task. Embedded in a self-optimizing CALYPSO crystal-structure-prediction workflow that iteratively refines the potential while exploring local minima of the potential energy surface, validated on Mg-Ca-H ternary and Be-P-N-O quaternary systems by exploring nearly 10 million configurations with substantial speedup over first-principles calculations.",
+    paperUrl: "https://doi.org/10.1038/s41524-026-01971-9",
+    isNew: true,
+    coverage: ["alloys", "ternary systems", "quaternary systems", "high-pressure hydrides"],
+    useCases: ["crystal structure prediction", "high-throughput structural optimization", "automated material discovery"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE"],
+    maintenance: "active",
+    lastReviewed: "2026-05-22",
+    trainingData: ["custom DFT"],
+    tags: ["descriptor", "attention", "self-optimizing", "CSP", "CALYPSO"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (validated on Mg-Ca-H and Be-P-N-O)",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: true,
+    longRange: false,
+  },
+  {
+    id: "emff_2025",
+    type: "node",
+    category: "Descriptor",
+    label: "EMFF-2025",
+    year: 2025,
+    author: "Wen, Han, Li, Chang, Chu, Chen (Beijing Institute of Technology)",
+    x: 4580,
+    y: 900,
+    desc:
+      "General-purpose deep-potential neural network force field for energetic materials composed of C, H, N, and O. Built on the DeePMD-kit framework with a transfer-learning workflow that fine-tunes a pretrained NNP backbone on a small, targeted set of DFT energies and forces, achieving DFT-level accuracy across 20 different high-energy material (HEM) systems for structural, mechanical, and decomposition properties. Distributed as the EMFF-2025_V1.0.pb model for LAMMPS + DeepMD integration; suitable for MD simulations of HEM systems with 1–5000 atoms, delivering ~30× speedup over baseline LAMMPS via GPU parallel execution.",
+    githubUrl: "https://github.com/MingjieWen/General-NNP-model-for-C-H-N-O-Energetic-Materials",
+    paperUrl: "https://doi.org/10.1038/s41524-025-01809-w",
+    isNew: true,
+    coverage: ["energetic materials", "high-energy materials", "explosives", "organic crystals"],
+    useCases: ["explosives MD", "shock simulation", "decomposition chemistry", "mechanical properties"],
+    properties: ["energy", "forces"],
+    frameworks: ["LAMMPS"],
+    maintenance: "active",
+    lastReviewed: "2026-05-22",
+    trainingData: ["custom CHNO DFT (HEM systems)"],
+    tags: ["descriptor", "Deep Potential", "DeePMD", "energetic materials", "transfer learning"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "C, H, N, O",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: false,
+    longRange: false,
+    numElements: 4,
+  },
+  {
+    id: "nep_cg",
+    type: "node",
+    category: "Descriptor",
+    label: "NEP-CG",
+    year: 2026,
+    author: "Fan, W. Zhang, Z. Zhang, Xu, Shao, Dong (Bohai University)",
+    x: 4860,
+    y: 750,
+    desc:
+      "Coarse-grained extension of the neuroevolution potential (NEP) framework that generates low-noise training data from the potential of mean force by constraining coarse-grained beads during atomistic simulations and accumulating time-averaged forces. Implemented within GPUMD, NEP-CG reaches training accuracy comparable to atomistic models trained on DFT data while running at hundreds to thousands of ns/day on a single consumer GPU. Demonstrated on liquid water (reproducing densities from 1 bar to 1 GPa with a virial correction for the correct equation of state) and an anisotropic C60 monolayer (capturing directional thermal conductivity). The companion NEP-AACG multiscale variant integrates all-atom and coarse-grained degrees of freedom in a single model, demonstrated for gold nanowire fracture at experimentally relevant strain rates.",
+    paperUrl: "https://arxiv.org/abs/2603.01234",
+    isNew: true,
+    coverage: ["coarse-grained liquids", "water", "C60 monolayers", "metal nanowires"],
+    useCases: ["coarse-grained MD", "multiscale MD", "mesoscale simulations", "thermal transport"],
+    properties: ["energy", "forces"],
+    frameworks: ["LAMMPS"],
+    maintenance: "active",
+    lastReviewed: "2026-05-22",
+    trainingData: ["potential of mean force from atomistic NEP simulations"],
+    tags: ["descriptor", "NEP family", "coarse-grained", "multiscale", "GPUMD"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "—",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: false,
+    longRange: false,
+    numElements: null,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3777,4 +3872,14 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mtp", to: "polymlp", label: "Polynomial invariants", description: "PolyMLP extends the moment-tensor-style polynomial descriptor philosophy of MTP into a systematic polynomial regression over linearly independent O(3) polynomial invariants of the local environment, sitting squarely in the MTP/SNAP linear-descriptor lineage." },
   { from: "snap", to: "polymlp", label: "Linear invariants", dashed: true, description: "PolyMLP and SNAP are sibling linear/polynomial descriptor MLIPs designed for LAMMPS-scale industrial throughput: SNAP fits a linear regression in the SOAP/bispectrum descriptor space, PolyMLP fits a polynomial regression in O(3)-invariant polynomial features." },
   { from: "ace", to: "polymlp", label: "Polynomial basis", dashed: true, description: "ACE and PolyMLP are concurrent systematically improvable polynomial-basis MLIP families: both expand the local energy in O(3)-invariant polynomial features and rely on linear/polynomial regression rather than neural networks, with PolyMLP shipped as an OpenKIM portable model driver covering 837 elemental and alloy parameterizations." },
+
+  // 2026 — ACNN (attention-coupled descriptor MLIP wired into a self-optimizing CSP workflow)
+  { from: "bpnn", to: "acnn", label: "+Attention", description: "ACNN sits in the Behler-Parrinello high-dimensional NN potential tradition — per-atom energy decomposition on local descriptors — augmented with stacked multi-head attention modules that act analogously to graph aggregation, extending the effective interaction range beyond the descriptor cutoff." },
+  { from: "dpa1", to: "acnn", label: "Attention-based descriptor MLIP", dashed: true, description: "Sibling attention-augmented descriptor MLIPs: DPA-1 introduces attention into the Deep Potential descriptor framework, while ACNN couples multi-head attention with a generic local descriptor + elemental embedding + MLP fitting head, tuned for crystal-structure-prediction workflows in the CALYPSO ecosystem." },
+
+  // 2025 — EMFF-2025 (DeePMD-based CHNO energetic-materials potential)
+  { from: "deepmd", to: "emff_2025", label: "DeePMD + transfer", description: "EMFF-2025 is built directly on the DeePMD-kit Deep Potential framework, fine-tuned via transfer learning from a pretrained NNP backbone on a curated DFT energy/force dataset for CHNO high-energy materials; ships as a LAMMPS-compatible Deep Potential model file." },
+
+  // 2026 — NEP-CG (coarse-grained extension of the NEP framework)
+  { from: "nep_orig", to: "nep_cg", label: "+Coarse-grained", description: "NEP-CG extends the NEP framework from atomistic to coarse-grained interatomic potentials by training on potential-of-mean-force-derived forces from constrained atomistic NEP simulations, retaining the NEP descriptor + neuroevolution training recipe inside GPUMD." },
 ];
