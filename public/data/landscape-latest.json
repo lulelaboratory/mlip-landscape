@@ -5535,6 +5535,57 @@
       "usesAttention": false,
       "longRange": true,
       "numElements": 94
+    },
+    {
+      "id": "metal53mlp",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "Metal53-MLP",
+      "year": 2026,
+      "author": "X.Y. Li, J. Li, Y.N. Wang et al.",
+      "x": 7100,
+      "y": 550,
+      "desc": "Domain-specific machine-learning interatomic potential for metallic materials covering 53 metallic elements — broad enough to span elemental metals, intermetallics, and multi-principal-element (high-entropy) alloys within a single model. Reaches DFT-level accuracy (energy MAE ≈ 12 meV/atom, force MAE ≈ 144 meV/Å) while staying efficient enough for large-scale molecular dynamics, and reproduces lattice parameters, elastic constants, and equations of state. Validated across four representative alloy problems: negative thermal expansion in orthorhombic Ti-Nb, the Elinvar effect in a Co25Ni25(TiZrHf)50 intermetallic, grain-boundary segregation and high-temperature deformation in the NbTaMoW refractory multi-principal-element alloy, and precipitation pathways.",
+      "paperUrl": "https://doi.org/10.1038/s41524-026-02072-3",
+      "isNew": true,
+      "coverage": [
+        "metals",
+        "alloys",
+        "high-entropy alloys",
+        "intermetallics"
+      ],
+      "useCases": [
+        "large-scale alloy MD",
+        "mechanical properties",
+        "phase transformations",
+        "alloy design"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-05-26",
+      "trainingData": [
+        "custom DFT (metallic systems)"
+      ],
+      "tags": [
+        "descriptor",
+        "metals",
+        "alloys",
+        "high-entropy alloys",
+        "intermetallics",
+        "domain-specific"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "53 metallic elements",
+      "equivariance": "invariant",
+      "architecture": "descriptor",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 53
     }
   ],
   "groups": [
