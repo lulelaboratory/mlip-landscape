@@ -1656,7 +1656,7 @@ export default function MLIPExplorer() {
     return { corridorOffset, sourceStagger, targetStagger };
   }, [edges, positionedModels, compactLayeredLayout]);
 
-  const buildEdgePath = (
+  const buildEdgePath = useCallback((
     fromNode: ModelNode,
     toNode: ModelNode,
     corridorOffset: number,
@@ -1748,7 +1748,7 @@ export default function MLIPExplorer() {
       labelX: (sxMid + exMid) / 2,
       labelY: bendY - 6,
     };
-  };
+  }, [compactLayeredLayout]);
 
   // Format the human-readable tooltip for an edge: "<from> → <to> · <label>"
   // when a label exists, falling back to just the endpoints. The dashed flag
@@ -1763,15 +1763,17 @@ export default function MLIPExplorer() {
     return `${head}${body}${note}`;
   };
 
-  const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
-    edges.map((edge, idx) => {
+  // Resolve an edge's SVG path and label anchor for the active layout. Shared
+  // by the renderer and the label de-overlap pass below so both agree on
+  // exactly where each label sits.
+  const computeEdgeGeometry = useCallback(
+    (
+      edge: Edge,
+      idx: number,
+    ): { path: string; labelX: number; labelY: number } | null => {
       const fromNode = positionedModels.find((n) => n.id === edge.from);
       const toNode = positionedModels.find((n) => n.id === edge.to);
       if (!fromNode || !toNode) return null;
-
-      let path: string;
-      let labelX: number;
-      let labelY: number;
 
       if (layout === "force" || layout === "timeline") {
         // Connect edges to the actual card border (rectangle exit point)
@@ -1803,24 +1805,103 @@ export default function MLIPExplorer() {
           -dx,
           -dy,
         );
-        path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-        labelX = (start.x + end.x) / 2;
-        labelY = (start.y + end.y) / 2 - 6;
-      } else {
-        const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
-        const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
-        const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
-        const built = buildEdgePath(
-          fromNode,
-          toNode,
-          corridorOffset,
-          sourceStagger,
-          targetStagger,
-        );
-        path = built.path;
-        labelX = built.labelX;
-        labelY = built.labelY;
+        return {
+          path: `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
+          labelX: (start.x + end.x) / 2,
+          labelY: (start.y + end.y) / 2 - 6,
+        };
       }
+
+      const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
+      const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
+      const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
+      return buildEdgePath(
+        fromNode,
+        toNode,
+        corridorOffset,
+        sourceStagger,
+        targetStagger,
+      );
+    },
+    [positionedModels, layout, edgeRouting, buildEdgePath],
+  );
+
+  // Edge labels are bold text drawn over the cards; with the full catalogue of
+  // lineage links they pile into an unreadable wall on the zoomed-out default
+  // layout. Place them greedily in priority order — the selected edge first,
+  // then solid "primary lineage" links, then dashed "speculative" ones — and
+  // skip any whose box would overlap an already-placed label. Boxes live in
+  // graph space, so a label that survives stays collision-free at every zoom
+  // level; hidden ones remain reachable through the edge's click target and
+  // tooltip.
+  const edgeLabelLayout = useMemo(() => {
+    const geometries = new Map<
+      number,
+      { path: string; labelX: number; labelY: number }
+    >();
+    type LabelBox = {
+      idx: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      priority: number;
+    };
+    const boxes: LabelBox[] = [];
+
+    const labelFontSize = 18 * fontScale;
+    // Bias the width estimate slightly above the 0.58-em used for the halo
+    // rect: bold glyphs (m, w, capitals) render wider, and undersized boxes
+    // let neighbours pass the overlap test and then touch on screen.
+    const approxCharW = labelFontSize * 0.62;
+    const padX = 6;
+    const padY = 3;
+
+    edges.forEach((edge, idx) => {
+      const geometry = computeEdgeGeometry(edge, idx);
+      if (!geometry) return;
+      geometries.set(idx, geometry);
+      if (!edge.label) return;
+      const selected =
+        selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const w = edge.label.length * approxCharW + padX * 2;
+      const h = labelFontSize + padY * 2;
+      boxes.push({
+        idx,
+        x: geometry.labelX - w / 2,
+        y: geometry.labelY - labelFontSize + padY,
+        w,
+        h,
+        priority: selected ? 0 : edge.dashed ? 2 : 1,
+      });
+    });
+
+    boxes.sort((a, b) => a.priority - b.priority || a.idx - b.idx);
+
+    const GAP = 8;
+    const kept: LabelBox[] = [];
+    const visible = new Set<number>();
+    for (const box of boxes) {
+      const overlaps = kept.some(
+        (k) =>
+          box.x < k.x + k.w + GAP &&
+          k.x < box.x + box.w + GAP &&
+          box.y < k.y + k.h + GAP &&
+          k.y < box.y + box.h + GAP,
+      );
+      if (overlaps) continue;
+      kept.push(box);
+      visible.add(box.idx);
+    }
+
+    return { geometries, visible };
+  }, [edges, computeEdgeGeometry, fontScale, selectedEdge]);
+
+  const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
+    edges.map((edge, idx) => {
+      const geometry = edgeLabelLayout.geometries.get(idx);
+      if (!geometry) return null;
+      const { path, labelX, labelY } = geometry;
 
       const tooltip = formatEdgeTooltip(edge);
       const isSelected =
@@ -1874,6 +1955,7 @@ export default function MLIPExplorer() {
 
       if (mode === "labels") {
         if (!edge.label || !edgeLabelsVisible) return null;
+        if (!edgeLabelLayout.visible.has(idx)) return null;
         // Approximate the rendered text width so we can draw a background
         // rect that masks whatever card the label overlaps. SVG <text> has
         // no synchronous width API, but bold sans-serif at fontSize ≈ 0.55em
