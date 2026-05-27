@@ -3620,7 +3620,9 @@ export const INITIAL_NODES: AnyNode[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // May 2026 ADDITIONS — auto-update sweep (domain-specific metallic MLIP, 53 elements)
+  // May 2026 ADDITIONS — auto-update sweep
+  //   • Metal53-MLP — domain-specific metallic MLIP (53 elements)
+  //   • MD-ET — off-the-shelf non-equivariant edge transformer for MD
   // ---------------------------------------------------------------------------
 
   {
@@ -3651,6 +3653,35 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: false,
     longRange: false,
     numElements: 53,
+  },
+  {
+    id: "md_et",
+    type: "node",
+    category: "Transformer",
+    label: "MD-ET",
+    year: 2026,
+    author: "Eissler, Korjakow, Ganscha, Unke, Müller, Gugler (BIFOLD / TU Berlin / Google DeepMind)",
+    x: 7660,
+    y: 150,
+    desc:
+      "Molecular-dynamics Edge Transformer: a deliberately minimal adaptation of an off-the-shelf Edge Transformer architecture to interatomic potentials, deployed with neither built-in equivariance nor energy conservation. Rather than encoding physical inductive biases into the network, MD-ET relies on a simple supervised pre-training scheme over ~30 million molecular structures from the QCML database and then fine-tunes for a small number of steps, reaching state-of-the-art accuracy on several molecular-dynamics benchmarks. The paper (\"How simple can you go?\") argues that, as in other ML domains, general-purpose transformer architectures paired with large-scale pre-training can rival specialised, physics-constrained networks for MD.",
+    paperUrl: "https://doi.org/10.1063/5.0295035",
+    isNew: true,
+    coverage: ["organic molecules", "small molecules"],
+    useCases: ["molecular dynamics surrogate", "transferable pre-training", "fine-tuning to new systems"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-27",
+    trainingData: ["QCML"],
+    tags: ["transformer", "edge transformer", "non-equivariant", "off-the-shelf", "large-scale pretraining"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (QCML molecular coverage)",
+    equivariance: "learnt",
+    architecture: "gnn",
+    usesAttention: true,
+    longRange: false,
   },
 ];
 
@@ -3957,4 +3988,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mpnice", to: "reaxnet", label: "Equivariant polarizable Qeq", description: "ReaxNet carries the explicit charge-equilibration-plus-long-range-Coulomb idea of MPNICE onto an E(3)-equivariant message-passing backbone and upgrades it to a polarizable response: instead of predicting partial charges it directly optimizes the electrostatic interaction energy and models induced polarization under external fields, whereas MPNICE uses an invariant message-passing network with an iterative Qeq approximation." },
   { from: "equiewald", to: "reaxnet", label: "Long-range equivariant MLIP", dashed: true, description: "Sibling equivariant long-range MLIPs: EquiEwald embeds an Ewald-inspired reciprocal-space formulation inside SO(3)-equivariant message passing, while ReaxNet attaches a polarizable charge-equilibration long-range term to an E(3)-equivariant GNN. Both target physically consistent long-range electrostatics across periodic materials beyond the message-passing cutoff." },
   { from: "mace_polar1", to: "reaxnet", label: "Polarisable foundation pair", dashed: true, description: "MACE-POLAR-1 and ReaxNet are concurrent polarisable foundation potentials built on equivariant backbones: MACE-POLAR-1 augments MACE with a non-self-consistent polarisable field for molecular chemistry (OMol25), while ReaxNet targets materials modelling across the periodic table up to Pu with a polarizable charge-equilibration scheme for electrolytes, ferroelectrics, and electrode interfaces." },
+
+  // 2026 — MD-ET (off-the-shelf non-equivariant Edge Transformer for molecular dynamics)
+  { from: "orb", to: "md_et", label: "Drop equivariance", description: "MD-ET pushes the non-equivariant, non-conservative design that Orb-v3 popularised for materials to its minimal extreme for molecular dynamics: an off-the-shelf Edge Transformer with neither built-in roto-equivariance nor energy conservation, compensating for the absence of physical inductive biases with large-scale supervised pre-training rather than architectural constraints." },
+  { from: "transip", to: "md_et", label: "Non-equivariant transformer", dashed: true, description: "Sibling non-equivariant Transformer interatomic potentials: TransIP keeps a generic Transformer backbone but recovers SO(3)-equivariance through a latent embedding-space training objective, whereas MD-ET forgoes equivariance (and energy conservation) entirely and instead relies on supervised pre-training over ~30M QCML structures plus light fine-tuning." },
+  { from: "mace4ir", to: "md_et", label: "QCML pre-training", dashed: true, description: "MD-ET and MACE4IR both build on the QCML quantum-chemistry dataset: MACE4IR trains an equivariant dipole head on QCML for infrared spectra, while MD-ET uses ~30M QCML molecular structures as the supervised pre-training corpus for its off-the-shelf edge-transformer potential. The link captures shared training data rather than architectural descent." },
 ];
