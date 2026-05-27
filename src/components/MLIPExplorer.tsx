@@ -57,6 +57,10 @@ const HEADER_HEIGHT = 112;
 
 const FONT_SCALES = [0.85, 1, 1.15, 1.3] as const;
 const DEFAULT_FONT_SCALE: number = 1;
+// Pointer travel (in screen px) before a press is treated as a canvas pan
+// rather than a click. Keeps taps on cards/edges selecting while letting a
+// drag that begins on them pan the canvas.
+const PAN_CLICK_THRESHOLD = 5;
 const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 
 // Multipliers applied to the curated layered coordinates so cards fan out
@@ -847,6 +851,13 @@ export default function MLIPExplorer() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragPointerId, setDragPointerId] = useState<number | null>(null);
+  // Canvas panning may start on top of a card or edge (so the user can grab
+  // anywhere in the dense graph). We remember the press origin and whether the
+  // pointer travelled far enough to count as a pan, so the trailing click can
+  // be suppressed — otherwise every pan that ends on a card/edge would also
+  // select it.
+  const panPointerStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const pannedRef = useRef(false);
 
   // Two-finger pinch-zoom. We track every active pointer (mouse + touch)
   // in a ref so the move handler can detect when two fingers are down and
@@ -1307,8 +1318,15 @@ export default function MLIPExplorer() {
   // to dodge stale closures during the rapid event burst.
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     const target = e.target as Element;
-    if (target.closest(".node-card")) return;
-    if (target.closest("[data-edge='true']")) return;
+    // A press that starts on a card or an edge can still pan: with the graph
+    // this dense there's barely any empty space left to grab. We only skip
+    // pointer capture for those so the element's own click (select) still
+    // fires on a tap; a real drag is caught by the movement threshold below
+    // and suppresses that click. Force-layout card drags never reach here —
+    // the card stops propagation in its own pointerdown.
+    const onInteractive = !!(
+      target.closest(".node-card") || target.closest("[data-edge='true']")
+    );
 
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1349,10 +1367,18 @@ export default function MLIPExplorer() {
     setIsDragging(true);
     setDragPointerId(e.pointerId);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // ignore — some browsers reject capture on synthetic pointers
+    panPointerStartRef.current = { x: e.clientX, y: e.clientY };
+    pannedRef.current = false;
+    if (!onInteractive) {
+      // Capture only for empty-canvas presses. Capturing would otherwise
+      // retarget the trailing click to the canvas and swallow the card/edge
+      // selection; bubbling already delivers pointermove while the cursor
+      // stays inside the canvas.
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore — some browsers reject capture on synthetic pointers
+      }
     }
   };
 
@@ -1386,6 +1412,11 @@ export default function MLIPExplorer() {
     }
 
     if (!isDragging || dragPointerId !== e.pointerId) return;
+    if (!pannedRef.current) {
+      const movedX = e.clientX - panPointerStartRef.current.x;
+      const movedY = e.clientY - panPointerStartRef.current.y;
+      if (Math.hypot(movedX, movedY) > PAN_CLICK_THRESHOLD) pannedRef.current = true;
+    }
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
@@ -1932,6 +1963,11 @@ export default function MLIPExplorer() {
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
+              if (pannedRef.current) {
+                // Trailing click from a canvas pan that started on this edge.
+                pannedRef.current = false;
+                return;
+              }
               handleEdgeClick(edge);
             }}
             onKeyDown={(e) => {
@@ -2767,9 +2803,11 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (nodeDragMovedRef.current) {
-                      // Suppress the click that fires after a drag.
+                    if (nodeDragMovedRef.current || pannedRef.current) {
+                      // Suppress the click that fires after a node drag or a
+                      // canvas pan that happened to start on this card.
                       nodeDragMovedRef.current = false;
+                      pannedRef.current = false;
                       return;
                     }
                     handleNodeClick(node);
