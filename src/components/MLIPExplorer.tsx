@@ -57,6 +57,10 @@ const HEADER_HEIGHT = 112;
 
 const FONT_SCALES = [0.85, 1, 1.15, 1.3] as const;
 const DEFAULT_FONT_SCALE: number = 1;
+// Pointer travel (in screen px) before a press is treated as a canvas pan
+// rather than a click. Keeps taps on cards/edges selecting while letting a
+// drag that begins on them pan the canvas.
+const PAN_CLICK_THRESHOLD = 5;
 const FONT_SCALE_STORAGE_KEY = "mliphub.fontScale";
 
 // Multipliers applied to the curated layered coordinates so cards fan out
@@ -847,6 +851,13 @@ export default function MLIPExplorer() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [dragPointerId, setDragPointerId] = useState<number | null>(null);
+  // Canvas panning may start on top of a card or edge (so the user can grab
+  // anywhere in the dense graph). We remember the press origin and whether the
+  // pointer travelled far enough to count as a pan, so the trailing click can
+  // be suppressed — otherwise every pan that ends on a card/edge would also
+  // select it.
+  const panPointerStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const pannedRef = useRef(false);
 
   // Two-finger pinch-zoom. We track every active pointer (mouse + touch)
   // in a ref so the move handler can detect when two fingers are down and
@@ -1307,8 +1318,15 @@ export default function MLIPExplorer() {
   // to dodge stale closures during the rapid event burst.
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     const target = e.target as Element;
-    if (target.closest(".node-card")) return;
-    if (target.closest("[data-edge='true']")) return;
+    // A press that starts on a card or an edge can still pan: with the graph
+    // this dense there's barely any empty space left to grab. We only skip
+    // pointer capture for those so the element's own click (select) still
+    // fires on a tap; a real drag is caught by the movement threshold below
+    // and suppresses that click. Force-layout card drags never reach here —
+    // the card stops propagation in its own pointerdown.
+    const onInteractive = !!(
+      target.closest(".node-card") || target.closest("[data-edge='true']")
+    );
 
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1349,10 +1367,18 @@ export default function MLIPExplorer() {
     setIsDragging(true);
     setDragPointerId(e.pointerId);
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // ignore — some browsers reject capture on synthetic pointers
+    panPointerStartRef.current = { x: e.clientX, y: e.clientY };
+    pannedRef.current = false;
+    if (!onInteractive) {
+      // Capture only for empty-canvas presses. Capturing would otherwise
+      // retarget the trailing click to the canvas and swallow the card/edge
+      // selection; bubbling already delivers pointermove while the cursor
+      // stays inside the canvas.
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore — some browsers reject capture on synthetic pointers
+      }
     }
   };
 
@@ -1386,6 +1412,11 @@ export default function MLIPExplorer() {
     }
 
     if (!isDragging || dragPointerId !== e.pointerId) return;
+    if (!pannedRef.current) {
+      const movedX = e.clientX - panPointerStartRef.current.x;
+      const movedY = e.clientY - panPointerStartRef.current.y;
+      if (Math.hypot(movedX, movedY) > PAN_CLICK_THRESHOLD) pannedRef.current = true;
+    }
     setUserPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
@@ -1656,7 +1687,7 @@ export default function MLIPExplorer() {
     return { corridorOffset, sourceStagger, targetStagger };
   }, [edges, positionedModels, compactLayeredLayout]);
 
-  const buildEdgePath = (
+  const buildEdgePath = useCallback((
     fromNode: ModelNode,
     toNode: ModelNode,
     corridorOffset: number,
@@ -1748,7 +1779,7 @@ export default function MLIPExplorer() {
       labelX: (sxMid + exMid) / 2,
       labelY: bendY - 6,
     };
-  };
+  }, [compactLayeredLayout]);
 
   // Format the human-readable tooltip for an edge: "<from> → <to> · <label>"
   // when a label exists, falling back to just the endpoints. The dashed flag
@@ -1763,15 +1794,17 @@ export default function MLIPExplorer() {
     return `${head}${body}${note}`;
   };
 
-  const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
-    edges.map((edge, idx) => {
+  // Resolve an edge's SVG path and label anchor for the active layout. Shared
+  // by the renderer and the label de-overlap pass below so both agree on
+  // exactly where each label sits.
+  const computeEdgeGeometry = useCallback(
+    (
+      edge: Edge,
+      idx: number,
+    ): { path: string; labelX: number; labelY: number } | null => {
       const fromNode = positionedModels.find((n) => n.id === edge.from);
       const toNode = positionedModels.find((n) => n.id === edge.to);
       if (!fromNode || !toNode) return null;
-
-      let path: string;
-      let labelX: number;
-      let labelY: number;
 
       if (layout === "force" || layout === "timeline") {
         // Connect edges to the actual card border (rectangle exit point)
@@ -1803,24 +1836,103 @@ export default function MLIPExplorer() {
           -dx,
           -dy,
         );
-        path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-        labelX = (start.x + end.x) / 2;
-        labelY = (start.y + end.y) / 2 - 6;
-      } else {
-        const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
-        const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
-        const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
-        const built = buildEdgePath(
-          fromNode,
-          toNode,
-          corridorOffset,
-          sourceStagger,
-          targetStagger,
-        );
-        path = built.path;
-        labelX = built.labelX;
-        labelY = built.labelY;
+        return {
+          path: `M ${start.x} ${start.y} L ${end.x} ${end.y}`,
+          labelX: (start.x + end.x) / 2,
+          labelY: (start.y + end.y) / 2 - 6,
+        };
       }
+
+      const corridorOffset = edgeRouting.corridorOffset.get(idx) ?? 0;
+      const sourceStagger = edgeRouting.sourceStagger.get(idx) ?? 0;
+      const targetStagger = edgeRouting.targetStagger.get(idx) ?? 0;
+      return buildEdgePath(
+        fromNode,
+        toNode,
+        corridorOffset,
+        sourceStagger,
+        targetStagger,
+      );
+    },
+    [positionedModels, layout, edgeRouting, buildEdgePath],
+  );
+
+  // Edge labels are bold text drawn over the cards; with the full catalogue of
+  // lineage links they pile into an unreadable wall on the zoomed-out default
+  // layout. Place them greedily in priority order — the selected edge first,
+  // then solid "primary lineage" links, then dashed "speculative" ones — and
+  // skip any whose box would overlap an already-placed label. Boxes live in
+  // graph space, so a label that survives stays collision-free at every zoom
+  // level; hidden ones remain reachable through the edge's click target and
+  // tooltip.
+  const edgeLabelLayout = useMemo(() => {
+    const geometries = new Map<
+      number,
+      { path: string; labelX: number; labelY: number }
+    >();
+    type LabelBox = {
+      idx: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      priority: number;
+    };
+    const boxes: LabelBox[] = [];
+
+    const labelFontSize = 18 * fontScale;
+    // Bias the width estimate slightly above the 0.58-em used for the halo
+    // rect: bold glyphs (m, w, capitals) render wider, and undersized boxes
+    // let neighbours pass the overlap test and then touch on screen.
+    const approxCharW = labelFontSize * 0.62;
+    const padX = 6;
+    const padY = 3;
+
+    edges.forEach((edge, idx) => {
+      const geometry = computeEdgeGeometry(edge, idx);
+      if (!geometry) return;
+      geometries.set(idx, geometry);
+      if (!edge.label) return;
+      const selected =
+        selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const w = edge.label.length * approxCharW + padX * 2;
+      const h = labelFontSize + padY * 2;
+      boxes.push({
+        idx,
+        x: geometry.labelX - w / 2,
+        y: geometry.labelY - labelFontSize + padY,
+        w,
+        h,
+        priority: selected ? 0 : edge.dashed ? 2 : 1,
+      });
+    });
+
+    boxes.sort((a, b) => a.priority - b.priority || a.idx - b.idx);
+
+    const GAP = 8;
+    const kept: LabelBox[] = [];
+    const visible = new Set<number>();
+    for (const box of boxes) {
+      const overlaps = kept.some(
+        (k) =>
+          box.x < k.x + k.w + GAP &&
+          k.x < box.x + box.w + GAP &&
+          box.y < k.y + k.h + GAP &&
+          k.y < box.y + box.h + GAP,
+      );
+      if (overlaps) continue;
+      kept.push(box);
+      visible.add(box.idx);
+    }
+
+    return { geometries, visible };
+  }, [edges, computeEdgeGeometry, fontScale, selectedEdge]);
+
+  const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
+    edges.map((edge, idx) => {
+      const geometry = edgeLabelLayout.geometries.get(idx);
+      if (!geometry) return null;
+      const { path, labelX, labelY } = geometry;
 
       const tooltip = formatEdgeTooltip(edge);
       const isSelected =
@@ -1851,6 +1963,11 @@ export default function MLIPExplorer() {
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
+              if (pannedRef.current) {
+                // Trailing click from a canvas pan that started on this edge.
+                pannedRef.current = false;
+                return;
+              }
               handleEdgeClick(edge);
             }}
             onKeyDown={(e) => {
@@ -1874,6 +1991,7 @@ export default function MLIPExplorer() {
 
       if (mode === "labels") {
         if (!edge.label || !edgeLabelsVisible) return null;
+        if (!edgeLabelLayout.visible.has(idx)) return null;
         // Approximate the rendered text width so we can draw a background
         // rect that masks whatever card the label overlaps. SVG <text> has
         // no synchronous width API, but bold sans-serif at fontSize ≈ 0.55em
@@ -2685,9 +2803,11 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (nodeDragMovedRef.current) {
-                      // Suppress the click that fires after a drag.
+                    if (nodeDragMovedRef.current || pannedRef.current) {
+                      // Suppress the click that fires after a node drag or a
+                      // canvas pan that happened to start on this card.
                       nodeDragMovedRef.current = false;
+                      pannedRef.current = false;
                       return;
                     }
                     handleNodeClick(node);
