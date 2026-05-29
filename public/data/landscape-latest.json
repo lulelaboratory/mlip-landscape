@@ -5634,6 +5634,59 @@
       "architecture": "gnn",
       "usesAttention": true,
       "longRange": false
+    },
+    {
+      "id": "pet_uafd",
+      "type": "node",
+      "category": "Transformer",
+      "label": "PET-UAFD",
+      "year": 2026,
+      "author": "Kellner, Hansen, Bligaard, Jacobsen, Ceriotti (EPFL lab-cosmo / DTU)",
+      "x": 7940,
+      "y": 320,
+      "desc": "Uncertainty-aware ensemble of universal interatomic potentials built on the Point Edge Transformer (PET) backbone. Rather than a single model, PET-UAFD (\"universal DFT approximators\") trains an ensemble across multiple electronic-structure references and calibrates it against experimental data — cohesive energies, atomization energies, lattice constants, and bulk moduli of simple materials and molecules — so that its predictions become as accurate against experiment as the best available electronic-structure reference while the ensemble spread reports prediction reliability. The companion PET-EXP protocol uses shallow ensembles and statistical reweighting to estimate uncertainty relative to experimental measurements at essentially no extra cost over a single conventional ML potential, accounting for the systematic error inherent in the underlying DFT functional.",
+      "paperUrl": "https://arxiv.org/abs/2604.24607",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "molecules",
+        "simple solids"
+      ],
+      "useCases": [
+        "uncertainty quantification",
+        "experiment-calibrated MD",
+        "prediction reliability estimation"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-05-29",
+      "trainingData": [
+        "multiple DFT references",
+        "experimental cohesive/atomization energies, lattice constants, bulk moduli"
+      ],
+      "tags": [
+        "transformer",
+        "PET",
+        "ensemble",
+        "uncertainty-quantification",
+        "experimental-calibration",
+        "lab-cosmo"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "simple materials and molecules (coverage not enumerated)",
+      "equivariance": "learnt",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": false,
+      "numElements": null
     }
   ],
   "groups": [
@@ -6763,6 +6816,19 @@
       "label": "QCML pre-training",
       "dashed": true,
       "description": "MD-ET and MACE4IR both build on the QCML quantum-chemistry dataset: MACE4IR trains an equivariant dipole head on QCML for infrared spectra, while MD-ET uses ~30M QCML molecular structures as the supervised pre-training corpus for its off-the-shelf edge-transformer potential. The link captures shared training data rather than architectural descent."
+    },
+    {
+      "from": "petmad",
+      "to": "pet_uafd",
+      "label": "+Experiment calibration",
+      "description": "PET-UAFD turns the single PET-MAD universal potential into an uncertainty-aware ensemble of PET 'universal DFT approximators': it trains across multiple electronic-structure references and calibrates against experimental cohesive/atomization energies, lattice constants, and bulk moduli, then exposes the ensemble spread (via the PET-EXP shallow-ensemble reweighting protocol) as a reliability estimate — where PET-MAD provides a single deterministic MAD-trained PET prediction."
+    },
+    {
+      "from": "petmad15",
+      "to": "pet_uafd",
+      "label": "lab-cosmo UQ",
+      "dashed": true,
+      "description": "Sibling lab-cosmo PET universal potentials released in 2026: PET-MAD-1.5 pushes elemental coverage to 102 elements at the r²SCAN level, while PET-UAFD keeps the PET backbone but focuses on multi-reference training plus experiment-calibrated uncertainty quantification so that predictions and their error bars are trustworthy against experimental measurements."
     }
   ]
 }
