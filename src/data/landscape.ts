@@ -3683,6 +3683,73 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — auto-update sweep
+  //   • eSEN-MoE — InstaDeep mlip v2's Mixture-of-Experts extension of eSEN
+  //   • T-PaiNN  — Transfer-learning extension of PaiNN with classical→DFT autotuning
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "esen_moe",
+    type: "node",
+    category: "Equivariant",
+    label: "eSEN-MoE",
+    year: 2026,
+    author: "Brunken, Cormier, Walewski, Peltre, Chomet et al. (InstaDeep)",
+    x: 7900,
+    y: 320,
+    desc:
+      "Mixture-of-Experts extension of Meta FAIR's eSEN architecture introduced in InstaDeep's mlip v2 framework. Routes through specialised expert kernels per chemical environment while contracting the routed kernels into a single dense kernel at inference, recovering the runtime cost of a standard single-head model. Built on the new e3j high-performance equivariant-operations backend (with dedicated CUDA and Pallas kernels for GPUs and TPUs) and shipped with pretrained checkpoints trained on a curated SPICE2 subset of OMol25. Integrates with ASE and JAX-MD wrappers and supports advanced simulation features such as NPT ensembles and nudged elastic band methods.",
+    githubUrl: "https://github.com/instadeepai/mlip",
+    paperUrl: "https://arxiv.org/abs/2605.22698",
+    isNew: true,
+    coverage: ["organic molecules", "small molecules"],
+    useCases: ["scalable MLIP training", "molecular MD surrogate", "multi-domain pretraining"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "JAX-MD", "PyTorch"],
+    license: "Apache-2.0",
+    maintenance: "active",
+    lastReviewed: "2026-05-28",
+    trainingData: ["SPICE2 (subset of OMol25)"],
+    tags: ["equivariant", "mixture-of-experts", "smooth PES", "e3j backend", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (SPICE2/OMol25 molecular coverage)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
+  {
+    id: "t_painn",
+    type: "node",
+    category: "Equivariant",
+    label: "T-PaiNN",
+    year: 2026,
+    author: "Pelletier, Bhat, Rivera, Wilson, Muhich (Arizona State University)",
+    x: 7900,
+    y: 550,
+    desc:
+      "Transfer-PaiNN: a transfer-learning recipe that substantially improves the DFT data efficiency of GNN-MLIPs by pretraining a PaiNN backbone on large-scale (>100× the DFT set) classical force-field trajectories of the target system and then autotuning the weights on a small DFT dataset. The pretraining lets the network learn the broad shape of the potential energy surface from cheap classical sampling, with quantum accuracy supplied by the fine-tuning stage. Demonstrated on QM9 (gas-phase molecules) and condensed-phase liquid water, with up to ~25× MAE reduction in low-data regimes and improved energies, forces, density, and diffusivity predictions versus DFT-only training.",
+    paperUrl: "https://arxiv.org/abs/2603.24752",
+    isNew: true,
+    coverage: ["organic molecules", "liquid water"],
+    useCases: ["data-efficient MLIP fitting", "classical→DFT transfer learning", "low-data regimes"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-28",
+    trainingData: ["classical force field MD (pretraining)", "QM9", "DFT liquid water"],
+    tags: ["equivariant", "transfer learning", "data-efficient", "PaiNN", "autotuning"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (QM9 / liquid water)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3699,6 +3766,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "pet", to: "petmad", label: "MAD pretraining", description: "PET-MAD applies the Massive Atomic Diversity training recipe to the Point Edge Transformer architecture; PET supplies the unconstrained-equivariance graph-transformer backbone." },
   { from: "eqv2", to: "esen", label: "Smooth PES" , description: "eSEN is an equivariant GNN focused on producing a smooth, energy-conserving PES for stable MD; it sits in the same Meta FAIR equivariant lineage as Equiformer V2 but the abstract emphasises smoothness/expressivity rather than naming Equiformer V2 as a parent." },
   { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture." },
+  { from: "esen", to: "esen_moe", label: "+MoE", description: "eSEN-MoE wraps Meta FAIR's eSEN smooth-PES backbone with InstaDeep's Mixture-of-Experts formalism in the mlip v2 framework; eSEN supplies the equivariant smooth-energy network that the MoE routing sits on top of." },
   { from: "gemnet", to: "jmp", label: "GemNet-OC backbone", description: "JMP uses a GemNet-OC backbone shared across all training datasets — GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top." },
   { from: "jmp", to: "uma", label: "Multi-task", dashed: true , description: "JMP demonstrated joint multi-domain pretraining across OC20/OC22/ANI-1x/Transition-1x and is widely framed as the precursor to UMA's universal multi-dataset foundation model." },
 
@@ -3913,6 +3981,7 @@ export const INITIAL_EDGES: Edge[] = [
 
   // ViSNet (2022) — vector-scalar message passing
   { from: "painn", to: "visnet", label: "Vector-scalar", description: "ViSNet generalises PaiNN's scalar/vector equivariant message passing with vector-scalar interactive update rules that capture geometric information without explicit higher-order tensor algebra." },
+  { from: "painn", to: "t_painn", label: "Classical→DFT TL", description: "T-PaiNN keeps PaiNN's scalar/vector equivariant message-passing backbone unchanged and adds a classical-force-field pretraining + DFT autotuning recipe on top to recover quantum accuracy with far less DFT data." },
 
   // DPA-1 (2022) — bridge between DeepMD and DPA-2
   { from: "deepmd", to: "dpa1", label: "+Attention", description: "DPA-1 introduces an attention layer to the DeepMD descriptor framework as the first attention-based, pretrained Deep Potential model; the direct attention-augmented successor to DeepMD." },
