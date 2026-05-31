@@ -24,6 +24,7 @@ const CITATION_AUTHORS: Person[] = [
   {
     name: "Timothy T. Duignan",
     role: "Author",
+    github: "https://github.com/timduignan",
   },
 ];
 
