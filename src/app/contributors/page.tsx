@@ -21,6 +21,11 @@ const CITATION_AUTHORS: Person[] = [
     role: "Maintainer, curator",
     github: "https://github.com/lulelaboratory",
   },
+  {
+    name: "Timothy T. Duignan",
+    role: "Author",
+    github: "https://github.com/timduignan",
+  },
 ];
 
 const CONTRIBUTORS: Person[] = [

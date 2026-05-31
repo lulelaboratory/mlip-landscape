@@ -17,6 +17,7 @@ also listed in [`CITATION.cff`](./CITATION.cff) and [`.zenodo.json`](./.zenodo.j
 | Name   | Role                  | ORCID | GitHub                                         |
 | ------ | --------------------- | ----- | ---------------------------------------------- |
 | Le Lu  | Maintainer, curator   | —     | [@lulelaboratory](https://github.com/lulelaboratory) |
+| Timothy T. Duignan | Author | — | [@timduignan](https://github.com/timduignan) |
 
 ---
 
