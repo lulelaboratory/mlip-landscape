@@ -25,6 +25,8 @@ authors:
   - family-names: "Lu"
     given-names: "Le"
     affiliation: "Department of Computer Science, University of Colorado Boulder"
+  - family-names: "Duignan"
+    given-names: "Timothy T."
 # Once the companion arXiv preprint is posted, uncomment and complete
 # `preferred-citation` so GitHub's "Cite this repository" widget points
 # readers at the paper. Leave `doi:` blank until the arXiv DOI is minted —

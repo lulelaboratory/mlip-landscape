@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 
 const version = (pkg as { version: string }).version;
 
-const AUTHORS = "Le Lu and MLIP Hub contributors";
+const AUTHORS = "Le Lu, Timothy T. Duignan, and MLIP Hub contributors";
 const YEAR = new Date().getFullYear();
 const TITLE = "MLIP Hub: Interatomic Potential Explorer";
 const URL = "https://www.mliphub.com";
 
 const bibtex = `@software{mliphub_${YEAR},
-  author  = {Lu, Le and {MLIP Hub contributors}},
+  author  = {Lu, Le and Duignan, Timothy T. and {MLIP Hub contributors}},
   title   = {{${TITLE}}},
   version = {${version}},
   year    = {${YEAR}},
