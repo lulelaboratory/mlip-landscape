@@ -3683,6 +3683,42 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // May 2026 ADDITIONS — auto-update sweep
+  //   • CSP-MACE-Å — DFT-accuracy MACE-POLAR-derived MLIP for molecular crystal
+  //                  structure prediction (AstraZeneca / Cambridge)
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "csp_mace",
+    type: "node",
+    category: "Equivariant",
+    label: "CSP-MACE-Å",
+    year: 2026,
+    author: "Midgley, Lin, Moore, Della Pia, Antorán, Nilsson Lill, Eriksson, Faber, Tornberg, Broo, Csányi (AstraZeneca / Cambridge)",
+    x: 7940,
+    y: 320,
+    desc:
+      "Composite MACE-based machine learning interatomic potential intended to replace DFT in molecular crystal structure prediction (CSP). The intramolecular component adopts the MACE-POLAR architecture trained on the OMol25 dataset; the intermolecular contribution combines the same MACE-POLAR backbone, a long-range XDM-form dispersion term, and a learned delta model that reproduces B86bPBE-XDM intermolecular energies, trained on residual intermolecular targets derived from 50,000 B86bPBE-XDM calculations on molecular crystal structures. On an evaluation set of 19 compounds (including a salt) from AstraZeneca's previous CSP publications, CSP-MACE-Å achieves performance comparable to PBE DFT with the Neumann-Perrin dispersion correction; on a second set of 28 compounds (including cocrystals and salts) from the seven CSP blind tests, performance approaches B86bPBE-XDM DFT. Outperforms the MACE-POLAR-1 and UMA-OMC foundation models on these benchmarks while running orders of magnitude faster than DFT, enabling much larger candidate-structure energy ranking.",
+    paperUrl: "https://arxiv.org/abs/2605.28905",
+    isNew: true,
+    coverage: ["molecular crystals", "organic molecules", "cocrystals", "salts"],
+    useCases: ["crystal structure prediction", "polymorph ranking", "drug discovery", "DFT replacement"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-31",
+    trainingData: ["OMol25", "B86bPBE-XDM molecular crystal residuals"],
+    tags: ["equivariant", "MACE", "MACE-POLAR", "molecular crystals", "CSP", "delta-learning", "XDM dispersion", "long-range"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "organic CSP elements (CHNOPS + halogens)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3993,4 +4029,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orb", to: "md_et", label: "Drop equivariance", description: "MD-ET pushes the non-equivariant, non-conservative design that Orb-v3 popularised for materials to its minimal extreme for molecular dynamics: an off-the-shelf Edge Transformer with neither built-in roto-equivariance nor energy conservation, compensating for the absence of physical inductive biases with large-scale supervised pre-training rather than architectural constraints." },
   { from: "transip", to: "md_et", label: "Non-equivariant transformer", dashed: true, description: "Sibling non-equivariant Transformer interatomic potentials: TransIP keeps a generic Transformer backbone but recovers SO(3)-equivariance through a latent embedding-space training objective, whereas MD-ET forgoes equivariance (and energy conservation) entirely and instead relies on supervised pre-training over ~30M QCML structures plus light fine-tuning." },
   { from: "mace4ir", to: "md_et", label: "QCML pre-training", dashed: true, description: "MD-ET and MACE4IR both build on the QCML quantum-chemistry dataset: MACE4IR trains an equivariant dipole head on QCML for infrared spectra, while MD-ET uses ~30M QCML molecular structures as the supervised pre-training corpus for its off-the-shelf edge-transformer potential. The link captures shared training data rather than architectural descent." },
+
+  // May 2026 — CSP-MACE-Å (composite MACE-POLAR + delta model for molecular CSP)
+  { from: "mace_polar1", to: "csp_mace", label: "CSP-tuned MACE", description: "CSP-MACE-Å reuses the MACE-POLAR architecture as both its intramolecular and intermolecular MACE backbone (trained on OMol25), then adds an XDM-form dispersion term and a learned delta model trained on residual B86bPBE-XDM intermolecular energies — a CSP-specialised composite that outperforms the bare MACE-POLAR-1 foundation model on AstraZeneca and CSP-blind-test compound sets." },
+  { from: "uma", to: "csp_mace", label: "Beats UMA-OMC", dashed: true, description: "On molecular crystal structure prediction benchmarks (19 AstraZeneca compounds, 28 CSP-blind-test compounds), CSP-MACE-Å outperforms the UMA-OMC molecular-crystal foundation model variant by combining its MACE-POLAR backbone with an XDM dispersion term and a delta-learned correction to B86bPBE-XDM intermolecular energies." },
 ];
