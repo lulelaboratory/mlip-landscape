@@ -3683,6 +3683,41 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // June 2026 ADDITIONS — auto-update sweep
+  //   • CSP-MACE-Å — CSP-targeted MACE-POLAR + XDM + Δ-learning potential
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "csp_mace_a",
+    type: "node",
+    category: "Equivariant",
+    label: "CSP-MACE-Å",
+    year: 2026,
+    author: "Midgley, Lin, Moore, Della Pia, Antorán, Nilsson Lill, Eriksson, Faber, Tornberg, Broo, Csányi (Ångström AI / Cambridge / AstraZeneca)",
+    x: 7660,
+    y: 320,
+    desc:
+      "Machine-learning interatomic potential targeted at organic-molecule crystal structure prediction (CSP). CSP-MACE-Å decomposes total energy into intramolecular and intermolecular components: the intramolecular term uses the MACE-POLAR architecture trained on the OMol25 dataset, and the intermolecular term combines a MACE-POLAR contribution, a long-range XDM-style dispersion correction, and a Δ-learned correction trained to reproduce B86bPBE-XDM intermolecular energies. On a 19-compound evaluation set drawn from previous AstraZeneca CSP studies, CSP-MACE-Å reaches performance comparable to PBE+Neumann-Perrin DFT while running orders of magnitude faster, outperforming MACE-POLAR-1 and UMA-OMC at the same task and enabling far larger candidate-structure searches in pharmaceutical solid-form de-risking.",
+    paperUrl: "https://arxiv.org/abs/2605.28905",
+    isNew: true,
+    coverage: ["organic molecular crystals", "pharmaceutical solid forms"],
+    useCases: ["crystal structure prediction", "polymorph ranking", "pharmaceutical solid-form de-risking"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE"],
+    maintenance: "active",
+    lastReviewed: "2026-06-01",
+    trainingData: ["OMol25", "B86bPBE-XDM intermolecular energies"],
+    tags: ["equivariant", "MACE family", "MACE-POLAR", "delta-learning", "XDM dispersion", "CSP", "pharmaceutical"],
+    supportsCharges: true,
+    supportsSpins: false,
+    elementsCovered: "OMol25 elemental coverage (organic-molecule chemistry incl. salts)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3993,4 +4028,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orb", to: "md_et", label: "Drop equivariance", description: "MD-ET pushes the non-equivariant, non-conservative design that Orb-v3 popularised for materials to its minimal extreme for molecular dynamics: an off-the-shelf Edge Transformer with neither built-in roto-equivariance nor energy conservation, compensating for the absence of physical inductive biases with large-scale supervised pre-training rather than architectural constraints." },
   { from: "transip", to: "md_et", label: "Non-equivariant transformer", dashed: true, description: "Sibling non-equivariant Transformer interatomic potentials: TransIP keeps a generic Transformer backbone but recovers SO(3)-equivariance through a latent embedding-space training objective, whereas MD-ET forgoes equivariance (and energy conservation) entirely and instead relies on supervised pre-training over ~30M QCML structures plus light fine-tuning." },
   { from: "mace4ir", to: "md_et", label: "QCML pre-training", dashed: true, description: "MD-ET and MACE4IR both build on the QCML quantum-chemistry dataset: MACE4IR trains an equivariant dipole head on QCML for infrared spectra, while MD-ET uses ~30M QCML molecular structures as the supervised pre-training corpus for its off-the-shelf edge-transformer potential. The link captures shared training data rather than architectural descent." },
+
+  // 2026 — CSP-MACE-Å (MACE-POLAR + Δ-learning + XDM, targeted at crystal structure prediction)
+  { from: "mace_polar1", to: "csp_mace_a", label: "+Δ-learning + XDM", description: "CSP-MACE-Å uses MACE-POLAR (the architecture introduced by MACE-POLAR-1, trained on OMol25) as its intra- and intermolecular foundation, then adds a long-range XDM-style dispersion correction and a Δ-learned correction trained to reproduce B86bPBE-XDM intermolecular energies. The result is a CSP-targeted potential that outperforms MACE-POLAR-1 on organic-molecule crystal energy ranking." },
+  { from: "uma", to: "csp_mace_a", label: "Outperforms UMA-OMC", dashed: true, description: "CSP-MACE-Å is benchmarked head-to-head against the UMA-OMC head of Meta's UMA foundation model on AstraZeneca's organic-crystal evaluation set; the link captures benchmarking lineage (CSP-MACE-Å reports surpassing UMA-OMC on this CSP task) rather than architectural descent." },
 ];
