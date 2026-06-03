@@ -3117,7 +3117,9 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                               {active && (
                                 <Check size={10} aria-hidden="true" className="-ml-0.5" />
                               )}
-                              {value}
+                              {/* "gnn" is an acronym — render upper-case (the
+                                  `capitalize` class would otherwise show "Gnn"). */}
+                              {value === "gnn" ? "GNN" : value}
                             </button>
                           );
                         })}
