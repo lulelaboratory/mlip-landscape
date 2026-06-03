@@ -858,6 +858,16 @@ export default function MLIPExplorer() {
   // select it.
   const panPointerStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const pannedRef = useRef(false);
+  // What a canvas press landed on. We always capture the pointer for a smooth
+  // pan (so it survives the cursor crossing the filter panel / header / window
+  // edge), but capture retargets the trailing click off the card/edge — so a
+  // press that turns out to be a tap is resolved into a selection in
+  // handlePointerUp using this remembered target instead of the native click.
+  const pressTargetRef = useRef<
+    | { kind: "node"; id: string }
+    | { kind: "edge"; from: string; to: string }
+    | null
+  >(null);
 
   // Two-finger pinch-zoom. We track every active pointer (mouse + touch)
   // in a ref so the move handler can detect when two fingers are down and
@@ -1319,14 +1329,24 @@ export default function MLIPExplorer() {
   const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
     const target = e.target as Element;
     // A press that starts on a card or an edge can still pan: with the graph
-    // this dense there's barely any empty space left to grab. We only skip
-    // pointer capture for those so the element's own click (select) still
-    // fires on a tap; a real drag is caught by the movement threshold below
-    // and suppresses that click. Force-layout card drags never reach here —
-    // the card stops propagation in its own pointerdown.
-    const onInteractive = !!(
-      target.closest(".node-card") || target.closest("[data-edge='true']")
-    );
+    // this dense there's barely any empty space left to grab. We always pan
+    // and capture the pointer (below) so the drag tracks the cursor even once
+    // it crosses the filter panel, the header, or leaves the window. Capture
+    // moves the trailing click off the card/edge, so we remember what was
+    // pressed and resolve a tap into a selection in handlePointerUp. Force-
+    // layout card drags never reach here — the card stops propagation in its
+    // own pointerdown.
+    const cardEl = target.closest(".node-card");
+    const edgeEl = target.closest("[data-edge='true']");
+    pressTargetRef.current = cardEl
+      ? { kind: "node", id: cardEl.getAttribute("data-model-id") ?? "" }
+      : edgeEl
+        ? {
+            kind: "edge",
+            from: edgeEl.getAttribute("data-edge-from") ?? "",
+            to: edgeEl.getAttribute("data-edge-to") ?? "",
+          }
+        : null;
 
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -1369,16 +1389,15 @@ export default function MLIPExplorer() {
     setDragStart({ x: e.clientX - userPan.x, y: e.clientY - userPan.y });
     panPointerStartRef.current = { x: e.clientX, y: e.clientY };
     pannedRef.current = false;
-    if (!onInteractive) {
-      // Capture only for empty-canvas presses. Capturing would otherwise
-      // retarget the trailing click to the canvas and swallow the card/edge
-      // selection; bubbling already delivers pointermove while the cursor
-      // stays inside the canvas.
-      try {
-        e.currentTarget.setPointerCapture(e.pointerId);
-      } catch {
-        // ignore — some browsers reject capture on synthetic pointers
-      }
+    // Capture on every press (empty canvas, card, or edge) so the pan keeps
+    // receiving pointermove/up even when the cursor leaves the canvas — over
+    // the filter panel, the header, or outside the window. Without this a drag
+    // that began on a card stalled the moment the cursor crossed onto the
+    // panel. Tap-to-select is restored in handlePointerUp via pressTargetRef.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore — some browsers reject capture on synthetic pointers
     }
   };
 
@@ -1435,6 +1454,30 @@ export default function MLIPExplorer() {
         // ignore
       }
     }
+
+    // Resolve a tap (a press the canvas itself started that never crossed the
+    // pan threshold) into a selection. The captured pointer's trailing click
+    // lands on the canvas instead of the card/edge, so we select from the
+    // remembered press target here. Force-layout node drags never set
+    // dragPointerId (the card stops propagation), so this can't double-fire
+    // with the card's own onClick selection.
+    if (dragPointerId === e.pointerId && !pannedRef.current) {
+      const pressed = pressTargetRef.current;
+      if (pressed?.kind === "node") {
+        const node = nodes.find(
+          (n): n is ModelNode => n.type === "node" && n.id === pressed.id,
+        );
+        if (node) handleNodeClick(node);
+      } else if (pressed?.kind === "edge") {
+        const edge = edges.find(
+          (ed) => ed.from === pressed.from && ed.to === pressed.to,
+        );
+        if (edge) handleEdgeClick(edge);
+      }
+    }
+
+    pressTargetRef.current = null;
+    pannedRef.current = false;
     setIsDragging(false);
     setDragPointerId(null);
   };
@@ -1957,6 +2000,8 @@ export default function MLIPExplorer() {
           <g
             key={idx}
             data-edge="true"
+            data-edge-from={edge.from}
+            data-edge-to={edge.to}
             className="cursor-pointer"
             aria-label={tooltip}
             role="button"
