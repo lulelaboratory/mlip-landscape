@@ -3683,6 +3683,134 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // Late-May / June 2026 ADDITIONS — auto-update sweep
+  //   • PET-UAFD    — uncertainty-aware PET universal-potential ensemble (PET-EXP)
+  //   • eSEN-MoE    — InstaDeep mlip v2 Mixture-of-Experts extension of eSEN
+  //   • T-PaiNN     — transfer-learning PaiNN (classical→DFT autotuning)
+  //   • CSP-MACE-Å  — MACE-POLAR + XDM + Δ-learning for molecular-crystal CSP
+  // ---------------------------------------------------------------------------
+
+  {
+    id: "pet_uafd",
+    type: "node",
+    category: "Transformer",
+    label: "PET-UAFD",
+    year: 2026,
+    author: "Kellner, Hansen, Bligaard, Jacobsen, Ceriotti (EPFL lab-cosmo / DTU)",
+    x: 7940,
+    y: 320,
+    desc:
+      "Uncertainty-aware ensemble of universal interatomic potentials built on the Point Edge Transformer (PET) backbone. Rather than a single model, PET-UAFD (\"universal DFT approximators\") trains an ensemble across multiple electronic-structure references and calibrates it against experimental data — cohesive energies, atomization energies, lattice constants, and bulk moduli of simple materials and molecules — so that its predictions become as accurate against experiment as the best available electronic-structure reference while the ensemble spread reports prediction reliability. The companion PET-EXP protocol uses shallow ensembles and statistical reweighting to estimate uncertainty relative to experimental measurements at essentially no extra cost over a single conventional ML potential, accounting for the systematic error inherent in the underlying DFT functional.",
+    paperUrl: "https://arxiv.org/abs/2604.24607",
+    isNew: true,
+    coverage: ["general materials", "molecules", "simple solids"],
+    useCases: ["uncertainty quantification", "experiment-calibrated MD", "prediction reliability estimation"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE"],
+    maintenance: "active",
+    lastReviewed: "2026-05-29",
+    trainingData: ["multiple DFT references", "experimental cohesive/atomization energies, lattice constants, bulk moduli"],
+    tags: ["transformer", "PET", "ensemble", "uncertainty-quantification", "experimental-calibration", "lab-cosmo"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "simple materials and molecules (coverage not enumerated)",
+    equivariance: "learnt",
+    architecture: "gnn",
+    usesAttention: true,
+    longRange: false,
+    numElements: null,
+  },
+  {
+    id: "esen_moe",
+    type: "node",
+    category: "Equivariant",
+    label: "eSEN-MoE",
+    year: 2026,
+    author: "Brunken, Cormier, Walewski, Peltre, Chomet et al. (InstaDeep)",
+    x: 7660,
+    y: 550,
+    desc:
+      "Mixture-of-Experts extension of Meta FAIR's eSEN architecture introduced in InstaDeep's mlip v2 framework. Routes through specialised expert kernels per chemical environment while contracting the routed kernels into a single dense kernel at inference, recovering the runtime cost of a standard single-head model. Built on the new e3j high-performance equivariant-operations backend (with dedicated CUDA and Pallas kernels for GPUs and TPUs) and shipped with pretrained checkpoints trained on a curated SPICE2 subset of OMol25. Integrates with ASE and JAX-MD wrappers and supports advanced simulation features such as NPT ensembles and nudged elastic band methods.",
+    githubUrl: "https://github.com/instadeepai/mlip",
+    paperUrl: "https://arxiv.org/abs/2605.22698",
+    isNew: true,
+    coverage: ["organic molecules", "small molecules"],
+    useCases: ["scalable MLIP training", "molecular MD surrogate", "multi-domain pretraining"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE", "JAX-MD", "PyTorch"],
+    license: "Apache-2.0",
+    maintenance: "active",
+    lastReviewed: "2026-05-28",
+    trainingData: ["SPICE2 (subset of OMol25)"],
+    tags: ["equivariant", "mixture-of-experts", "smooth PES", "e3j backend", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (SPICE2/OMol25 molecular coverage)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
+  {
+    id: "t_painn",
+    type: "node",
+    category: "Equivariant",
+    label: "T-PaiNN",
+    year: 2026,
+    author: "Pelletier, Bhat, Rivera, Wilson, Muhich (Arizona State University)",
+    x: 7940,
+    y: 550,
+    desc:
+      "Transfer-PaiNN: a transfer-learning recipe that substantially improves the DFT data efficiency of GNN-MLIPs by pretraining a PaiNN backbone on large-scale (>100× the DFT set) classical force-field trajectories of the target system and then autotuning the weights on a small DFT dataset. The pretraining lets the network learn the broad shape of the potential energy surface from cheap classical sampling, with quantum accuracy supplied by the fine-tuning stage. Demonstrated on QM9 (gas-phase molecules) and condensed-phase liquid water, with up to ~25× MAE reduction in low-data regimes and improved energies, forces, density, and diffusivity predictions versus DFT-only training.",
+    paperUrl: "https://arxiv.org/abs/2603.24752",
+    isNew: true,
+    coverage: ["organic molecules", "liquid water"],
+    useCases: ["data-efficient MLIP fitting", "classical→DFT transfer learning", "low-data regimes"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-05-28",
+    trainingData: ["classical force field MD (pretraining)", "QM9", "DFT liquid water"],
+    tags: ["equivariant", "transfer learning", "data-efficient", "PaiNN", "autotuning"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (QM9 / liquid water)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+  },
+  {
+    id: "csp_mace_angstrom",
+    type: "node",
+    category: "Equivariant",
+    label: "CSP-MACE-Å",
+    year: 2026,
+    author: "Midgley, Lin, Moore, Della Pia, Antorán, Nilsson Lill, Eriksson, Faber, Tornberg, Broo, Csányi (AstraZeneca / Ångström AI / MPI Polymer Research / Cambridge)",
+    x: 7660,
+    y: 320,
+    desc:
+      "Composite machine-learning interatomic potential targeting DFT-quality molecular crystal structure prediction (CSP) at a tiny fraction of DFT cost. Decomposes the total energy into intramolecular and intermolecular components: the intramolecular term is supplied by a MACE-POLAR model trained on OMol25, and the intermolecular term combines a MACE-POLAR contribution, an XDM-style long-range dispersion correction, and a learned Δ-model trained to reproduce B86bPBE-XDM intermolecular energies on ~50,000 molecular-crystal calculations. On the AstraZeneca CSP evaluation set (19 compounds) CSP-MACE-Å matches PBE-DFT-with-Neumann–Perrin accuracy, and on CSP blind-test compounds it approaches B86bPBE-XDM accuracy — making rigorous solid-form derisking tractable at scale.",
+    paperUrl: "https://arxiv.org/abs/2605.28905",
+    isNew: true,
+    coverage: ["molecular crystals", "pharmaceutical compounds", "organic crystals"],
+    useCases: ["crystal structure prediction", "polymorph screening", "solid-form derisking", "lattice energy ranking"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE"],
+    maintenance: "experimental",
+    lastReviewed: "2026-06-02",
+    trainingData: ["OMol25", "B86bPBE-XDM molecular-crystal calculations"],
+    tags: ["equivariant", "MACE", "MACE-POLAR", "crystal structure prediction", "molecular crystals", "delta-learning", "XDM dispersion", "long-range"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "elements present in OMol25 (organic / pharmaceutical chemistry)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -3993,4 +4121,18 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orb", to: "md_et", label: "Drop equivariance", description: "MD-ET pushes the non-equivariant, non-conservative design that Orb-v3 popularised for materials to its minimal extreme for molecular dynamics: an off-the-shelf Edge Transformer with neither built-in roto-equivariance nor energy conservation, compensating for the absence of physical inductive biases with large-scale supervised pre-training rather than architectural constraints." },
   { from: "transip", to: "md_et", label: "Non-equivariant transformer", dashed: true, description: "Sibling non-equivariant Transformer interatomic potentials: TransIP keeps a generic Transformer backbone but recovers SO(3)-equivariance through a latent embedding-space training objective, whereas MD-ET forgoes equivariance (and energy conservation) entirely and instead relies on supervised pre-training over ~30M QCML structures plus light fine-tuning." },
   { from: "mace4ir", to: "md_et", label: "QCML pre-training", dashed: true, description: "MD-ET and MACE4IR both build on the QCML quantum-chemistry dataset: MACE4IR trains an equivariant dipole head on QCML for infrared spectra, while MD-ET uses ~30M QCML molecular structures as the supervised pre-training corpus for its off-the-shelf edge-transformer potential. The link captures shared training data rather than architectural descent." },
+
+  // 2026 — PET-UAFD (uncertainty-aware PET universal-potential ensemble)
+  { from: "petmad", to: "pet_uafd", label: "+Experiment calibration", description: "PET-UAFD turns the single PET-MAD universal potential into an uncertainty-aware ensemble of PET 'universal DFT approximators': it trains across multiple electronic-structure references and calibrates against experimental cohesive/atomization energies, lattice constants, and bulk moduli, then exposes the ensemble spread (via the PET-EXP shallow-ensemble reweighting protocol) as a reliability estimate — where PET-MAD provides a single deterministic MAD-trained PET prediction." },
+  { from: "petmad15", to: "pet_uafd", label: "lab-cosmo UQ", dashed: true, description: "Sibling lab-cosmo PET universal potentials released in 2026: PET-MAD-1.5 pushes elemental coverage to 102 elements at the r²SCAN level, while PET-UAFD keeps the PET backbone but focuses on multi-reference training plus experiment-calibrated uncertainty quantification so that predictions and their error bars are trustworthy against experimental measurements." },
+
+  // 2026 — eSEN-MoE (InstaDeep mlip v2 Mixture-of-Experts extension of eSEN)
+  { from: "esen", to: "esen_moe", label: "+MoE", description: "eSEN-MoE wraps Meta FAIR's eSEN smooth-PES backbone with InstaDeep's Mixture-of-Experts formalism in the mlip v2 framework; eSEN supplies the equivariant smooth-energy network that the MoE routing sits on top of." },
+
+  // 2026 — T-PaiNN (transfer-learning PaiNN: classical pretraining + DFT autotuning)
+  { from: "painn", to: "t_painn", label: "Classical→DFT TL", description: "T-PaiNN keeps PaiNN's scalar/vector equivariant message-passing backbone unchanged and adds a classical-force-field pretraining + DFT autotuning recipe on top to recover quantum accuracy with far less DFT data." },
+
+  // 2026 — CSP-MACE-Å (MACE-POLAR + XDM + Δ-learning composite for molecular CSP)
+  { from: "mace_polar1", to: "csp_mace_angstrom", label: "Intramolecular MACE-POLAR", description: "CSP-MACE-Å uses MACE-POLAR as the intramolecular energy term of its composite potential — the OMol25-trained MACE-POLAR network directly supplies in-molecule energies and forces, with separate intermolecular Δ-learning and XDM dispersion terms added on top for crystal-packing accuracy." },
+  { from: "mace_off", to: "csp_mace_angstrom", label: "Molecular-crystal MACE", dashed: true, description: "Both CSP-MACE-Å and MACE-OFF are MACE-family molecular potentials for organic chemistry, but CSP-MACE-Å is purpose-built for crystal structure prediction with explicit XDM long-range dispersion and a Δ-learned intermolecular correction trained on B86bPBE-XDM, whereas MACE-OFF is a transferable SPICE-trained organic foundation potential." },
 ];
