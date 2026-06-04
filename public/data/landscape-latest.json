@@ -5843,6 +5843,64 @@
       "architecture": "gnn",
       "usesAttention": false,
       "longRange": true
+    },
+    {
+      "id": "dpa4",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "DPA4",
+      "year": 2026,
+      "author": "T. Li, W. Li, Peng, Xue, L. Zhang, D. Zhang, H. Wang (Peking Univ. / Tsinghua / AI for Science Institute / DP Technology / IAPCM)",
+      "x": 8220,
+      "y": 320,
+      "desc": "Fourth-generation Deep Potential architecture that breaks with the prior invariant DPA-1/2/3 line by going SE(3)-equivariant via a new EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution. EMFA combines a low-rank edge–node SO(2)-equivariant product in an edge-local frame, a multi-focus design for message nonlinearity, and envelope-gated attention for message aggregation; a Lebedev-grid projection preserves SO(3)-equivariance in the nonlinearity to machine precision while reaching the same algebraic order of accuracy as latitude–longitude grids with substantially fewer sample points. Released in DPA4-Air (2.76 M params), DPA4-Plus (5.4 M), and DPA4-Pro variants — DPA4-Pro attains the best Combined Performance Score on the compliant Matbench Discovery leaderboard with ~31% fewer parameters than EquiformerV3+DeNS-MP, while DPA4-Air exceeds the 30.1 M-parameter eSEN-30M-MP baseline at 10.9× fewer parameters and 42.9× less training compute, redefining the SE(3)-equivariant foundation-MLIP Pareto frontier.",
+      "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
+      "paperUrl": "https://arxiv.org/abs/2606.02419",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals",
+        "organic molecules"
+      ],
+      "useCases": [
+        "foundation MLIP",
+        "large atomistic model pretraining",
+        "Matbench Discovery",
+        "high-throughput materials simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "LGPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-06-04",
+      "trainingData": [
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "SO(2) convolution",
+        "EMFA",
+        "Lebedev grid",
+        "envelope-gated attention",
+        "DeePMD",
+        "foundation model"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": false,
+      "numElements": 89
     }
   ],
   "groups": [
@@ -7010,6 +7068,26 @@
       "label": "Molecular-crystal MACE",
       "dashed": true,
       "description": "Both CSP-MACE-Å and MACE-OFF are MACE-family molecular potentials for organic chemistry, but CSP-MACE-Å is purpose-built for crystal structure prediction with explicit XDM long-range dispersion and a Δ-learned intermolecular correction trained on B86bPBE-XDM, whereas MACE-OFF is a transferable SPICE-trained organic foundation potential."
+    },
+    {
+      "from": "dpa3",
+      "to": "dpa4",
+      "label": "+SE(3) equivariance",
+      "description": "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision."
+    },
+    {
+      "from": "escn",
+      "to": "dpa4",
+      "label": "SO(2) convolution",
+      "dashed": true,
+      "description": "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing."
+    },
+    {
+      "from": "esen",
+      "to": "dpa4",
+      "label": "Pareto frontier",
+      "dashed": true,
+      "description": "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs."
     }
   ]
 }
