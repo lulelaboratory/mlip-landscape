@@ -3815,6 +3815,7 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
   // June 2026 ADDITIONS — auto-update sweep
   //   • DPA4 — SE(3)-equivariant Deep Potential with EMFA SO(2) convolution
+  //   • Allegro-FM — exascale Allegro foundation model with TEA dataset alignment
   // ---------------------------------------------------------------------------
 
   {
@@ -3846,6 +3847,38 @@ export const INITIAL_NODES: AnyNode[] = [
     equivariance: "constrained",
     architecture: "gnn",
     usesAttention: true,
+    longRange: false,
+    numElements: 89,
+  },
+  {
+    id: "allegro_fm",
+    type: "node",
+    category: "Equivariant",
+    label: "Allegro-FM",
+    year: 2025,
+    author: "Nomura, Hattori, Ohmura, Kanemasu, Shimamura, Dasgupta, Nakano, Kalia, Vashishta (USC / Sony Group / Hiroshima Institute of Technology / Kumamoto Univ.)",
+    x: 8500,
+    y: 320,
+    desc:
+      "Exascale foundation MLIP built on the strictly-local E(3)-equivariant Allegro architecture and trained on a merger of large-scale organic and inorganic materials datasets harmonised via a new Total Energy Alignment (TEA) framework, with Transition1x added for reactive-pathway coverage. Spans 89 elements across the periodic table and achieves quantum-chemistry-level accuracy on structural, mechanical, and thermodynamic properties while exhibiting emergent behaviour for reaction kinetics, fracture, and solid/liquid dissolution beyond its training distribution. Demonstrated 97.5% parallel efficiency on the Aurora exaflop/s supercomputer at Argonne Leadership Computing Facility, scaling up to multi-billion-atom systems — applied to cement chemistry and carbon-neutral concrete design.",
+    githubUrl: "https://github.com/mir-group/allegro",
+    paperUrl: "https://arxiv.org/abs/2502.06073",
+    isNew: true,
+    coverage: ["general materials", "organic molecules", "inorganic crystals", "cements", "interfaces"],
+    useCases: ["exascale molecular dynamics", "foundation MLIP", "cement chemistry", "carbon capture / sequestration", "reactive MD"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["LAMMPS", "ASE"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-06-05",
+    trainingData: ["organic + inorganic materials datasets merged via TEA", "Transition1x"],
+    tags: ["equivariant", "Allegro", "foundation model", "Total Energy Alignment", "exascale", "strictly local"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "89 elements",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
     longRange: false,
     numElements: 89,
   },
@@ -4178,4 +4211,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // 2025 — Allegro-FM (exascale Allegro foundation model with TEA dataset alignment, USC / Argonne)
+  { from: "allegro", to: "allegro_fm", label: "+TEA foundation", description: "Allegro-FM is the foundation-scale extension of the Allegro architecture from the USC / ANL collaboration: it keeps Allegro's strictly-local E(3)-equivariant tensor-product backbone and scales it across 89 elements by training on organic and inorganic materials datasets merged via a new Total Energy Alignment (TEA) framework that harmonises absolute energy references across heterogeneous DFT corpora." },
+  { from: "mace_mp0", to: "allegro_fm", label: "89-element foundation pair", dashed: true, description: "Sibling 89-element materials foundation MLIPs: MACE-MP-0 trains the MACE equivariant message-passing backbone on the MPtrj dataset, while Allegro-FM trains the strictly-local Allegro backbone on a multi-dataset TEA-aligned corpus. Both target broad-coverage universal materials simulation but differ in dataset construction and locality assumptions." },
+  { from: "allegro_moe", to: "allegro_fm", label: "Allegro family", dashed: true, description: "Allegro-FM and Allegro-MoE are co-developed 2025 Allegro-family extensions: Allegro-FM scales the Allegro backbone to an 89-element TEA-aligned foundation model for exascale single-network MD, while Allegro-MoE keeps a finer-grained, smaller architecture and routes a Mixture-of-Experts of Allegro experts of varying capacity across spatial regions of the simulation cell." },
 ];
