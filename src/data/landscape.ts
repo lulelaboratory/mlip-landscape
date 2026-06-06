@@ -42,6 +42,38 @@ export const ARCHITECTURE_VALUES: readonly Architecture[] = [
   "gnn",
 ] as const;
 
+// --- Verification / provenance (Phase 1) -----------------------------------
+// Curation status of a model's metadata. The site must never present uncertain
+// metadata as ground truth, so an absent value is treated as "needs_review"
+// (see `effectiveVerificationStatus`) and is NEVER treated as "verified".
+// - "verified": every surfaced claim was checked against a cited source.
+// - "partially_verified": some claims checked; others still pending.
+// - "unverified": reviewed and could not be supported by a source.
+// - "needs_review": not yet audited (the default for un-curated entries).
+export type VerificationStatus =
+  | "verified"
+  | "partially_verified"
+  | "unverified"
+  | "needs_review";
+
+// Who/what performed the verification. "llm_assisted" flags entries whose
+// sources were gathered with model assistance and still need a human sign-off.
+export type VerifiedBy = "human" | "script" | "llm_assisted" | "unknown";
+
+export const VERIFICATION_STATUS_VALUES: readonly VerificationStatus[] = [
+  "verified",
+  "partially_verified",
+  "unverified",
+  "needs_review",
+] as const;
+
+export const VERIFIED_BY_VALUES: readonly VerifiedBy[] = [
+  "human",
+  "script",
+  "llm_assisted",
+  "unknown",
+] as const;
+
 export interface ModelMeta {
   coverage?: string[];
   useCases?: string[];
@@ -88,6 +120,30 @@ export interface ModelMeta {
   // Integer count of elements covered (parallel to the free-form
   // `elementsCovered` so a numeric slider can use it).
   numElements?: number | null;
+
+  // --- Verification / provenance (Phase 1) ---------------------------------
+  // All optional and backward-compatible. Absence means "not yet audited":
+  // `effectiveVerificationStatus` resolves an absent value to "needs_review",
+  // so nothing is ever silently treated as verified. Do not set
+  // `verificationStatus: "verified"` without populating `verifiedSources`.
+  verificationStatus?: VerificationStatus;
+  // URLs / DOIs that were actually checked while verifying this entry.
+  verifiedSources?: string[];
+  // ISO date (YYYY-MM-DD) of the last verification pass, or null if never.
+  lastVerifiedDate?: string | null;
+  verifiedBy?: VerifiedBy;
+  // Free-form curator notes about what was (or still needs to be) checked.
+  evidenceNotes?: string;
+
+  // Claim-level evidence (free-form citation / note backing a specific claim).
+  // TODO(curators): populate as individual claims are audited; absence means
+  // the claim has not been independently sourced yet.
+  speedEvidence?: string;
+  accuracyEvidence?: string;
+  datasetEvidence?: string;
+  foundationModelEvidence?: string;
+  chargeSpinEvidence?: string;
+  licenseEvidence?: string;
 }
 
 export interface BaseNode {
@@ -117,6 +173,16 @@ export interface ModelNode extends BaseNode, ModelMeta {
   dimmed?: boolean;
   githubUrl?: string;
   paperUrl?: string;
+}
+
+// Resolve the curation status the UI should display. An absent
+// `verificationStatus` is deliberately treated as "needs_review" — never
+// "verified" — so un-curated entries are never presented as authoritative.
+// Single source of truth for both the explorer detail panel and the table.
+export function effectiveVerificationStatus(
+  node: Pick<ModelMeta, "verificationStatus">,
+): VerificationStatus {
+  return node.verificationStatus ?? "needs_review";
 }
 
 export const MAINTENANCE_STATUSES: readonly MaintenanceStatus[] = [
@@ -163,6 +229,17 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
   "longRange",
   "trainingSetSize",
   "numElements",
+  "verificationStatus",
+  "verifiedSources",
+  "lastVerifiedDate",
+  "verifiedBy",
+  "evidenceNotes",
+  "speedEvidence",
+  "accuracyEvidence",
+  "datasetEvidence",
+  "foundationModelEvidence",
+  "chargeSpinEvidence",
+  "licenseEvidence",
 ] as const;
 
 export type AnyNode = GroupNode | ModelNode;
