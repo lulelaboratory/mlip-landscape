@@ -3815,6 +3815,7 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
   // June 2026 ADDITIONS — auto-update sweep
   //   • DPA4 — SE(3)-equivariant Deep Potential with EMFA SO(2) convolution
+  //   • GG-NN — generalised global HPNN descriptor potential (Fudan / LASP, 83 elements)
   // ---------------------------------------------------------------------------
 
   {
@@ -3848,6 +3849,38 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
     numElements: 89,
+  },
+  {
+    id: "gg_nn",
+    type: "node",
+    category: "Descriptor",
+    label: "GG-NN",
+    year: 2026,
+    author: "Sheng, Kang, Cheng, Zhu, Shang, Liu (Fudan Univ. / LASP — Zhi-Pan Liu group)",
+    x: 8220,
+    y: 650,
+    desc:
+      "Generalised Global Neural Network potential built on the new high-order pair-reduced neural network (HPNN) architecture. HPNN keeps the per-element Behler–Parrinello HDNNP form but replaces the standard symmetry-function descriptors with a hierarchical angular interaction scheme that reduces the pair dimension while incorporating spherical harmonics up to l = 6 at low cost. Trained on a comprehensive 5.84 M-configuration global potential energy surface dataset spanning 83 elements collected from the LASP stochastic surface walking project, GG-NN reaches RMSEs of 7.3 meV/atom in energy and 0.16 eV/Å in force, and is the first periodic-table-wide global potential released through the LASP code for stochastic surface walking global PES exploration and large-scale MD.",
+    githubUrl: "http://www.lasphub.com",
+    paperUrl: "https://doi.org/10.1007/s11426-025-3054-y",
+    isNew: true,
+    coverage: ["general materials", "inorganic crystals", "surfaces", "catalysts"],
+    useCases: ["global PES exploration", "stochastic surface walking", "high-throughput screening", "large-scale MD"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["LAMMPS"],
+    maintenance: "active",
+    lastReviewed: "2026-06-06",
+    trainingData: ["LASP global SSW PES (5.84 M configurations)"],
+    tags: ["descriptor", "HDNNP", "HPNN", "global PES", "spherical harmonics", "foundation model"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "83 elements (periodic table coverage from the LASP global PES dataset)",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: false,
+    longRange: false,
+    numElements: 83,
+    trainingSetSize: 5840000,
   },
 ];
 
@@ -4178,4 +4211,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // 2026 — GG-NN (Generalised Global Neural Network potential on the HPNN descriptor architecture)
+  { from: "bpnn", to: "gg_nn", label: "HPNN HDNNP", description: "GG-NN sits squarely in the Behler-Parrinello high-dimensional NN potential tradition — per-element atomic NNs on local descriptors — and extends it with the new HPNN (High-order Pair-reduced Neural Network) architecture that uses a hierarchical angular interaction scheme with reduced pair dimension to incorporate spherical harmonics up to l=6 at low cost." },
+  { from: "nep89", to: "gg_nn", label: "Periodic-table coverage", dashed: true, description: "Both GG-NN (Liu / LASP, 83 elements) and NEP89 (Fan et al. / GPUMD, 89 elements) are 2025–2026 universal descriptor potentials reaching near-periodic-table coverage from a single training run, sharing the descriptor + per-element NN HDNNP design while differing in training engine (LASP stochastic surface walking vs. GPUMD neuroevolution)." },
 ];
