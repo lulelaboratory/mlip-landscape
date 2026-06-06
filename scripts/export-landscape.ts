@@ -68,6 +68,7 @@ const CSV_COLUMNS: Array<keyof ModelNode> = [
   "paperUrl",
   "license",
   "maintenance",
+  "verificationStatus",
   "lastReviewed",
   "lastUpdated",
   "supportsCharges",
