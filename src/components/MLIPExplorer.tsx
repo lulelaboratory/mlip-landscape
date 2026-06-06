@@ -34,8 +34,52 @@ import {
   Architecture,
   EQUIVARIANCE_VALUES,
   ARCHITECTURE_VALUES,
+  effectiveVerificationStatus,
+  type VerificationStatus,
 } from "@/data/landscape";
 import OnboardingTour from "@/components/OnboardingTour";
+
+// Subtle curation-status pill shown in the model detail panel (next to the
+// category badge). Mirrors the table's VerificationBadge styling. Driven by
+// `effectiveVerificationStatus`, so an un-curated entry reads "Needs review"
+// rather than appearing authoritative.
+const VERIFICATION_PILL_STYLES: Record<VerificationStatus, string> = {
+  verified:
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200",
+  partially_verified:
+    "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200",
+  needs_review:
+    "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200",
+  unverified:
+    "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+};
+const VERIFICATION_PILL_LABELS: Record<VerificationStatus, string> = {
+  verified: "Verified",
+  partially_verified: "Partially verified",
+  needs_review: "Needs review",
+  unverified: "Unverified",
+};
+const VERIFICATION_PILL_TITLES: Record<VerificationStatus, string> = {
+  verified: "All surfaced metadata was checked against a cited source.",
+  partially_verified:
+    "Some metadata is source-checked; other claims are still pending review.",
+  needs_review:
+    "This entry has not been audited yet — treat its metadata as provisional.",
+  unverified:
+    "Reviewed, but the metadata could not be backed by a reliable source.",
+};
+
+function DetailVerificationBadge({ status }: { status: VerificationStatus }) {
+  return (
+    <span
+      title={VERIFICATION_PILL_TITLES[status]}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875em] font-semibold uppercase tracking-wide ${VERIFICATION_PILL_STYLES[status]}`}
+    >
+      {VERIFICATION_PILL_LABELS[status]}
+    </span>
+  );
+}
+
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -2538,11 +2582,16 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
       <>
         <div className="flex justify-between items-start gap-4">
           <div>
-            <div
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide mb-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm`}
-            >
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              {selectedNode.category}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm`}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                {selectedNode.category}
+              </div>
+              <DetailVerificationBadge
+                status={effectiveVerificationStatus(selectedNode)}
+              />
             </div>
             <h2 className={titleClass}>{selectedNode.label}</h2>
           </div>
