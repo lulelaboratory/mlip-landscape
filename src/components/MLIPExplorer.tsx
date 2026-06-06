@@ -2621,17 +2621,31 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
           {selectedNode.desc}
         </div>
 
+        {/*
+          Data Scale and Inference were previously derived from heuristics that
+          fabricated claims for every model: "Data Scale" came from the card's
+          canvas x-coordinate (x > 600) and "Inference" from category ===
+          "Equivariant". Both are neutralized to honest placeholders here.
+          Phase 2 replaces them with curated, source-backed fields
+          (trainingScope, inferenceCost, accuracyTier, speedTier).
+        */}
         <div className={spacing}>
           <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
             <Database size={14} className="text-blue-500" />
             <span>
-              Data Scale: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.x > 600 ? "Universal (Foundational)" : "Specialized"}</strong>
+              Data Scale:{" "}
+              <span className="italic text-slate-400 dark:text-slate-500">
+                Not yet verified
+              </span>
             </span>
           </div>
           <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
             <Cpu size={14} className="text-purple-500 dark:text-purple-400" />
             <span>
-              Inference: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.category === "Equivariant" ? "High cost / high accuracy" : "Optimized for speed"}</strong>
+              Inference:{" "}
+              <span className="italic text-slate-400 dark:text-slate-500">
+                Not yet verified
+              </span>
             </span>
           </div>
         </div>
