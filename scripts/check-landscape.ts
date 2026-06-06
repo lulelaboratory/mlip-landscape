@@ -5,6 +5,8 @@ import {
   FRAMEWORK_TAGS,
   PROPERTY_TAGS,
   MODEL_META_FIELDS,
+  VERIFICATION_STATUS_VALUES,
+  VERIFIED_BY_VALUES,
   type AnyNode,
   type ModelNode,
   type GroupNode,
@@ -23,6 +25,8 @@ const VALID_CATEGORIES = new Set([
 const VALID_MAINTENANCE = new Set<string>(MAINTENANCE_STATUSES);
 const VALID_FRAMEWORKS = new Set<string>(FRAMEWORK_TAGS);
 const VALID_PROPERTIES = new Set<string>(PROPERTY_TAGS);
+const VALID_VERIFICATION_STATUS = new Set<string>(VERIFICATION_STATUS_VALUES);
+const VALID_VERIFIED_BY = new Set<string>(VERIFIED_BY_VALUES);
 const SPDX_ALLOWLIST = new Set([
   "MIT",
   "Apache-2.0",
@@ -204,6 +208,45 @@ for (const n of modelNodes) {
       `Model ${n.id} has maintenance "${n.maintenance}" (valid: ${[...VALID_MAINTENANCE].join(", ")})`,
     );
   }
+  // Verification metadata is optional; only validate when present so existing
+  // (un-curated) entries are never flagged just for lacking a status.
+  if (
+    n.verificationStatus !== undefined &&
+    !VALID_VERIFICATION_STATUS.has(n.verificationStatus)
+  ) {
+    push(
+      "invalid-verificationStatus",
+      `Model ${n.id} has verificationStatus "${n.verificationStatus}" (valid: ${[...VALID_VERIFICATION_STATUS].join(", ")})`,
+    );
+  }
+  if (n.verifiedBy !== undefined && !VALID_VERIFIED_BY.has(n.verifiedBy)) {
+    push(
+      "invalid-verifiedBy",
+      `Model ${n.id} has verifiedBy "${n.verifiedBy}" (valid: ${[...VALID_VERIFIED_BY].join(", ")})`,
+    );
+  }
+  if (
+    n.lastVerifiedDate !== undefined &&
+    n.lastVerifiedDate !== null &&
+    !ISO_DATE_RE.test(n.lastVerifiedDate)
+  ) {
+    push(
+      "bad-date",
+      `Model ${n.id} lastVerifiedDate "${n.lastVerifiedDate}" is not YYYY-MM-DD (or null)`,
+    );
+  }
+  // A model marked verified/partially_verified must cite at least one source —
+  // this enforces the core rule that nothing is "verified" without evidence.
+  if (
+    (n.verificationStatus === "verified" ||
+      n.verificationStatus === "partially_verified") &&
+    (!n.verifiedSources || n.verifiedSources.length === 0)
+  ) {
+    push(
+      "verified-without-source",
+      `Model ${n.id} is "${n.verificationStatus}" but has no verifiedSources`,
+    );
+  }
   if (n.frameworks) {
     for (const f of n.frameworks) {
       if (!VALID_FRAMEWORKS.has(f)) {
@@ -310,7 +353,7 @@ const edgeCount = (INITIAL_EDGES as Edge[]).length;
 const coverageLines = MODEL_META_FIELDS.map((field) => {
   const n = coverage[field];
   const pct = modelCount === 0 ? 0 : Math.round((n / modelCount) * 100);
-  return `    ${field.padEnd(14)} ${String(n).padStart(3)}/${modelCount}  ${String(pct).padStart(3)}%`;
+  return `    ${field.padEnd(24)} ${String(n).padStart(3)}/${modelCount}  ${String(pct).padStart(3)}%`;
 }).join("\n");
 
 const printSummary = () => {
