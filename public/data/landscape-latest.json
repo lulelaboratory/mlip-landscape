@@ -5901,6 +5901,60 @@
       "usesAttention": true,
       "longRange": false,
       "numElements": 89
+    },
+    {
+      "id": "p_egnn",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "P-EGNN",
+      "year": 2026,
+      "author": "Zaghen et al.",
+      "x": 8780,
+      "y": 150,
+      "desc": "Probabilistic equivariant-GNN MLIP built on the EGNN backbone, augmented with the P-MLIP recipe: a lightweight plug-in module that introduces learned functional perturbations into the network's parameter space and is finetuned end-to-end with the Continuous Ranked Probability Score (CRPS), a proper scoring rule. Position-update networks are left noise-free so that E(n)-equivariance is preserved exactly. The P-MLIP framework is also applied to the Orb-v3 foundation model (the resulting model is called P-Orb), demonstrating that the same recipe upgrades both from-scratch and pretrained MLIPs into uncertainty-aware probabilistic potentials. On the N-body charged-particle benchmark P-EGNN improves CRPS over the Bayesian MLIP baseline BLIP by 19–32% across all training-set sizes, and on the silica-glass (SiO2, 699 atoms) benchmark P-Orb raises the Spearman correlation between predicted uncertainty and actual error from 0.75 (BLIP-Orb) to 0.84 — pushing the Pareto frontier for non-ensemble uncertainty quantification in MLIPs.",
+      "paperUrl": "https://arxiv.org/abs/2605.19939",
+      "isNew": true,
+      "coverage": [
+        "small molecules",
+        "amorphous oxides",
+        "silica glass",
+        "N-body charged particles"
+      ],
+      "useCases": [
+        "uncertainty quantification",
+        "active learning",
+        "error-aware MD",
+        "probabilistic foundation-model finetuning"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-06-07",
+      "trainingData": [
+        "N-body charged-particle benchmark",
+        "silica-glass (SiO2) DFT"
+      ],
+      "tags": [
+        "equivariant",
+        "EGNN",
+        "probabilistic",
+        "uncertainty quantification",
+        "learned perturbations",
+        "CRPS",
+        "P-MLIP"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "dataset-dependent (small molecules and silica)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false
     }
   ],
   "groups": [
@@ -7088,6 +7142,19 @@
       "label": "Pareto frontier",
       "dashed": true,
       "description": "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs."
+    },
+    {
+      "from": "egnn",
+      "to": "p_egnn",
+      "label": "+Learned perturbations",
+      "description": "P-EGNN keeps the E(n)-equivariant EGNN backbone unchanged and wraps it with the P-MLIP recipe: learned functional perturbations injected into the parameter space plus end-to-end finetuning under the Continuous Ranked Probability Score, turning the deterministic EGNN into an uncertainty-aware probabilistic MLIP while leaving position-update networks noise-free so that E(n)-equivariance is preserved exactly."
+    },
+    {
+      "from": "orb",
+      "to": "p_egnn",
+      "label": "P-Orb finetune",
+      "dashed": true,
+      "description": "The P-MLIP recipe behind P-EGNN is also demonstrated by finetuning the Orb-v3 foundation model into a probabilistic variant called P-Orb, which on the silica-glass benchmark raises the Spearman correlation between predicted uncertainty and actual error from 0.75 (BLIP-Orb) to 0.84."
     }
   ]
 }
