@@ -3815,6 +3815,7 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
   // June 2026 ADDITIONS — auto-update sweep
   //   • DPA4 — SE(3)-equivariant Deep Potential with EMFA SO(2) convolution
+  //   • P-EGNN — probabilistic equivariant MLIP via learned functional perturbations
   // ---------------------------------------------------------------------------
 
   {
@@ -3848,6 +3849,35 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
     numElements: 89,
+  },
+  {
+    id: "p_egnn",
+    type: "node",
+    category: "Equivariant",
+    label: "P-EGNN",
+    year: 2026,
+    author: "Zaghen et al.",
+    x: 8580,
+    y: 150,
+    desc:
+      "Probabilistic equivariant interatomic potential built on the E(n)-Equivariant Graph Neural Network (EGNN) backbone. Turns a deterministic MLIP into a probabilistic one by perturbing all MLP blocks on the edge and node update functions with learned functional noise (the position update networks are left noise-free to avoid breaking equivariance), then finetunes the perturbed model end-to-end with the Continuous Ranked Probability Score (CRPS), a proper scoring rule. The same recipe applied to the Orb-v3 foundation model produces a P-Orb variant. On the N-body charged-particle benchmark P-EGNN improves CRPS over the state-of-the-art Bayesian MLIP method BLIP by 19–32% across all training-set sizes; on silica, P-Orb raises the Spearman correlation between predicted uncertainty and actual error from 0.75 to 0.84 — providing well-calibrated uncertainties for error-aware MD and active learning while inheriting the deterministic backbone's accuracy.",
+    paperUrl: "https://arxiv.org/abs/2605.19939",
+    isNew: true,
+    coverage: ["general materials", "small molecules", "silica"],
+    useCases: ["uncertainty quantification", "active learning", "error-aware MD", "foundation-model finetuning"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-06-08",
+    trainingData: ["N-body charged particles", "silica"],
+    tags: ["equivariant", "probabilistic", "uncertainty quantification", "CRPS", "EGNN", "Orb-v3 finetuning", "functional perturbations"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "dataset-dependent (validated on silica and toy N-body benchmarks)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
   },
 ];
 
@@ -4178,4 +4208,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // 2026 — P-EGNN (probabilistic equivariant MLIP via learned functional perturbations)
+  { from: "egnn", to: "p_egnn", label: "+Probabilistic", description: "P-EGNN extends Satorras et al.'s E(n)-Equivariant Graph Neural Network (EGNN) by perturbing all MLP blocks on its edge and node update functions with learned functional noise — leaving the position update networks noise-free to preserve equivariance — and finetuning end-to-end with the Continuous Ranked Probability Score (CRPS) to turn the deterministic EGNN potential into a calibrated probabilistic MLIP." },
+  { from: "orb", to: "p_egnn", label: "Foundation finetuning", dashed: true, description: "The same learned-functional-perturbation + CRPS recipe used in P-EGNN is also applied as a finetuning protocol to the Orb-v3 foundation model, producing a P-Orb variant that raises the Spearman correlation between predicted uncertainty and actual error on silica from 0.75 to 0.84 — demonstrating the technique transfers to large pretrained backbones." },
 ];
