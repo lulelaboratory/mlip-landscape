@@ -3815,6 +3815,7 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
   // June 2026 ADDITIONS — auto-update sweep
   //   • DPA4 — SE(3)-equivariant Deep Potential with EMFA SO(2) convolution
+  //   • Egret-1 — Rowan family of MACE-based pretrained bioorganic NNPs
   // ---------------------------------------------------------------------------
 
   {
@@ -3848,6 +3849,38 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
     numElements: 89,
+  },
+  {
+    id: "egret_1",
+    type: "node",
+    category: "Equivariant",
+    label: "Egret-1",
+    year: 2025,
+    author: "Wagen, Mann, Vandezande, Wagen, Schneider (Rowan Scientific)",
+    x: 8500,
+    y: 150,
+    desc:
+      "Family of pretrained neural-network potentials built on the MACE E(3)-equivariant message-passing architecture, targeted at bioorganic and main-group chemistry. The flagship Egret-1 was trained on 951,005 DFT structures spanning 19,228 unique organic molecules over H, C, N, O, F, P, S, Cl, Br, and I, reaching DFT-level accuracy (equal to or better than B3LYP-D3BJ/6-31G(d), r²SCAN-3c, and B97-3c) on torsional scans, conformer ranking, and geometry optimisation while outperforming AIMNet2, Orb-v3, and MACE-MP-0b2-L on bioorganic benchmarks. Ships as five MIT-licensed checkpoints: Egret-1 (general-purpose bioorganic), Egret-1e (extra main-group data for thermochemistry), Egret-1t (transition states / reactivity), Egret-1S (invariant-only, 92 spherical channels, smallest/fastest), and Egret-1M (low-resolution equivariance, 128 spherical channels, fast). Distributed through the rowansci/egret-public repository and runnable locally via ASE (mace_off-style calculator) or through the Rowan computational-chemistry platform.",
+    githubUrl: "https://github.com/rowansci/egret-public",
+    paperUrl: "https://arxiv.org/abs/2504.20955",
+    isNew: true,
+    coverage: ["organic molecules", "bioorganic molecules", "main-group chemistry"],
+    useCases: ["bioorganic MD", "conformer ranking", "torsional scans", "geometry optimisation", "thermochemistry", "transition states", "reactivity modelling"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE"],
+    license: "MIT",
+    maintenance: "active",
+    lastReviewed: "2026-06-10",
+    trainingData: ["Rowan organic DFT dataset (951k structures / 19,228 molecules)"],
+    tags: ["equivariant", "MACE family", "bioorganic", "pretrained NNP", "Rowan", "model family"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "H, C, N, O, F, P, S, Cl, Br, I",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: false,
+    numElements: 10,
   },
 ];
 
@@ -4178,4 +4211,9 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // 2025 — Egret-1 (Rowan family of MACE-based pretrained bioorganic NNPs)
+  { from: "mace", to: "egret_1", label: "MACE backbone", description: "Egret-1 is built directly on the MACE E(3)-equivariant message-passing architecture; the Egret family ships the standard equivariant MACE backbone (with two lightweight Egret-1S/Egret-1M variants that reduce or remove higher-order spherical channels) plus Rowan's bioorganic training recipe on top." },
+  { from: "mace_off", to: "egret_1", label: "Bio/organic MACE pair", dashed: true, description: "Egret-1 and MACE-OFF are sibling MACE-architecture organic foundation potentials covering nearly the same element set (H, C, N, O, F, P, S, Cl, Br, I): MACE-OFF is the SPICE-trained academic line from the original MACE authors, while Egret-1 is Rowan Scientific's commercial-platform-backed family trained on a custom 951k-structure / 19,228-molecule DFT dataset and adds transition-state (Egret-1t) and thermochemistry-tuned (Egret-1e) variants." },
+  { from: "aimnet2", to: "egret_1", label: "Bioorganic NNP comparator", dashed: true, description: "Egret-1 directly benchmarks against AIMNet2 as the prior state-of-the-art pretrained NNP for neutral and charged organic / bioorganic chemistry, reporting that the Egret family equals or exceeds AIMNet2 on torsional scans, conformer ranking, and geometry optimisation across the same H/C/N/O/F/P/S/Cl/Br/I element set." },
 ];
