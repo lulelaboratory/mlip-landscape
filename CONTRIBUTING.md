@@ -226,6 +226,28 @@ accuracy into one label; `"unknown"` and *absent* are different (`"unknown"` =
 reviewed but undetermined, absent = not yet reviewed) and neither ever counts
 as `false`.
 
+### Datasets (`src/data/datasets.ts`)
+
+Datasets are normalized in a registry so the same dataset isn't double-counted
+under different spellings (`MPTrj` / `MPtrj` / `MPTraj`). Each entry has a stable
+`datasetId`, a canonical `name`, the `aliases` seen in the wild, `domain[]`, and
+optional `sourceUrl` / `paperUrl` / `license` / `notes` / `verificationStatus`.
+Only source-checked datasets carry a `paperUrl` / `license`; the rest are
+`needs_review` with **no guessed links**.
+
+- Connect a model to datasets with `trainedDatasets: string[]` on the model,
+  using **`datasetId`s** (e.g. `["omol25", "omat24"]`). `check:landscape` fails
+  if an id isn't in the registry. Keep this separate from the free-form
+  `trainingData` provenance text — do not infer one from the other.
+- A dataset becomes selectable in the explorer's **Trained on dataset** filter
+  only when its id is added to `FILTERABLE_DATASET_IDS`, which should happen
+  **only after every model trained on it has a normalized `trainedDatasets`** —
+  otherwise the filter under-reports. OMol25 is fully normalized; others are
+  TODO.
+- `fineTuningDatasets` / `evaluationDatasets` / `benchmarkDatasets` relationship
+  types are **not implemented yet** (Phase 4 did `trainedDatasets` first); add
+  them the same way when needed.
+
 ### Required-for-new-entries fields
 
 The three capability fields above are **required for new entries** so that

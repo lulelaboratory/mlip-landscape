@@ -40,6 +40,16 @@ _Last updated: 2026-06-11 (manual)._
   multiple output heads). These are per-claim checks only; the entries
   otherwise remain `needs_review`. **TODO:** source-check denoising pretraining
   (e.g. Orb / DPA families) and broaden capability coverage.
+- **2026-06-11 Phase 4 dataset registry:** added `src/data/datasets.ts`
+  (normalized ids + aliases). Flagship datasets OMol25 (arXiv:2505.08762),
+  OMat24 (arXiv:2410.12771, CC-BY-4.0) and OC20 (arXiv:2010.09990) are
+  source-checked (`partially_verified`); the remaining ~20 registry entries are
+  `needs_review` with **no guessed URLs** — verify their `paperUrl` / `license`
+  during the reference audit. `trainedDatasets` was normalized for the 11
+  OMol25-trained models so the "Trained on OMol25" filter is complete; only
+  `omol25` is in `FILTERABLE_DATASET_IDS`. **TODO:** normalize `trainedDatasets`
+  for the rest of the catalogue, then expose more datasets in the filter; add
+  the fine-tuning / evaluation / benchmark relationship types.
 
 <!-- AUTOGEN:START metadata-warnings -->
 | model id | field | current value | concern | severity | suggested action |
