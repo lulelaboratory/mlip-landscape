@@ -35,9 +35,11 @@ import {
   EQUIVARIANCE_VALUES,
   ARCHITECTURE_VALUES,
   effectiveVerificationStatus,
+  effectiveEdgeConfidence,
   type VerificationStatus,
   type EntityType,
   type TrainingScope,
+  type EdgeConfidence,
 } from "@/data/landscape";
 import {
   FILTERABLE_DATASET_IDS,
@@ -323,6 +325,17 @@ type DeviceType = "mobile" | "tablet" | "desktop";
 type LayoutMode = "layered" | "force" | "timeline";
 const LAYOUT_STORAGE_KEY = "mliphub.layout";
 const EDGE_LABELS_STORAGE_KEY = "mliphub.edgeLabels";
+const SHOW_CONNECTIONS_STORAGE_KEY = "mliphub.showConnections";
+const UNVERIFIED_EDGES_STORAGE_KEY = "mliphub.unverifiedEdges";
+
+// Human-readable wording for each edge trust tier, used by tooltips and the
+// connection detail panel so unverified links are always clearly marked.
+const EDGE_CONFIDENCE_LABELS: Record<EdgeConfidence, string> = {
+  verified: "verified",
+  probable: "probable (not yet source-verified)",
+  speculative: "speculative (weak link)",
+  unknown: "unverified",
+};
 const FORCE_OVERRIDES_STORAGE_KEY = "mliphub.forceOverrides";
 
 const isLayoutMode = (value: string | null): value is LayoutMode =>
@@ -978,7 +991,12 @@ export default function MLIPExplorer() {
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [layout, setLayout] = useState<LayoutMode>("layered");
-  const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(true);
+  // Phase 5 graph cleanup: connections and edge labels are OFF by default so
+  // the landscape opens clean; selecting a model still reveals its own edges.
+  const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+  const [showUnverifiedEdges, setShowUnverifiedEdges] = useState(false);
+  const [hoveredEdgeIdx, setHoveredEdgeIdx] = useState<number | null>(null);
   const [forceOverrides, setForceOverrides] = useState<Record<string, Vec2>>({});
   const [viewCitationCopied, setViewCitationCopied] = useState(false);
   const CATEGORY_STYLES = CATEGORY_STYLES_DEFAULT;
@@ -1077,6 +1095,12 @@ export default function MLIPExplorer() {
     const labels = window.localStorage.getItem(EDGE_LABELS_STORAGE_KEY);
     if (labels === "off") setEdgeLabelsVisible(false);
     if (labels === "on") setEdgeLabelsVisible(true);
+    const connections = window.localStorage.getItem(SHOW_CONNECTIONS_STORAGE_KEY);
+    if (connections === "on") setShowConnections(true);
+    if (connections === "off") setShowConnections(false);
+    const unverified = window.localStorage.getItem(UNVERIFIED_EDGES_STORAGE_KEY);
+    if (unverified === "on") setShowUnverifiedEdges(true);
+    if (unverified === "off") setShowUnverifiedEdges(false);
     try {
       const raw = window.localStorage.getItem(FORCE_OVERRIDES_STORAGE_KEY);
       if (raw) {
@@ -1099,6 +1123,20 @@ export default function MLIPExplorer() {
     setEdgeLabelsVisible(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(EDGE_LABELS_STORAGE_KEY, next ? "on" : "off");
+    }
+  };
+
+  const updateShowConnections = (next: boolean) => {
+    setShowConnections(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SHOW_CONNECTIONS_STORAGE_KEY, next ? "on" : "off");
+    }
+  };
+
+  const updateShowUnverifiedEdges = (next: boolean) => {
+    setShowUnverifiedEdges(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(UNVERIFIED_EDGES_STORAGE_KEY, next ? "on" : "off");
     }
   };
 
@@ -1985,17 +2023,51 @@ export default function MLIPExplorer() {
   }, [compactLayeredLayout]);
 
   // Format the human-readable tooltip for an edge: "<from> → <to> · <label>"
-  // when a label exists, falling back to just the endpoints. The dashed flag
-  // is appended in parentheses so screen readers and hover tooltips both
-  // surface the "weaker / speculative" status.
+  // when a label exists, falling back to just the endpoints. The trust tier is
+  // always appended so screen readers and hover tooltips surface whether the
+  // relationship is verified, probable, or speculative — even when on-graph
+  // labels are switched off, hovering an edge reveals the relation this way.
   const formatEdgeTooltip = (edge: Edge) => {
     const fromLabel = positionedModels.find((n) => n.id === edge.from)?.label ?? edge.from;
     const toLabel = positionedModels.find((n) => n.id === edge.to)?.label ?? edge.to;
     const head = `${fromLabel} → ${toLabel}`;
     const body = edge.label ? ` · ${edge.label}` : "";
-    const note = edge.dashed ? " (weaker / speculative link)" : "";
+    const note = ` · ${EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(edge)]}`;
     return `${head}${body}${note}`;
   };
+
+  // Phase 5 graph cleanup — which edges are drawn at all:
+  // - the clicked (selected) edge always stays visible;
+  // - selecting a model reveals only that model's own connections ("relevant
+  //   edges only"), any confidence, with unverified ones visually marked;
+  // - otherwise nothing is drawn unless "Show connections" is on, and that
+  //   global view includes only VERIFIED edges unless the explicit
+  //   "Include unverified edges" toggle is also enabled.
+  const visibleEdgeIdx = useMemo(() => {
+    const visible = new Set<number>();
+    edges.forEach((edge, idx) => {
+      const isSelectedEdge =
+        selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      if (isSelectedEdge) {
+        visible.add(idx);
+        return;
+      }
+      if (selectedNode) {
+        if (edge.from === selectedNode.id || edge.to === selectedNode.id) {
+          visible.add(idx);
+        }
+        return;
+      }
+      if (!showConnections) return;
+      if (
+        effectiveEdgeConfidence(edge) === "verified" ||
+        showUnverifiedEdges
+      ) {
+        visible.add(idx);
+      }
+    });
+    return visible;
+  }, [edges, selectedEdge, selectedNode, showConnections, showUnverifiedEdges]);
 
   // Resolve an edge's SVG path and label anchor for the active layout. Shared
   // by the renderer and the label de-overlap pass below so both agree on
@@ -2092,12 +2164,16 @@ export default function MLIPExplorer() {
     const padY = 3;
 
     edges.forEach((edge, idx) => {
+      // Hidden edges neither render nor claim label space — otherwise an
+      // invisible edge's label box could cull a visible neighbour's label.
+      if (!visibleEdgeIdx.has(idx)) return;
       const geometry = computeEdgeGeometry(edge, idx);
       if (!geometry) return;
       geometries.set(idx, geometry);
       if (!edge.label) return;
       const selected =
         selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const hovered = hoveredEdgeIdx === idx;
       const w = edge.label.length * approxCharW + padX * 2;
       const h = labelFontSize + padY * 2;
       boxes.push({
@@ -2106,7 +2182,7 @@ export default function MLIPExplorer() {
         y: geometry.labelY - labelFontSize + padY,
         w,
         h,
-        priority: selected ? 0 : edge.dashed ? 2 : 1,
+        priority: selected || hovered ? 0 : edge.dashed ? 2 : 1,
       });
     });
 
@@ -2129,20 +2205,25 @@ export default function MLIPExplorer() {
     }
 
     return { geometries, visible };
-  }, [edges, computeEdgeGeometry, fontScale, selectedEdge]);
+  }, [edges, computeEdgeGeometry, fontScale, selectedEdge, visibleEdgeIdx, hoveredEdgeIdx]);
 
   const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
     edges.map((edge, idx) => {
+      if (!visibleEdgeIdx.has(idx)) return null;
       const geometry = edgeLabelLayout.geometries.get(idx);
       if (!geometry) return null;
       const { path, labelX, labelY } = geometry;
 
       const tooltip = formatEdgeTooltip(edge);
+      const confidence = effectiveEdgeConfidence(edge);
       const isSelected =
         selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const isHovered = hoveredEdgeIdx === idx;
       const baseStrokeWidth = isSelected
         ? (edge.dashed ? 3.5 : 4)
-        : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
+        : isHovered
+          ? (edge.dashed ? 3 : 3.25)
+          : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
 
       // Three render modes, each on a dedicated SVG layer so we can stack
       // them around the card layer:
@@ -2181,6 +2262,14 @@ export default function MLIPExplorer() {
                 handleEdgeClick(edge);
               }
             }}
+            onMouseEnter={() => setHoveredEdgeIdx(idx)}
+            onMouseLeave={() =>
+              setHoveredEdgeIdx((cur) => (cur === idx ? null : cur))
+            }
+            onFocus={() => setHoveredEdgeIdx(idx)}
+            onBlur={() =>
+              setHoveredEdgeIdx((cur) => (cur === idx ? null : cur))
+            }
           >
             <title>{tooltip}</title>
             <path
@@ -2195,7 +2284,11 @@ export default function MLIPExplorer() {
       }
 
       if (mode === "labels") {
-        if (!edge.label || !edgeLabelsVisible) return null;
+        if (!edge.label) return null;
+        // Even with global edge labels off, the hovered or selected edge's
+        // relation label is shown so users can always discover what a line
+        // means without flooding the canvas.
+        if (!edgeLabelsVisible && !isSelected && !isHovered) return null;
         if (!edgeLabelLayout.visible.has(idx)) return null;
         // Approximate the rendered text width so we can draw a background
         // rect that masks whatever card the label overlaps. SVG <text> has
@@ -2263,7 +2356,17 @@ export default function MLIPExplorer() {
             strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={isSelected ? "opacity-100" : "opacity-90"}
+            className={
+              // Unverified edges are visibly faded (plus dashed when
+              // speculative) so they are never mistaken for verified ones.
+              isSelected || isHovered
+                ? "opacity-100"
+                : confidence === "verified"
+                  ? "opacity-90"
+                  : confidence === "probable"
+                    ? "opacity-70"
+                    : "opacity-50"
+            }
             markerEnd="url(#edge-arrow)"
           />
         </g>
@@ -2593,7 +2696,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">
             <span className="inline-block uppercase tracking-widest font-bold text-[0.75em] sm:text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
-              Connection {selectedEdge.dashed ? "(speculative)" : ""}
+              Connection ·{" "}
+              {EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(selectedEdge)]}
             </span>
             <h2 className="text-[1.25em] md:text-[1.5em] font-bold text-slate-900 dark:text-slate-100 leading-snug">
               {fromNode?.label ?? selectedEdge.from}
@@ -2637,6 +2741,45 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             edge in <code>landscape.ts</code> to fill this in.
           </p>
         )}
+
+        <div>
+          <div className="uppercase tracking-widest font-bold text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
+            Verification
+          </div>
+          {effectiveEdgeConfidence(selectedEdge) === "verified" ? (
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug">
+              This relationship was checked against a source
+              {selectedEdge.edgeSource && (
+                <>
+                  {": "}
+                  <a
+                    href={selectedEdge.edgeSource}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                  >
+                    {selectedEdge.edgeSource}
+                  </a>
+                </>
+              )}
+              .
+            </p>
+          ) : (
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug">
+              This relationship is{" "}
+              <strong>
+                {EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(selectedEdge)]}
+              </strong>{" "}
+              — curated but not yet checked against a source. Treat it as
+              provisional.
+            </p>
+          )}
+          {selectedEdge.edgeNotes && (
+            <p className="mt-1 text-[0.75em] text-slate-500 dark:text-slate-400 leading-snug">
+              {selectedEdge.edgeNotes}
+            </p>
+          )}
+        </div>
 
         {fromNode && (
           <button
@@ -3514,7 +3657,35 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   </ul>
                 </div>
 
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 space-y-2">
+                  <label
+                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showConnections}
+                      onChange={(e) => updateShowConnections(e.target.checked)}
+                      aria-label="Show connections between models on the landscape graph"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                    />
+                    Show connections
+                  </label>
+                  {showConnections && (
+                    <label
+                      className="flex items-center gap-2 pl-6 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={showUnverifiedEdges}
+                        onChange={(e) =>
+                          updateShowUnverifiedEdges(e.target.checked)
+                        }
+                        aria-label="Also show unverified (probable or speculative) connections"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                      />
+                      Include unverified edges
+                    </label>
+                  )}
                   <label
                     className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
                   >
@@ -3527,6 +3698,13 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     />
                     Show edge labels
                   </label>
+                  <p className="text-[0.625em] text-slate-400 dark:text-slate-500 leading-snug">
+                    Connections are off by default for a clean view; the
+                    default view shows source-verified links only. Selecting a
+                    model always reveals its own connections (unverified ones
+                    are faded / dashed), and hovering an edge shows its
+                    relationship.
+                  </p>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
