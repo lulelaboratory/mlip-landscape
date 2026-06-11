@@ -726,6 +726,67 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
   },
   {
+    id: "orbmol_v2",
+    type: "node",
+    category: "Transformer",
+    label: "OrbMol-v2",
+    year: 2026,
+    author: "Orbital Materials",
+    x: 8500,
+    y: 320,
+    desc:
+      "Second-generation OrbMol adding learnable per-atom electrostatics to the OrbMol molecular potential: a LatentChargeHead predicts per-atom latent charges constrained to the system total charge, and a CoulombModule adds long-range Coulomb energy (direct summation for non-periodic systems, particle-mesh Ewald for periodic ones). Trained on OMol25 and OPoly26 at the ωB97M-V/def2-TZVPD level.",
+    githubUrl: "https://github.com/orbital-materials/orb-models",
+    isNew: true,
+    coverage: ["organic molecules", "electrolytes", "metal complexes", "biomolecules", "polymers"],
+    useCases: ["molecular MD", "electrolyte design", "polymer simulation"],
+    properties: ["energy", "forces"],
+    frameworks: ["ASE"],
+    license: "Apache-2.0",
+    maintenance: "active",
+    lastReviewed: "2026-06-11",
+    trainingData: ["OMol25", "OPoly26"],
+    trainedDatasets: ["omol25", "opoly26"],
+    tags: ["transformer", "charge-aware", "spin-aware", "long-range-electrostatics", "molecular"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered:
+      "elements present in OMol25 / OPoly26 (organic, electrolyte, metal-complex, polymer chemistry)",
+    equivariance: "learnt",
+    architecture: "gnn",
+    trainingSetSize: 100000000,
+    usesAttention: true,
+    longRange: true,
+    // Phase 6 (Tim's request): added 2026-06-11 from official sources only —
+    // the Hugging Face model card and the orb-models repo/release notes. The
+    // LinkedIn post Tim shared was treated as a pointer, not a source.
+    entityType: "trained_model",
+    architectureFamily: "Orb",
+    trainingScope: "domain_specific",
+    isFoundationModel: "unknown",
+    accuracyTier: "unknown",
+    accuracyEvidence:
+      "Developer-reported: GSCDB138 normalized error ratio improves 6.05 -> 1.62 vs OrbMol-v1 ('comparable to a good DFT functional'; orb-models release notes / HF model card, checked 2026-06-11). No independent benchmark tier assessed yet.",
+    benchmarkContext:
+      "Developer-reported GSCDB138 molecular benchmark, relative to OrbMol-v1.",
+    chargeSpinEvidence:
+      "ChargeSpinConditioner mixes the system's net charge and spin multiplicity into the backbone; LatentChargeHead + ChargeConditionedEnergyHead handle per-atom charges (HF model card / orb-models release notes, checked 2026-06-11).",
+    datasetEvidence:
+      "Trained on OMol25 and OPoly26 (wB97M-V/def2-TZVPD) per the Orbital-Materials/orbmol-v2 model card, checked 2026-06-11. OPoly26 itself is needs_review in the dataset registry pending a primary source.",
+    licenseEvidence: "Apache-2.0 per the HF model card (checked 2026-06-11).",
+    foundationModelEvidence:
+      "Pretrained broad molecular potential; the sources checked do not describe it as a 'foundation model', so this is recorded as 'unknown' rather than asserted.",
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://huggingface.co/Orbital-Materials/orbmol-v2",
+      "https://github.com/orbital-materials/orb-models",
+    ],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 (Phase 6): details corroborated across two independent web-search passes of the official HF model card and orb-models release notes (direct page fetch blocked by network policy); full model-card review pending. properties/frameworks inherited from the OrbMol entry pending confirmation. One search summary mis-attributed arXiv:2505.08762 (the OMol25 dataset paper) as an 'OrbMol-v2 paper' — rejected, so no paper is cited.",
+  },
+  {
     id: "tfn",
     type: "node",
     category: "Equivariant",
@@ -4241,6 +4302,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "grace", label: "ACE family" , description: "GRACE (Graph ACE) is a foundation-scale graph implementation of the Atomic Cluster Expansion. MACE shares the ACE many-body basis as its mathematical backbone, so GRACE is a parallel ACE-graph development rather than a strict descendant of MACE; the link captures the shared ACE-on-a-graph design." },
   { from: "orb_v2", to: "orb", label: "v2 → v3", description: "Orb-v3 is the direct successor to Orb-v2 from Orbital Materials, sharing the same non-equivariant backbone with refinements to training data and conservativity." },
   { from: "orb", to: "orbmol", label: "Adds OMol25" , description: "OrbMol is the molecular variant of Orb-v3 trained on the OMol25 dataset, with the same Orb backbone plus charge/spin conditioning." },
+  { from: "orbmol", to: "orbmol_v2", label: "+Electrostatics", description: "OrbMol-v2 extends the OrbMol architecture with learnable per-atom electrostatics: a LatentChargeHead predicting per-atom latent charges constrained to the system total charge, and a CoulombModule adding long-range Coulomb energy (direct summation for non-periodic systems, particle-mesh Ewald for periodic ones), trained on OMol25 + OPoly26.", edgeConfidence: "verified", edgeSource: "https://huggingface.co/Orbital-Materials/orbmol-v2", edgeNotes: "Verified 2026-06-11 against the official HF model card / orb-models release notes (corroborated across two independent search passes; direct page fetch blocked by network policy)." },
   { from: "pet", to: "petmad", label: "MAD pretraining", description: "PET-MAD applies the Massive Atomic Diversity training recipe to the Point Edge Transformer architecture; PET supplies the unconstrained-equivariance graph-transformer backbone." },
   { from: "eqv2", to: "esen", label: "Smooth PES" , description: "eSEN is an equivariant GNN focused on producing a smooth, energy-conserving PES for stable MD; it sits in the same Meta FAIR equivariant lineage as Equiformer V2 but the abstract emphasises smoothness/expressivity rather than naming Equiformer V2 as a parent." },
   { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2506.23971", edgeNotes: "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN." },

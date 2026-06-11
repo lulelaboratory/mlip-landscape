@@ -94,6 +94,15 @@ export const DATASETS: DatasetEntry[] = [
     verificationStatus: "needs_review",
   },
   {
+    datasetId: "opoly26",
+    name: "OPoly26 (Open Polymers 2026)",
+    aliases: ["OPoly26", "Open Polymers 2026"],
+    domain: ["polymers", "molecules"],
+    notes:
+      "~6.57M DFT single points on capped substructures of diverse polymer chains (per secondary summaries of the Orbital Materials release; primary-source check pending — no URL is recorded until verified).",
+    verificationStatus: "needs_review",
+  },
+  {
     datasetId: "mptrj",
     name: "MPtrj (Materials Project trajectories)",
     aliases: [
