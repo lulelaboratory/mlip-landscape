@@ -170,7 +170,6 @@
         "oxides"
       ],
       "useCases": [
-        "universal MLIP",
         "MD at scale",
         "high-throughput screening"
       ],
@@ -186,22 +185,32 @@
       "license": "MIT",
       "maintenance": "active",
       "lastReviewed": "2026-05-05",
-      "trainingData": [
-        "MPTrj",
-        "Alexandria"
-      ],
       "tags": [
         "equivariant",
         "higher-order",
-        "foundation model"
+        "architecture"
       ],
       "supportsCharges": false,
       "supportsSpins": false,
-      "elementsCovered": "all elements covered by MPTrj / Alexandria (~89 elements)",
+      "elementsCovered": "dataset-dependent (architecture; ~89-element universal coverage via the MACE-MP foundation variants)",
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
-      "longRange": false
+      "longRange": false,
+      "entityType": "architecture",
+      "architectureFamily": "MACE",
+      "isFoundationModel": false,
+      "hasFoundationVariant": true,
+      "foundationModelEvidence": "arXiv:2206.07697 introduces the MACE architecture (benchmarked on rMD17, 3BPA, AcAc) with no universal/foundation claims; the universal foundation family is MACE-MP-0 and successors (arXiv:2401.00096), catalogued as separate entries.",
+      "datasetEvidence": "Removed trainingData [MPTrj, Alexandria] from this entry: those are training sets of the MACE-MP foundation variants, not of the 2022 architecture paper (which trains per-task models on rMD17 / 3BPA / AcAc).",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2206.07697",
+        "https://arxiv.org/abs/2401.00096"
+      ],
+      "lastVerifiedDate": "2026-06-11",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-06-11 audit: removed unsupported universal/foundation labels from the base architecture entry (identity claims source-checked). Remaining capability fields still pending full review."
     },
     {
       "id": "grace",
@@ -2970,7 +2979,7 @@
         "general materials"
       ],
       "useCases": [
-        "lightweight foundation MLIP",
+        "lightweight universal MLIP",
         "thousand-atom MD"
       ],
       "properties": [
@@ -2993,7 +3002,7 @@
         "invariant",
         "distilled",
         "lightweight",
-        "foundation model"
+        "universal MLIP"
       ],
       "supportsCharges": false,
       "supportsSpins": false,
@@ -3001,7 +3010,27 @@
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
-      "longRange": false
+      "longRange": false,
+      "entityType": "trained_model",
+      "architectureFamily": "SevenNet",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": "unknown",
+      "hasFoundationVariant": true,
+      "inferenceCost": "low",
+      "speedTier": "fast",
+      "accuracyTier": "unknown",
+      "speedEvidence": "Paper title/abstract: \"A Lightweight Universal Machine-Learning Interatomic Potential via Knowledge Distillation for Scalable Atomistic Simulations\" — compact distilled architecture aimed at scalable simulation (arXiv:2604.10887).",
+      "accuracyEvidence": "Paper claims high accuracy and strong transferability inherited from the SevenNet-Omni teacher (arXiv:2604.10887); no independent benchmark tier assessed yet, so the tier is kept 'unknown'.",
+      "benchmarkContext": "Cost/speed are relative to full-size universal MLIPs (its SevenNet-Omni teacher); paper benchmarks static and dynamical properties such as Li-ion diffusion and liquid densities.",
+      "foundationModelEvidence": "Distilled student of the SevenNet-Omni foundation model; the paper presents it as a lightweight *universal* MLIP rather than itself a foundation model, so isFoundationModel is recorded as 'unknown'.",
+      "datasetEvidence": "Trained by knowledge distillation from SevenNet-Omni (arXiv:2604.10887); dataset-registry linkage pending (Phase 4).",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2604.10887"
+      ],
+      "lastVerifiedDate": "2026-06-11",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-06-11 audit: replaced the fabricated combined inference label with separated cost/speed/accuracy axes; retagged 'foundation model' to 'universal MLIP' per the paper's own framing."
     },
     {
       "id": "sevennet_omni",
@@ -3054,7 +3083,21 @@
       "usesAttention": false,
       "longRange": false,
       "numElements": 89,
-      "trainingSetSize": 250000000
+      "trainingSetSize": 250000000,
+      "entityType": "trained_model",
+      "architectureFamily": "SevenNet",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "hasFoundationVariant": true,
+      "foundationModelEvidence": "Universal multi-task MLIP for cross-domain transfer (arXiv:2510.11241); described as \"a large multi-task foundation model\" in the SevenNet-Nano paper abstract (arXiv:2604.10887). Checkpoint publicly released.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2510.11241",
+        "https://arxiv.org/abs/2604.10887"
+      ],
+      "lastVerifiedDate": "2026-06-11",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-06-11 audit: foundation status source-checked. Training-data composition (15 datasets, ~250M structures) and capability tiers still pending detailed review."
     },
     {
       "id": "pfp_v8",
@@ -4147,8 +4190,10 @@
         "invariant",
         "crystal graph",
         "convolutional",
-        "foundation"
+        "precursor"
       ],
+      "isFoundationModel": false,
+      "foundationModelEvidence": "CGCNN (arXiv:1710.10324, 2018) is a per-property crystal-graph prediction network from before the pretrained-universal-potential era; the previous 'foundation' tag referred to its ancestral influence (see description), not foundation-model status.",
       "supportsCharges": false,
       "supportsSpins": false,
       "elementsCovered": "all elements covered by Materials Project",
@@ -4895,7 +4940,21 @@
       "equivariance": "constrained",
       "architecture": "gnn",
       "usesAttention": false,
-      "longRange": false
+      "longRange": false,
+      "entityType": "trained_model",
+      "architectureFamily": "MACE",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "hasFoundationVariant": true,
+      "foundationModelEvidence": "Paper title: \"A foundation model for atomistic materials chemistry\" (arXiv:2401.00096); a single MACE potential trained on MPtrj, presented as an out-of-the-box foundation model.",
+      "datasetEvidence": "MPtrj (Materials Project trajectories, ~150k inorganic crystals, 89 elements) stated as the training set in arXiv:2401.00096.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2401.00096"
+      ],
+      "lastVerifiedDate": "2026-06-11",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-06-11 audit: foundation status and training data source-checked. Benchmark/capability tiers still pending review."
     },
     {
       "id": "mpnice",
