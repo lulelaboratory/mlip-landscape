@@ -3462,6 +3462,97 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   </span>
                 </label>
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div
+                    className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
+                    id="mliphub-layout-label"
+                  >
+                    Layout
+                  </div>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="mliphub-layout-label"
+                    className="grid grid-cols-1 gap-1"
+                  >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "layered"}
+                      onClick={() => updateLayout("layered")}
+                      title="Curated, hand-tuned arrangement (default — the version cited in the paper)."
+                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "layered"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Layered (default)
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "force"}
+                      onClick={() => updateLayout("force")}
+                      title="Experimental: deterministic force-directed simulation. The curated layered view remains the default."
+                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "force"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Force-directed
+                      <span
+                        aria-label="experimental"
+                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                      >
+                        Exp
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={layout === "timeline"}
+                      onClick={() => updateLayout("timeline")}
+                      title="Tree of Life view: cards arranged left-to-right by release year with month ticks."
+                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
+                        layout === "timeline"
+                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
+                      }`}
+                    >
+                      Timeline (Tree of Life)
+                      <span
+                        aria-label="new"
+                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                      >
+                        New
+                      </span>
+                    </button>
+                  </div>
+                  {layout === "force" && (
+                    <>
+                      <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
+                        Experimental view. The curated layered layout remains
+                        the default and is the version cited in the paper.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={resetForceLayout}
+                        aria-label="Reset force-directed layout to its computed positions"
+                        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      >
+                        <RotateCcw size={12} aria-hidden="true" /> Reset layout
+                      </button>
+                    </>
+                  )}
+                  {layout === "timeline" && (
+                    <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
+                      Tree-of-life view: cards are placed left-to-right by
+                      year (older → newer), grouped into one lane per
+                      architecture family. Minor ticks mark months.
+                    </p>
+                  )}
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       Filter tags
@@ -3705,98 +3796,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     are faded / dashed), and hovering an edge shows its
                     relationship.
                   </p>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <div
-                    className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
-                    id="mliphub-layout-label"
-                  >
-                    Layout
-                  </div>
-                  <div
-                    role="radiogroup"
-                    aria-labelledby="mliphub-layout-label"
-                    className="grid grid-cols-1 gap-1"
-                  >
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={layout === "layered"}
-                      onClick={() => updateLayout("layered")}
-                      title="Curated, hand-tuned arrangement (default — the version cited in the paper)."
-                      className={`px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
-                        layout === "layered"
-                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      Layered (default)
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={layout === "force"}
-                      onClick={() => updateLayout("force")}
-                      title="Experimental: deterministic force-directed simulation. The curated layered view remains the default."
-                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
-                        layout === "force"
-                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      Force-directed
-                      <span
-                        aria-label="experimental"
-                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-                      >
-                        Exp
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={layout === "timeline"}
-                      onClick={() => updateLayout("timeline")}
-                      title="Tree of Life view: cards arranged left-to-right by release year with month ticks."
-                      className={`relative px-2 py-1.5 rounded-lg text-[0.75em] md:text-[0.6875em] font-semibold border transition ${
-                        layout === "timeline"
-                          ? "bg-slate-100 text-slate-900 border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
-                      }`}
-                    >
-                      Timeline (Tree of Life)
-                      <span
-                        aria-label="new"
-                        className="ml-1 inline-block align-middle px-1 py-0 rounded text-[0.55em] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                      >
-                        New
-                      </span>
-                    </button>
-                  </div>
-                  {layout === "force" && (
-                    <>
-                      <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
-                        Experimental view. The curated layered layout remains
-                        the default and is the version cited in the paper.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={resetForceLayout}
-                        aria-label="Reset force-directed layout to its computed positions"
-                        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      >
-                        <RotateCcw size={12} aria-hidden="true" /> Reset layout
-                      </button>
-                    </>
-                  )}
-                  {layout === "timeline" && (
-                    <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
-                      Tree-of-life view: cards are placed left-to-right by
-                      year (older → newer), grouped into one lane per
-                      architecture family. Minor ticks mark months.
-                    </p>
-                  )}
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
