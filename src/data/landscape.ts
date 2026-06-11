@@ -3815,6 +3815,8 @@ export const INITIAL_NODES: AnyNode[] = [
   // ---------------------------------------------------------------------------
   // June 2026 ADDITIONS — auto-update sweep
   //   • DPA4 — SE(3)-equivariant Deep Potential with EMFA SO(2) convolution
+  //   • PSWF-LR — exponent-aware long-range MLIP framework via prolate
+  //               spheroidal wave functions
   // ---------------------------------------------------------------------------
 
   {
@@ -3848,6 +3850,35 @@ export const INITIAL_NODES: AnyNode[] = [
     usesAttention: true,
     longRange: false,
     numElements: 89,
+  },
+  {
+    id: "pswflr",
+    type: "node",
+    category: "Equivariant",
+    label: "PSWF-LR",
+    year: 2026,
+    author: "Liang, Lu, Ji, Jiang (Flatiron Institute / Shanghai Jiao Tong Univ. / Yale)",
+    x: 8500,
+    y: 150,
+    desc:
+      "Exponent-aware long-range MLIP framework that replaces dense Fourier grids with compact basis expansions built from prolate spheroidal wave functions (PSWFs). Couples PSWF-based mollification with atom-grid spreading so an arbitrary inverse-power channel 1/r^p can be represented with substantially fewer modes than standard Ewald-style reciprocal-space convolution, treating the decay exponent p as an explicit physical prior on the architecture. Drop-in for existing local MLIPs (MACE / NequIP / Allegro-style backbones): improves energy and force accuracy on ionic, polar and interfacial systems, accelerates production-level MD by roughly 3×, and pushes long-range MLIP simulations past the memory limits of conventional Ewald-coupled implementations.",
+    paperUrl: "https://arxiv.org/abs/2606.06617",
+    isNew: true,
+    coverage: ["ionic systems", "polar liquids", "interfacial systems", "electrolytes"],
+    useCases: ["long-range electrostatics", "long-range dispersion", "large-scale MD with explicit 1/r^p physics"],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-06-11",
+    trainingData: ["framework — backbone-dependent"],
+    tags: ["long-range", "prolate spheroidal wave functions", "Ewald", "reciprocal space", "exponent-aware", "framework"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "—",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: false,
+    longRange: true,
   },
 ];
 
@@ -4178,4 +4209,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // 2026 — PSWF-LR (exponent-aware long-range MLIP framework via prolate spheroidal wave functions)
+  { from: "equiewald", to: "pswflr", label: "+Exponent-aware basis", description: "PSWF-LR is the direct reciprocal-space-mechanism successor to EquiEwald-style Ewald-coupled MLIPs: it keeps the reciprocal-space long-range channel but replaces the dense Fourier grid with a compact PSWF (prolate spheroidal wave function) basis, treating the inverse-power decay exponent p of 1/r^p as an explicit physical prior on the architecture rather than implicit in the integrand." },
+  { from: "mace", to: "pswflr", label: "Drop-in long-range", dashed: true, description: "PSWF-LR is designed as a drop-in long-range module for existing local equivariant backbones such as MACE (and NequIP/Allegro): the PSWF mollification + atom-grid spreading attaches to the short-range MACE energy as an additive long-range channel, providing ionic / polar / interfacial accuracy without modifying the underlying message-passing architecture." },
 ];
