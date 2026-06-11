@@ -74,6 +74,102 @@ export const VERIFIED_BY_VALUES: readonly VerifiedBy[] = [
   "unknown",
 ] as const;
 
+// --- Identity & capability axes (Phase 2) ----------------------------------
+// What kind of thing an entry is. The catalogue historically mixed
+// architectures (e.g. MACE) with pretrained model instances (e.g. MACE-MP-0);
+// this field makes the distinction explicit. "dataset" / "benchmark" are
+// reserved for future registry entries (Phase 4).
+export type EntityType =
+  | "architecture"
+  | "trained_model"
+  | "model_family"
+  | "dataset"
+  | "benchmark";
+
+// Breadth of the training data behind a *trained model* entry. Architecture
+// entries should normally leave this unset — scope is a property of each
+// trained model, not of the architecture. "unknown" = reviewed but
+// undetermined; absent = not yet reviewed.
+export type TrainingScope =
+  | "single_system"
+  | "domain_specific"
+  | "multi_domain"
+  | "universal_foundation"
+  | "unknown";
+
+// Separate cost / speed / accuracy axes replacing the old combined
+// "high cost / high accuracy" style labels. Tiers are coarse, relative to
+// contemporaneous MLIPs of similar coverage, and MUST be backed by the
+// matching evidence field (speedEvidence / accuracyEvidence; the validator
+// enforces this). Prefer "unknown" over a guess.
+export type InferenceCost =
+  | "very_low"
+  | "low"
+  | "medium"
+  | "high"
+  | "very_high"
+  | "unknown";
+export type AccuracyTier =
+  | "low"
+  | "medium"
+  | "high"
+  | "state_of_the_art"
+  | "unknown";
+export type SpeedTier =
+  | "very_fast"
+  | "fast"
+  | "medium"
+  | "slow"
+  | "very_slow"
+  | "unknown";
+
+// Tri-state for audited yes/no claims: true/false only when source-checked,
+// "unknown" = reviewed but undetermined, absent = not yet reviewed. Filters
+// must never treat "unknown" (or absence) as false.
+export type TriState = boolean | "unknown";
+
+export const ENTITY_TYPE_VALUES: readonly EntityType[] = [
+  "architecture",
+  "trained_model",
+  "model_family",
+  "dataset",
+  "benchmark",
+] as const;
+
+export const TRAINING_SCOPE_VALUES: readonly TrainingScope[] = [
+  "single_system",
+  "domain_specific",
+  "multi_domain",
+  "universal_foundation",
+  "unknown",
+] as const;
+
+export const INFERENCE_COST_VALUES: readonly InferenceCost[] = [
+  "very_low",
+  "low",
+  "medium",
+  "high",
+  "very_high",
+  "unknown",
+] as const;
+
+export const ACCURACY_TIER_VALUES: readonly AccuracyTier[] = [
+  "low",
+  "medium",
+  "high",
+  "state_of_the_art",
+  "unknown",
+] as const;
+
+export const SPEED_TIER_VALUES: readonly SpeedTier[] = [
+  "very_fast",
+  "fast",
+  "medium",
+  "slow",
+  "very_slow",
+  "unknown",
+] as const;
+
 export interface ModelMeta {
   coverage?: string[];
   useCases?: string[];
@@ -144,6 +240,28 @@ export interface ModelMeta {
   foundationModelEvidence?: string;
   chargeSpinEvidence?: string;
   licenseEvidence?: string;
+
+  // --- Identity & capability axes (Phase 2) --------------------------------
+  // Distinguishes architectures from pretrained model instances so that e.g.
+  // base MACE (architecture) is never conflated with MACE-MP-0 (foundation
+  // model). All optional; absent = not yet classified.
+  entityType?: EntityType;
+  // Architecture family this entry belongs to (e.g. "MACE", "SevenNet").
+  architectureFamily?: string;
+  trainingScope?: TrainingScope;
+  // Whether this entry itself is a pretrained foundation model. Setting
+  // `true` requires foundationModelEvidence (validator-enforced).
+  isFoundationModel?: TriState;
+  // Whether a foundation-style pretrained variant exists in this entry's
+  // family (true for the foundation entries themselves).
+  hasFoundationVariant?: TriState;
+  // Separate cost / speed / accuracy axes — never combine into one label, and
+  // never set a non-"unknown" tier without the matching evidence field.
+  inferenceCost?: InferenceCost;
+  speedTier?: SpeedTier;
+  accuracyTier?: AccuracyTier;
+  // Which benchmark/setting any tier claims refer to.
+  benchmarkContext?: string;
 }
 
 export interface BaseNode {
@@ -240,6 +358,15 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
   "foundationModelEvidence",
   "chargeSpinEvidence",
   "licenseEvidence",
+  "entityType",
+  "architectureFamily",
+  "trainingScope",
+  "isFoundationModel",
+  "hasFoundationVariant",
+  "inferenceCost",
+  "speedTier",
+  "accuracyTier",
+  "benchmarkContext",
 ] as const;
 
 export type AnyNode = GroupNode | ModelNode;
