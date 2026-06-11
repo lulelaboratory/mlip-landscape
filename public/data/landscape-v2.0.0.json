@@ -6125,7 +6125,10 @@
       "from": "esen",
       "to": "uma",
       "label": "Backbone",
-      "description": "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture."
+      "description": "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2506.23971",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN."
     },
     {
       "from": "gemnet",
@@ -6313,13 +6316,19 @@
       "from": "sevennet",
       "to": "sevennet_omni",
       "label": "Multi-fidelity",
-      "description": "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets."
+      "description": "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2510.11241",
+      "edgeNotes": "Verified 2026-06-11: SevenNet-Omni ships in the official MDIL-SNU/SevenNet codebase and is described as a SevenNet-family foundation model in arXiv:2604.10887; the SevenNet-MF backbone detail is from the entry description (full-text check pending)."
     },
     {
       "from": "sevennet_omni",
       "to": "sevennet_nano",
       "label": "Distillation",
-      "description": "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy."
+      "description": "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2604.10887",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): SevenNet-Nano is distilled from the SevenNet-Omni teacher via knowledge distillation."
     },
     {
       "from": "mace",
@@ -6889,7 +6898,10 @@
       "from": "mace",
       "to": "mace_mp0",
       "label": "+MPtrj foundation",
-      "description": "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals."
+      "description": "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2401.00096",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): MACE-MP-0 is a single MACE-architecture potential trained on MPtrj."
     },
     {
       "from": "mace_mp0",

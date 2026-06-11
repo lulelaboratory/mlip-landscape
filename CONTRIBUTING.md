@@ -77,8 +77,21 @@ There are currently two zones: `zone_eq` (Equivariant & Transformers) and `zone_
   to: string;                       // ModelNode.id
   label?: string;                   // short label drawn along the curve
   dashed?: boolean;                 // dashed line for weaker / speculative links
+  description?: string;            // long-form explanation (edge detail panel)
+  edgeConfidence?: "verified" | "probable" | "speculative" | "unknown";
+  edgeSource?: string;             // citation backing the relationship
+  edgeNotes?: string;              // what was checked / what's pending
 }
 ```
+
+Edge trust rules: an edge with no explicit `edgeConfidence` inherits the
+historical curation via `effectiveEdgeConfidence` — solid edges count as
+`probable`, dashed ones as `speculative`; neither is ever treated as verified.
+Setting `edgeConfidence: "verified"` **requires** `edgeSource`
+(validator-enforced). The graph shows no edges by default; the
+"Show connections" view draws only verified edges unless the user explicitly
+enables "Include unverified edges", and selecting a model reveals just that
+model's own connections with unverified ones faded/dashed.
 
 ---
 

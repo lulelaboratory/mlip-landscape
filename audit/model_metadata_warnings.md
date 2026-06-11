@@ -50,6 +50,19 @@ _Last updated: 2026-06-11 (manual)._
   `omol25` is in `FILTERABLE_DATASET_IDS`. **TODO:** normalize `trainedDatasets`
   for the rest of the catalogue, then expose more datasets in the filter; add
   the fine-tuning / evaluation / benchmark relationship types.
+- **2026-06-11 Phase 5 edge confidence:** all 181 graph edges now carry an
+  effective trust tier. Mapping decision: edges without explicit
+  `edgeConfidence` inherit the historical curation — solid edges =
+  `probable` (curator-asserted lineage, not source-checked), dashed =
+  `speculative`. Four edges were source-verified (see
+  `references_audit_report.md`): MACE→MACE-MP-0, SevenNet-Omni→SevenNet-Nano,
+  eSEN→UMA, SevenNet→SevenNet-Omni. One candidate was deliberately NOT
+  verified: TFN→NequIP (the search confirmed NequIP's E(3)-equivariant
+  convolutions but not the explicit TFN citation — stays `probable`).
+  The default graph shows no edges; "Show connections" draws verified only;
+  probable/speculative require the explicit "Include unverified edges" toggle
+  and render faded/dashed. **TODO:** source-check the remaining 98 probable +
+  79 speculative edges during the systematic reference audit.
 
 <!-- AUTOGEN:START metadata-warnings -->
 | model id | field | current value | concern | severity | suggested action |

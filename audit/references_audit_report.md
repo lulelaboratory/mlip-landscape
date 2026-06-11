@@ -12,7 +12,7 @@ has actually checked.
   replace only the rows between the `AUTOGEN` markers, leaving this header and
   the table head intact.
 
-_Last updated: 2026-06-11 (manual). 4 references audited so far (abstract level)._
+_Last updated: 2026-06-11 (manual). 12 references audited so far (abstract level): 4 model papers, 3 dataset papers, 5 edge relationships (4 verified, 1 left pending)._
 
 <!-- AUTOGEN:START references -->
 | model id | reference (url/doi) | reference type | status | checked on | notes |
@@ -24,4 +24,9 @@ _Last updated: 2026-06-11 (manual). 4 references audited so far (abstract level)
 | dataset:omol25 | https://arxiv.org/abs/2505.08762 | dataset paper | verified | 2026-06-11 | "The Open Molecules 2025 (OMol25) Dataset" (Meta FAIR); >100M ωB97M-V DFT calcs, ~83 elements. Abstract-level check (llm_assisted); license still to confirm. |
 | dataset:omat24 | https://arxiv.org/abs/2410.12771 | dataset paper | verified | 2026-06-11 | "Open Materials 2024 (OMat24)" (Meta FAIR); >100M DFT on inorganic bulk; CC-BY-4.0. Abstract-level check (llm_assisted). |
 | dataset:oc20 | https://arxiv.org/abs/2010.09990 | dataset paper | verified | 2026-06-11 | "The Open Catalyst 2020 (OC20) Dataset and Community Challenges"; ~1.28M DFT relaxations. Abstract-level check (llm_assisted); license still to confirm. |
+| edge:mace→mace_mp0 | https://arxiv.org/abs/2401.00096 | paper | verified | 2026-06-11 | MACE-MP-0 is a single MACE-architecture potential trained on MPtrj. Abstract-level check (llm_assisted). |
+| edge:sevennet_omni→sevennet_nano | https://arxiv.org/abs/2604.10887 | paper | verified | 2026-06-11 | SevenNet-Nano distilled from the SevenNet-Omni teacher via knowledge distillation. Abstract-level check (llm_assisted). |
+| edge:esen→uma | https://arxiv.org/abs/2506.23971 | paper | verified | 2026-06-11 | "The UMA architecture is based on eSEN" (UMA paper). Abstract-level check (llm_assisted). |
+| edge:sevennet→sevennet_omni | https://arxiv.org/abs/2510.11241 | paper | verified | 2026-06-11 | SevenNet-Omni ships in the official MDIL-SNU/SevenNet codebase; called a SevenNet-family foundation model in arXiv:2604.10887. SevenNet-MF backbone detail pending full-text check. |
+| edge:tfn→nequip | https://arxiv.org/abs/2101.03164 | paper | pending | 2026-06-11 | NOT marked verified: search confirmed NequIP's E(3)-equivariant tensor convolutions but not the explicit TFN citation claim in the edge description. Stays "probable". |
 <!-- AUTOGEN:END references -->
