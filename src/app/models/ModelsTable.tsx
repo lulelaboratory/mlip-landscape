@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, GitCompare, Search } from "lucide-react";
-import type { ModelNode } from "@/data/landscape";
+import {
+  effectiveVerificationStatus,
+  type ModelNode,
+  type VerificationStatus,
+} from "@/data/landscape";
 
 type SortKey = "label" | "year" | "category" | "license" | "maintenance";
 type SortDir = "asc" | "desc";
@@ -278,6 +282,9 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
                 );
               })}
               <th scope="col" className="px-3 py-2 font-semibold">
+                Status
+              </th>
+              <th scope="col" className="px-3 py-2 font-semibold">
                 Charges
               </th>
               <th scope="col" className="px-3 py-2 font-semibold">
@@ -292,7 +299,7 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
             {sorted.length === 0 && (
               <tr>
                 <td
-                  colSpan={COLUMNS.length + 4}
+                  colSpan={COLUMNS.length + 5}
                   className="px-3 py-6 text-center text-slate-500 dark:text-slate-400"
                 >
                   No models match that search.
@@ -360,6 +367,9 @@ export default function ModelsTable({ models }: { models: ModelNode[] }) {
                   ) : (
                     <span className="text-slate-400 dark:text-slate-500">—</span>
                   )}
+                </td>
+                <td className="px-3 py-2">
+                  <VerificationBadge status={effectiveVerificationStatus(m)} />
                 </td>
                 <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                   <BoolCell value={m.supportsCharges} />
@@ -462,6 +472,41 @@ function MaintenanceBadge({
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
     >
       {status}
+    </span>
+  );
+}
+
+const VERIFICATION_LABELS: Record<VerificationStatus, string> = {
+  verified: "verified",
+  partially_verified: "partially verified",
+  needs_review: "needs review",
+  unverified: "unverified",
+};
+
+const VERIFICATION_TITLES: Record<VerificationStatus, string> = {
+  verified: "All surfaced metadata was checked against a cited source.",
+  partially_verified: "Some metadata is source-checked; other claims are still pending review.",
+  needs_review: "This entry has not been audited yet — treat its metadata as provisional.",
+  unverified: "Reviewed, but the metadata could not be backed by a reliable source.",
+};
+
+function VerificationBadge({ status }: { status: VerificationStatus }) {
+  const styles: Record<VerificationStatus, string> = {
+    verified:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200",
+    partially_verified:
+      "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200",
+    needs_review:
+      "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200",
+    unverified:
+      "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  };
+  return (
+    <span
+      title={VERIFICATION_TITLES[status]}
+      className={`inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
+    >
+      {VERIFICATION_LABELS[status]}
     </span>
   );
 }

@@ -5,6 +5,13 @@ import {
   FRAMEWORK_TAGS,
   PROPERTY_TAGS,
   MODEL_META_FIELDS,
+  VERIFICATION_STATUS_VALUES,
+  VERIFIED_BY_VALUES,
+  ENTITY_TYPE_VALUES,
+  TRAINING_SCOPE_VALUES,
+  INFERENCE_COST_VALUES,
+  ACCURACY_TIER_VALUES,
+  SPEED_TIER_VALUES,
   type AnyNode,
   type ModelNode,
   type GroupNode,
@@ -23,6 +30,13 @@ const VALID_CATEGORIES = new Set([
 const VALID_MAINTENANCE = new Set<string>(MAINTENANCE_STATUSES);
 const VALID_FRAMEWORKS = new Set<string>(FRAMEWORK_TAGS);
 const VALID_PROPERTIES = new Set<string>(PROPERTY_TAGS);
+const VALID_VERIFICATION_STATUS = new Set<string>(VERIFICATION_STATUS_VALUES);
+const VALID_VERIFIED_BY = new Set<string>(VERIFIED_BY_VALUES);
+const VALID_ENTITY_TYPE = new Set<string>(ENTITY_TYPE_VALUES);
+const VALID_TRAINING_SCOPE = new Set<string>(TRAINING_SCOPE_VALUES);
+const VALID_INFERENCE_COST = new Set<string>(INFERENCE_COST_VALUES);
+const VALID_ACCURACY_TIER = new Set<string>(ACCURACY_TIER_VALUES);
+const VALID_SPEED_TIER = new Set<string>(SPEED_TIER_VALUES);
 const SPDX_ALLOWLIST = new Set([
   "MIT",
   "Apache-2.0",
@@ -204,6 +218,165 @@ for (const n of modelNodes) {
       `Model ${n.id} has maintenance "${n.maintenance}" (valid: ${[...VALID_MAINTENANCE].join(", ")})`,
     );
   }
+  // Verification metadata is optional; only validate when present so existing
+  // (un-curated) entries are never flagged just for lacking a status.
+  if (
+    n.verificationStatus !== undefined &&
+    !VALID_VERIFICATION_STATUS.has(n.verificationStatus)
+  ) {
+    push(
+      "invalid-verificationStatus",
+      `Model ${n.id} has verificationStatus "${n.verificationStatus}" (valid: ${[...VALID_VERIFICATION_STATUS].join(", ")})`,
+    );
+  }
+  if (n.verifiedBy !== undefined && !VALID_VERIFIED_BY.has(n.verifiedBy)) {
+    push(
+      "invalid-verifiedBy",
+      `Model ${n.id} has verifiedBy "${n.verifiedBy}" (valid: ${[...VALID_VERIFIED_BY].join(", ")})`,
+    );
+  }
+  if (
+    n.lastVerifiedDate !== undefined &&
+    n.lastVerifiedDate !== null &&
+    !ISO_DATE_RE.test(n.lastVerifiedDate)
+  ) {
+    push(
+      "bad-date",
+      `Model ${n.id} lastVerifiedDate "${n.lastVerifiedDate}" is not YYYY-MM-DD (or null)`,
+    );
+  }
+  // A model marked verified/partially_verified must cite at least one source —
+  // this enforces the core rule that nothing is "verified" without evidence.
+  if (
+    (n.verificationStatus === "verified" ||
+      n.verificationStatus === "partially_verified") &&
+    (!n.verifiedSources || n.verifiedSources.length === 0)
+  ) {
+    push(
+      "verified-without-source",
+      `Model ${n.id} is "${n.verificationStatus}" but has no verifiedSources`,
+    );
+  }
+
+  // --- Identity & capability axes (Phase 2) ---
+  if (n.entityType !== undefined && !VALID_ENTITY_TYPE.has(n.entityType)) {
+    push(
+      "invalid-entityType",
+      `Model ${n.id} has entityType "${n.entityType}" (valid: ${[...VALID_ENTITY_TYPE].join(", ")})`,
+    );
+  }
+  if (
+    n.trainingScope !== undefined &&
+    !VALID_TRAINING_SCOPE.has(n.trainingScope)
+  ) {
+    push(
+      "invalid-trainingScope",
+      `Model ${n.id} has trainingScope "${n.trainingScope}" (valid: ${[...VALID_TRAINING_SCOPE].join(", ")})`,
+    );
+  }
+  if (
+    n.inferenceCost !== undefined &&
+    !VALID_INFERENCE_COST.has(n.inferenceCost)
+  ) {
+    push(
+      "invalid-inferenceCost",
+      `Model ${n.id} has inferenceCost "${n.inferenceCost}" (valid: ${[...VALID_INFERENCE_COST].join(", ")})`,
+    );
+  }
+  if (n.speedTier !== undefined && !VALID_SPEED_TIER.has(n.speedTier)) {
+    push(
+      "invalid-speedTier",
+      `Model ${n.id} has speedTier "${n.speedTier}" (valid: ${[...VALID_SPEED_TIER].join(", ")})`,
+    );
+  }
+  if (
+    n.accuracyTier !== undefined &&
+    !VALID_ACCURACY_TIER.has(n.accuracyTier)
+  ) {
+    push(
+      "invalid-accuracyTier",
+      `Model ${n.id} has accuracyTier "${n.accuracyTier}" (valid: ${[...VALID_ACCURACY_TIER].join(", ")})`,
+    );
+  }
+  for (const field of ["isFoundationModel", "hasFoundationVariant"] as const) {
+    const v = n[field];
+    if (v !== undefined && typeof v !== "boolean" && v !== "unknown") {
+      push(
+        `invalid-${field}`,
+        `Model ${n.id} ${field} must be boolean or "unknown" (got: ${JSON.stringify(v)})`,
+      );
+    }
+  }
+
+  // --- No-silent-claims rules: a non-"unknown" tier needs evidence ---
+  if (n.speedTier !== undefined && n.speedTier !== "unknown" && !n.speedEvidence) {
+    push(
+      "tier-without-evidence",
+      `Model ${n.id} sets speedTier "${n.speedTier}" without speedEvidence`,
+    );
+  }
+  if (
+    n.accuracyTier !== undefined &&
+    n.accuracyTier !== "unknown" &&
+    !n.accuracyEvidence
+  ) {
+    push(
+      "tier-without-evidence",
+      `Model ${n.id} sets accuracyTier "${n.accuracyTier}" without accuracyEvidence`,
+    );
+  }
+  if (
+    n.inferenceCost !== undefined &&
+    n.inferenceCost !== "unknown" &&
+    !n.speedEvidence &&
+    !n.evidenceNotes
+  ) {
+    push(
+      "tier-without-evidence",
+      `Model ${n.id} sets inferenceCost "${n.inferenceCost}" without speedEvidence or evidenceNotes`,
+    );
+  }
+  if (n.isFoundationModel === true && !n.foundationModelEvidence) {
+    push(
+      "foundation-without-evidence",
+      `Model ${n.id} sets isFoundationModel: true without foundationModelEvidence`,
+    );
+  }
+  // An architecture entry cannot itself be a foundation model — that is the
+  // exact architecture/trained-model conflation this schema exists to prevent.
+  if (n.entityType === "architecture" && n.isFoundationModel === true) {
+    push(
+      "architecture-foundation-conflation",
+      `Model ${n.id} is entityType "architecture" but isFoundationModel: true — foundation status belongs on the trained-model entry`,
+    );
+  }
+  if (n.entityType === "architecture" && n.trainingData && n.trainingData.length > 0) {
+    warn(
+      "architecture-with-trainingData",
+      `Model ${n.id} is entityType "architecture" but lists trainingData — training sets normally belong on trained-model entries`,
+    );
+  }
+  if (
+    n.hasFoundationVariant === true &&
+    !n.foundationModelEvidence &&
+    !n.evidenceNotes
+  ) {
+    warn(
+      "foundation-variant-without-evidence",
+      `Model ${n.id} sets hasFoundationVariant: true without foundationModelEvidence or evidenceNotes`,
+    );
+  }
+  if (
+    n.trainingScope === "universal_foundation" &&
+    !n.foundationModelEvidence &&
+    !n.datasetEvidence &&
+    !n.evidenceNotes
+  ) {
+    warn(
+      "scope-without-evidence",
+      `Model ${n.id} sets trainingScope "universal_foundation" without any evidence field`,
+    );
+  }
   if (n.frameworks) {
     for (const f of n.frameworks) {
       if (!VALID_FRAMEWORKS.has(f)) {
@@ -310,7 +483,7 @@ const edgeCount = (INITIAL_EDGES as Edge[]).length;
 const coverageLines = MODEL_META_FIELDS.map((field) => {
   const n = coverage[field];
   const pct = modelCount === 0 ? 0 : Math.round((n / modelCount) * 100);
-  return `    ${field.padEnd(14)} ${String(n).padStart(3)}/${modelCount}  ${String(pct).padStart(3)}%`;
+  return `    ${field.padEnd(24)} ${String(n).padStart(3)}/${modelCount}  ${String(pct).padStart(3)}%`;
 }).join("\n");
 
 const printSummary = () => {

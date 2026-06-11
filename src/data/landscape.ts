@@ -42,6 +42,134 @@ export const ARCHITECTURE_VALUES: readonly Architecture[] = [
   "gnn",
 ] as const;
 
+// --- Verification / provenance (Phase 1) -----------------------------------
+// Curation status of a model's metadata. The site must never present uncertain
+// metadata as ground truth, so an absent value is treated as "needs_review"
+// (see `effectiveVerificationStatus`) and is NEVER treated as "verified".
+// - "verified": every surfaced claim was checked against a cited source.
+// - "partially_verified": some claims checked; others still pending.
+// - "unverified": reviewed and could not be supported by a source.
+// - "needs_review": not yet audited (the default for un-curated entries).
+export type VerificationStatus =
+  | "verified"
+  | "partially_verified"
+  | "unverified"
+  | "needs_review";
+
+// Who/what performed the verification. "llm_assisted" flags entries whose
+// sources were gathered with model assistance and still need a human sign-off.
+export type VerifiedBy = "human" | "script" | "llm_assisted" | "unknown";
+
+export const VERIFICATION_STATUS_VALUES: readonly VerificationStatus[] = [
+  "verified",
+  "partially_verified",
+  "unverified",
+  "needs_review",
+] as const;
+
+export const VERIFIED_BY_VALUES: readonly VerifiedBy[] = [
+  "human",
+  "script",
+  "llm_assisted",
+  "unknown",
+] as const;
+
+// --- Identity & capability axes (Phase 2) ----------------------------------
+// What kind of thing an entry is. The catalogue historically mixed
+// architectures (e.g. MACE) with pretrained model instances (e.g. MACE-MP-0);
+// this field makes the distinction explicit. "dataset" / "benchmark" are
+// reserved for future registry entries (Phase 4).
+export type EntityType =
+  | "architecture"
+  | "trained_model"
+  | "model_family"
+  | "dataset"
+  | "benchmark";
+
+// Breadth of the training data behind a *trained model* entry. Architecture
+// entries should normally leave this unset — scope is a property of each
+// trained model, not of the architecture. "unknown" = reviewed but
+// undetermined; absent = not yet reviewed.
+export type TrainingScope =
+  | "single_system"
+  | "domain_specific"
+  | "multi_domain"
+  | "universal_foundation"
+  | "unknown";
+
+// Separate cost / speed / accuracy axes replacing the old combined
+// "high cost / high accuracy" style labels. Tiers are coarse, relative to
+// contemporaneous MLIPs of similar coverage, and MUST be backed by the
+// matching evidence field (speedEvidence / accuracyEvidence; the validator
+// enforces this). Prefer "unknown" over a guess.
+export type InferenceCost =
+  | "very_low"
+  | "low"
+  | "medium"
+  | "high"
+  | "very_high"
+  | "unknown";
+export type AccuracyTier =
+  | "low"
+  | "medium"
+  | "high"
+  | "state_of_the_art"
+  | "unknown";
+export type SpeedTier =
+  | "very_fast"
+  | "fast"
+  | "medium"
+  | "slow"
+  | "very_slow"
+  | "unknown";
+
+// Tri-state for audited yes/no claims: true/false only when source-checked,
+// "unknown" = reviewed but undetermined, absent = not yet reviewed. Filters
+// must never treat "unknown" (or absence) as false.
+export type TriState = boolean | "unknown";
+
+export const ENTITY_TYPE_VALUES: readonly EntityType[] = [
+  "architecture",
+  "trained_model",
+  "model_family",
+  "dataset",
+  "benchmark",
+] as const;
+
+export const TRAINING_SCOPE_VALUES: readonly TrainingScope[] = [
+  "single_system",
+  "domain_specific",
+  "multi_domain",
+  "universal_foundation",
+  "unknown",
+] as const;
+
+export const INFERENCE_COST_VALUES: readonly InferenceCost[] = [
+  "very_low",
+  "low",
+  "medium",
+  "high",
+  "very_high",
+  "unknown",
+] as const;
+
+export const ACCURACY_TIER_VALUES: readonly AccuracyTier[] = [
+  "low",
+  "medium",
+  "high",
+  "state_of_the_art",
+  "unknown",
+] as const;
+
+export const SPEED_TIER_VALUES: readonly SpeedTier[] = [
+  "very_fast",
+  "fast",
+  "medium",
+  "slow",
+  "very_slow",
+  "unknown",
+] as const;
+
 export interface ModelMeta {
   coverage?: string[];
   useCases?: string[];
@@ -88,6 +216,52 @@ export interface ModelMeta {
   // Integer count of elements covered (parallel to the free-form
   // `elementsCovered` so a numeric slider can use it).
   numElements?: number | null;
+
+  // --- Verification / provenance (Phase 1) ---------------------------------
+  // All optional and backward-compatible. Absence means "not yet audited":
+  // `effectiveVerificationStatus` resolves an absent value to "needs_review",
+  // so nothing is ever silently treated as verified. Do not set
+  // `verificationStatus: "verified"` without populating `verifiedSources`.
+  verificationStatus?: VerificationStatus;
+  // URLs / DOIs that were actually checked while verifying this entry.
+  verifiedSources?: string[];
+  // ISO date (YYYY-MM-DD) of the last verification pass, or null if never.
+  lastVerifiedDate?: string | null;
+  verifiedBy?: VerifiedBy;
+  // Free-form curator notes about what was (or still needs to be) checked.
+  evidenceNotes?: string;
+
+  // Claim-level evidence (free-form citation / note backing a specific claim).
+  // TODO(curators): populate as individual claims are audited; absence means
+  // the claim has not been independently sourced yet.
+  speedEvidence?: string;
+  accuracyEvidence?: string;
+  datasetEvidence?: string;
+  foundationModelEvidence?: string;
+  chargeSpinEvidence?: string;
+  licenseEvidence?: string;
+
+  // --- Identity & capability axes (Phase 2) --------------------------------
+  // Distinguishes architectures from pretrained model instances so that e.g.
+  // base MACE (architecture) is never conflated with MACE-MP-0 (foundation
+  // model). All optional; absent = not yet classified.
+  entityType?: EntityType;
+  // Architecture family this entry belongs to (e.g. "MACE", "SevenNet").
+  architectureFamily?: string;
+  trainingScope?: TrainingScope;
+  // Whether this entry itself is a pretrained foundation model. Setting
+  // `true` requires foundationModelEvidence (validator-enforced).
+  isFoundationModel?: TriState;
+  // Whether a foundation-style pretrained variant exists in this entry's
+  // family (true for the foundation entries themselves).
+  hasFoundationVariant?: TriState;
+  // Separate cost / speed / accuracy axes — never combine into one label, and
+  // never set a non-"unknown" tier without the matching evidence field.
+  inferenceCost?: InferenceCost;
+  speedTier?: SpeedTier;
+  accuracyTier?: AccuracyTier;
+  // Which benchmark/setting any tier claims refer to.
+  benchmarkContext?: string;
 }
 
 export interface BaseNode {
@@ -117,6 +291,16 @@ export interface ModelNode extends BaseNode, ModelMeta {
   dimmed?: boolean;
   githubUrl?: string;
   paperUrl?: string;
+}
+
+// Resolve the curation status the UI should display. An absent
+// `verificationStatus` is deliberately treated as "needs_review" — never
+// "verified" — so un-curated entries are never presented as authoritative.
+// Single source of truth for both the explorer detail panel and the table.
+export function effectiveVerificationStatus(
+  node: Pick<ModelMeta, "verificationStatus">,
+): VerificationStatus {
+  return node.verificationStatus ?? "needs_review";
 }
 
 export const MAINTENANCE_STATUSES: readonly MaintenanceStatus[] = [
@@ -163,6 +347,26 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
   "longRange",
   "trainingSetSize",
   "numElements",
+  "verificationStatus",
+  "verifiedSources",
+  "lastVerifiedDate",
+  "verifiedBy",
+  "evidenceNotes",
+  "speedEvidence",
+  "accuracyEvidence",
+  "datasetEvidence",
+  "foundationModelEvidence",
+  "chargeSpinEvidence",
+  "licenseEvidence",
+  "entityType",
+  "architectureFamily",
+  "trainingScope",
+  "isFoundationModel",
+  "hasFoundationVariant",
+  "inferenceCost",
+  "speedTier",
+  "accuracyTier",
+  "benchmarkContext",
 ] as const;
 
 export type AnyNode = GroupNode | ModelNode;
@@ -309,21 +513,40 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/ACEsuit/mace",
     paperUrl: "https://arxiv.org/abs/2206.07697",
     coverage: ["general materials", "organic molecules", "oxides"],
-    useCases: ["universal MLIP", "MD at scale", "high-throughput screening"],
+    useCases: ["MD at scale", "high-throughput screening"],
     properties: ["energy", "forces", "stress"],
     frameworks: ["ASE", "LAMMPS"],
     license: "MIT",
     maintenance: "active",
     lastReviewed: "2026-05-05",
-    trainingData: ["MPTrj", "Alexandria"],
-    tags: ["equivariant", "higher-order", "foundation model"],
+    tags: ["equivariant", "higher-order", "architecture"],
     supportsCharges: false,
     supportsSpins: false,
-    elementsCovered: "all elements covered by MPTrj / Alexandria (~89 elements)",
+    elementsCovered:
+      "dataset-dependent (architecture; ~89-element universal coverage via the MACE-MP foundation variants)",
     equivariance: "constrained",
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit (Tim's review): base MACE is the *architecture*, not a
+    // universal/foundation model — those labels belong to MACE-MP-0 et al.
+    entityType: "architecture",
+    architectureFamily: "MACE",
+    isFoundationModel: false,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      "arXiv:2206.07697 introduces the MACE architecture (benchmarked on rMD17, 3BPA, AcAc) with no universal/foundation claims; the universal foundation family is MACE-MP-0 and successors (arXiv:2401.00096), catalogued as separate entries.",
+    datasetEvidence:
+      "Removed trainingData [MPTrj, Alexandria] from this entry: those are training sets of the MACE-MP foundation variants, not of the 2022 architecture paper (which trains per-task models on rMD17 / 3BPA / AcAc).",
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2206.07697",
+      "https://arxiv.org/abs/2401.00096",
+    ],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: removed unsupported universal/foundation labels from the base architecture entry (identity claims source-checked). Remaining capability fields still pending full review.",
   },
   {
     id: "grace",
@@ -2055,14 +2278,14 @@ export const INITIAL_NODES: AnyNode[] = [
     paperUrl: "https://arxiv.org/abs/2604.10887",
     isNew: true,
     coverage: ["general materials"],
-    useCases: ["lightweight foundation MLIP", "thousand-atom MD"],
+    useCases: ["lightweight universal MLIP", "thousand-atom MD"],
     properties: ["energy", "forces", "stress"],
     frameworks: ["ASE", "LAMMPS", "PyTorch"],
     license: "MIT",
     maintenance: "active",
     lastReviewed: "2026-05-05",
     trainingData: ["distilled from SevenNet-Omni"],
-    tags: ["invariant", "distilled", "lightweight", "foundation model"],
+    tags: ["invariant", "distilled", "lightweight", "universal MLIP"],
     supportsCharges: false,
     supportsSpins: false,
     elementsCovered: "all elements covered by SevenNet-Omni",
@@ -2070,6 +2293,34 @@ export const INITIAL_NODES: AnyNode[] = [
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit (Tim's review): SevenNet-Nano was shown with a fabricated
+    // "high cost / high accuracy" label. It is a distilled lightweight model;
+    // cost/speed/accuracy are now separate, source-backed axes, and accuracy
+    // is explicitly "unknown" rather than guessed.
+    entityType: "trained_model",
+    architectureFamily: "SevenNet",
+    trainingScope: "universal_foundation",
+    isFoundationModel: "unknown",
+    hasFoundationVariant: true,
+    inferenceCost: "low",
+    speedTier: "fast",
+    accuracyTier: "unknown",
+    speedEvidence:
+      'Paper title/abstract: "A Lightweight Universal Machine-Learning Interatomic Potential via Knowledge Distillation for Scalable Atomistic Simulations" — compact distilled architecture aimed at scalable simulation (arXiv:2604.10887).',
+    accuracyEvidence:
+      "Paper claims high accuracy and strong transferability inherited from the SevenNet-Omni teacher (arXiv:2604.10887); no independent benchmark tier assessed yet, so the tier is kept 'unknown'.",
+    benchmarkContext:
+      "Cost/speed are relative to full-size universal MLIPs (its SevenNet-Omni teacher); paper benchmarks static and dynamical properties such as Li-ion diffusion and liquid densities.",
+    foundationModelEvidence:
+      "Distilled student of the SevenNet-Omni foundation model; the paper presents it as a lightweight *universal* MLIP rather than itself a foundation model, so isFoundationModel is recorded as 'unknown'.",
+    datasetEvidence:
+      "Trained by knowledge distillation from SevenNet-Omni (arXiv:2604.10887); dataset-registry linkage pending (Phase 4).",
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2604.10887"],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: replaced the fabricated combined inference label with separated cost/speed/accuracy axes; retagged 'foundation model' to 'universal MLIP' per the paper's own framing.",
   },
   {
     id: "sevennet_omni",
@@ -2103,6 +2354,24 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
     trainingSetSize: 250000000,
+    // Phase 2 audit: trained universal foundation model (teacher of
+    // SevenNet-Nano) built on the SevenNet architecture family.
+    entityType: "trained_model",
+    architectureFamily: "SevenNet",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      'Universal multi-task MLIP for cross-domain transfer (arXiv:2510.11241); described as "a large multi-task foundation model" in the SevenNet-Nano paper abstract (arXiv:2604.10887). Checkpoint publicly released.',
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2510.11241",
+      "https://arxiv.org/abs/2604.10887",
+    ],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: foundation status source-checked. Training-data composition (15 datasets, ~250M structures) and capability tiers still pending detailed review.",
   },
   {
     id: "pfp_v8",
@@ -2768,7 +3037,13 @@ export const INITIAL_NODES: AnyNode[] = [
     maintenance: "archived",
     lastReviewed: "2026-05-10",
     trainingData: ["Materials Project"],
-    tags: ["invariant", "crystal graph", "convolutional", "foundation"],
+    // Phase 2 audit: "foundation" tag replaced with "precursor" — CGCNN (2018)
+    // is a property-prediction GNN that predates pretrained universal
+    // potentials; its own description already records the ancestral influence.
+    tags: ["invariant", "crystal graph", "convolutional", "precursor"],
+    isFoundationModel: false,
+    foundationModelEvidence:
+      "CGCNN (arXiv:1710.10324, 2018) is a per-property crystal-graph prediction network from before the pretrained-universal-potential era; the previous 'foundation' tag referred to its ancestral influence (see description), not foundation-model status.",
     supportsCharges: false,
     supportsSpins: false,
     elementsCovered: "all elements covered by Materials Project",
@@ -3231,6 +3506,23 @@ export const INITIAL_NODES: AnyNode[] = [
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit: this is the trained foundation-model counterpart of the
+    // base MACE architecture entry.
+    entityType: "trained_model",
+    architectureFamily: "MACE",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      'Paper title: "A foundation model for atomistic materials chemistry" (arXiv:2401.00096); a single MACE potential trained on MPtrj, presented as an out-of-the-box foundation model.',
+    datasetEvidence:
+      "MPtrj (Materials Project trajectories, ~150k inorganic crystals, 89 elements) stated as the training set in arXiv:2401.00096.",
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2401.00096"],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: foundation status and training data source-checked. Benchmark/capability tiers still pending review.",
   },
   {
     id: "mpnice",

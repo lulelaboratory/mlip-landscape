@@ -196,6 +196,36 @@ more useful.
 when `supportsCharges` / `supportsSpins` / `elementsCovered` are missing
 on a model; and prints a per-field metadata coverage report.
 
+### Verification & identity fields (trust metadata)
+
+The catalogue must never present uncertain metadata as ground truth, so every
+entry also accepts optional verification/identity fields. **An absent
+`verificationStatus` is treated as `needs_review`** — nothing is shown as
+verified unless a curator actually checked sources.
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `verificationStatus` | `"verified"` / `"partially_verified"` / `"unverified"` / `"needs_review"` | `verified`/`partially_verified` **require** `verifiedSources` (validator-enforced) |
+| `verifiedSources` | `string[]` | URLs/DOIs actually checked |
+| `lastVerifiedDate` | ISO date or `null` | |
+| `verifiedBy` | `"human"` / `"script"` / `"llm_assisted"` / `"unknown"` | `llm_assisted` still needs human sign-off |
+| `evidenceNotes` | `string` | What was checked / what's pending |
+| `speedEvidence`, `accuracyEvidence`, `datasetEvidence`, `foundationModelEvidence`, `chargeSpinEvidence`, `licenseEvidence` | `string` | Claim-level citations |
+| `entityType` | `"architecture"` / `"trained_model"` / `"model_family"` / `"dataset"` / `"benchmark"` | Don't conflate an architecture (MACE) with its pretrained variant (MACE-MP-0) |
+| `architectureFamily` | `string` | e.g. `"MACE"`, `"SevenNet"` |
+| `trainingScope` | `"single_system"` / `"domain_specific"` / `"multi_domain"` / `"universal_foundation"` / `"unknown"` | Leave unset on architecture entries |
+| `isFoundationModel` | `boolean \| "unknown"` | `true` **requires** `foundationModelEvidence` |
+| `hasFoundationVariant` | `boolean \| "unknown"` | `true` for foundation entries themselves too |
+| `inferenceCost` | `"very_low"`…`"very_high"` / `"unknown"` | Non-`unknown` requires `speedEvidence` or `evidenceNotes` |
+| `speedTier` | `"very_fast"`…`"very_slow"` / `"unknown"` | Non-`unknown` requires `speedEvidence` |
+| `accuracyTier` | `"low"`…`"state_of_the_art"` / `"unknown"` | Non-`unknown` requires `accuracyEvidence` |
+| `benchmarkContext` | `string` | What setting the tiers refer to |
+
+Ground rules: **prefer `"unknown"` over a guess**; never combine cost/speed/
+accuracy into one label; `"unknown"` and *absent* are different (`"unknown"` =
+reviewed but undetermined, absent = not yet reviewed) and neither ever counts
+as `false`.
+
 ### Required-for-new-entries fields
 
 The three capability fields above are **required for new entries** so that

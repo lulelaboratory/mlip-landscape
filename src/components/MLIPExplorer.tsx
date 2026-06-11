@@ -34,8 +34,74 @@ import {
   Architecture,
   EQUIVARIANCE_VALUES,
   ARCHITECTURE_VALUES,
+  effectiveVerificationStatus,
+  type VerificationStatus,
+  type EntityType,
+  type TrainingScope,
 } from "@/data/landscape";
 import OnboardingTour from "@/components/OnboardingTour";
+
+// Subtle curation-status pill shown in the model detail panel (next to the
+// category badge). Mirrors the table's VerificationBadge styling. Driven by
+// `effectiveVerificationStatus`, so an un-curated entry reads "Needs review"
+// rather than appearing authoritative.
+const VERIFICATION_PILL_STYLES: Record<VerificationStatus, string> = {
+  verified:
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200",
+  partially_verified:
+    "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200",
+  needs_review:
+    "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200",
+  unverified:
+    "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+};
+const VERIFICATION_PILL_LABELS: Record<VerificationStatus, string> = {
+  verified: "Verified",
+  partially_verified: "Partially verified",
+  needs_review: "Needs review",
+  unverified: "Unverified",
+};
+const VERIFICATION_PILL_TITLES: Record<VerificationStatus, string> = {
+  verified: "All surfaced metadata was checked against a cited source.",
+  partially_verified:
+    "Some metadata is source-checked; other claims are still pending review.",
+  needs_review:
+    "This entry has not been audited yet — treat its metadata as provisional.",
+  unverified:
+    "Reviewed, but the metadata could not be backed by a reliable source.",
+};
+
+function DetailVerificationBadge({ status }: { status: VerificationStatus }) {
+  return (
+    <span
+      title={VERIFICATION_PILL_TITLES[status]}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875em] font-semibold uppercase tracking-wide ${VERIFICATION_PILL_STYLES[status]}`}
+    >
+      {VERIFICATION_PILL_LABELS[status]}
+    </span>
+  );
+}
+
+// Display labels for the curated identity/capability axes (Phase 2). These
+// rows render ONLY from curated, source-backed fields — never derived from
+// layout coordinates, category, or any other heuristic.
+const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
+  architecture: "Architecture",
+  trained_model: "Trained model",
+  model_family: "Model family",
+  dataset: "Dataset",
+  benchmark: "Benchmark",
+};
+const TRAINING_SCOPE_LABELS: Record<TrainingScope, string> = {
+  single_system: "Single system",
+  domain_specific: "Domain-specific",
+  multi_domain: "Multi-domain",
+  universal_foundation: "Universal (foundation)",
+  unknown: "Unknown",
+};
+// "very_low" -> "very low", "state_of_the_art" -> "state of the art"
+const prettyTier = (v: string) => v.replace(/_/g, " ");
+
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -2538,11 +2604,24 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
       <>
         <div className="flex justify-between items-start gap-4">
           <div>
-            <div
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide mb-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm`}
-            >
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              {selectedNode.category}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${labelText} font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm`}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                {selectedNode.category}
+              </div>
+              {selectedNode.entityType && (
+                <span
+                  title="Whether this entry is an architecture, a trained model instance, or a model family"
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[0.6875em] font-semibold uppercase tracking-wide bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                >
+                  {ENTITY_TYPE_LABELS[selectedNode.entityType]}
+                </span>
+              )}
+              <DetailVerificationBadge
+                status={effectiveVerificationStatus(selectedNode)}
+              />
             </div>
             <h2 className={titleClass}>{selectedNode.label}</h2>
           </div>
@@ -2572,17 +2651,80 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
           {selectedNode.desc}
         </div>
 
+        {/*
+          Training scope and inference axes render ONLY from curated,
+          source-backed ModelMeta fields (trainingScope, inferenceCost,
+          speedTier, accuracyTier). They were previously fabricated from
+          heuristics — "Data Scale" from the card's canvas x-coordinate
+          (x > 600) and "Inference" from category === "Equivariant" — which
+          mislabelled e.g. MACE and SevenNet-Nano. Absent fields render as
+          "Not yet verified"; explicit "unknown" means reviewed but
+          undetermined.
+        */}
         <div className={spacing}>
-          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
+          <div
+            className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}
+            title={selectedNode.datasetEvidence ?? selectedNode.evidenceNotes}
+          >
             <Database size={14} className="text-blue-500" />
             <span>
-              Data Scale: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.x > 600 ? "Universal (Foundational)" : "Specialized"}</strong>
+              Training scope:{" "}
+              {selectedNode.trainingScope ? (
+                selectedNode.trainingScope === "unknown" ? (
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Unknown (reviewed, undetermined)
+                  </span>
+                ) : (
+                  <strong className="text-slate-800 dark:text-slate-100">
+                    {TRAINING_SCOPE_LABELS[selectedNode.trainingScope]}
+                  </strong>
+                )
+              ) : selectedNode.entityType === "architecture" ? (
+                <span className="text-slate-500 dark:text-slate-400">
+                  Defined per trained model
+                </span>
+              ) : (
+                <span className="italic text-slate-400 dark:text-slate-500">
+                  Not yet verified
+                </span>
+              )}
             </span>
           </div>
-          <div className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}>
+          <div
+            className={`flex items-center gap-3 ${bodyText} text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-2 rounded-lg`}
+            title={
+              [
+                selectedNode.speedEvidence,
+                selectedNode.accuracyEvidence,
+                selectedNode.benchmarkContext,
+              ]
+                .filter(Boolean)
+                .join(" — ") || undefined
+            }
+          >
             <Cpu size={14} className="text-purple-500 dark:text-purple-400" />
             <span>
-              Inference: <strong className="text-slate-800 dark:text-slate-100">{selectedNode.category === "Equivariant" ? "High cost / high accuracy" : "Optimized for speed"}</strong>
+              Inference:{" "}
+              {(() => {
+                const parts: string[] = [];
+                if (selectedNode.inferenceCost)
+                  parts.push(`cost: ${prettyTier(selectedNode.inferenceCost)}`);
+                if (selectedNode.speedTier)
+                  parts.push(`speed: ${prettyTier(selectedNode.speedTier)}`);
+                if (selectedNode.accuracyTier)
+                  parts.push(
+                    `accuracy: ${prettyTier(selectedNode.accuracyTier)}`,
+                  );
+                return parts.length > 0 ? (
+                  <strong className="text-slate-800 dark:text-slate-100">
+                    {parts.join(" · ")}
+                  </strong>
+                ) : (
+                  <span className="italic text-slate-400 dark:text-slate-500">
+                    Not yet verified
+                  </span>
+                );
+              })()}
             </span>
           </div>
         </div>
