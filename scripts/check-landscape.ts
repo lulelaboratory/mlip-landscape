@@ -18,6 +18,7 @@ import {
   type Edge,
   type ModelMeta,
 } from "../src/data/landscape";
+import { DATASETS, DATASET_BY_ID } from "../src/data/datasets";
 
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
@@ -323,6 +324,15 @@ for (const n of modelNodes) {
         "invalid-trainedDatasets",
         `Model ${n.id} trainedDatasets must be an array of non-empty strings`,
       );
+    } else {
+      for (const id of n.trainedDatasets) {
+        if (!DATASET_BY_ID.has(id)) {
+          push(
+            "unknown-dataset-id",
+            `Model ${n.id} trainedDatasets references "${id}" which is not a datasetId in the registry (src/data/datasets.ts)`,
+          );
+        }
+      }
     }
   }
 
@@ -480,6 +490,49 @@ for (const n of modelNodes) {
       `Model ${n.id} is missing ${missingChargeSpin.join(", ")}; new entries should set this (use null or "—" if unknown)`,
     );
   }
+}
+
+// --- 8b. Dataset registry integrity ---
+const datasetIdCounts = new Map<string, number>();
+for (const d of DATASETS) {
+  datasetIdCounts.set(d.datasetId, (datasetIdCounts.get(d.datasetId) ?? 0) + 1);
+  if (!d.datasetId || !/^[a-z0-9_]+$/.test(d.datasetId)) {
+    push(
+      "dataset-bad-id",
+      `Dataset id "${d.datasetId}" must be lowercase alphanumeric/underscore`,
+    );
+  }
+  if (!d.name || !Array.isArray(d.aliases) || d.aliases.length === 0) {
+    push(
+      "dataset-missing-field",
+      `Dataset ${d.datasetId} must have a name and at least one alias`,
+    );
+  }
+  if (
+    d.verificationStatus !== undefined &&
+    !VALID_VERIFICATION_STATUS.has(d.verificationStatus)
+  ) {
+    push(
+      "dataset-bad-status",
+      `Dataset ${d.datasetId} has invalid verificationStatus "${d.verificationStatus}"`,
+    );
+  }
+  // A dataset can only be "verified"/"partially_verified" with a real source.
+  if (
+    (d.verificationStatus === "verified" ||
+      d.verificationStatus === "partially_verified") &&
+    !d.paperUrl &&
+    !d.sourceUrl
+  ) {
+    push(
+      "dataset-verified-without-source",
+      `Dataset ${d.datasetId} is "${d.verificationStatus}" but has no paperUrl/sourceUrl`,
+    );
+  }
+}
+for (const [id, count] of datasetIdCounts) {
+  if (count > 1)
+    push("dataset-duplicate-id", `Dataset id "${id}" used ${count} times`);
 }
 
 // --- 9. Metadata coverage report (non-blocking) ---

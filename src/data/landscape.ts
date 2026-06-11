@@ -663,6 +663,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "orbmol",
     type: "node",
+    trainedDatasets: ["omol25"],
     category: "Transformer",
     label: "OrbMol",
     year: 2025,
@@ -816,6 +817,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "uma",
     type: "node",
+    trainedDatasets: ["oc20", "odac23", "omat24", "omc25", "omol25"],
     hasMultipleExperts: true,
     evidenceNotes:
       "2026-06-11: hasMultipleExperts verified — UMA is a \"Mixture of Linear Experts (MoLE)\" model (in-repo description; arXiv:2506.23971). Other fields still needs_review.",
@@ -977,6 +979,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "mace_polar1",
     type: "node",
+    trainedDatasets: ["omol25"],
     category: "Equivariant",
     label: "MACE-POLAR-1",
     year: 2026,
@@ -1099,6 +1102,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "allscaip",
     type: "node",
+    trainedDatasets: ["omol25", "omat24", "oc20"],
     category: "Transformer",
     label: "AllScAIP",
     year: 2026,
@@ -1598,6 +1602,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "matris_moe",
     type: "node",
+    trainedDatasets: ["omat24", "mptrj", "salex", "omol25", "oc20", "odac23"],
     hasMultipleExperts: true,
     evidenceNotes:
       "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of MatRIS ... sparse expert modules ... a message-update MoE ... and a feature-update MoE\" (in-repo description). Other fields still needs_review.",
@@ -2534,6 +2539,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "omnimol",
     type: "node",
+    trainedDatasets: ["omol25"],
     category: "Transformer",
     label: "OmniMol",
     year: 2026,
@@ -2599,6 +2605,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "mace_mh1",
     type: "node",
+    trainedDatasets: ["omat24", "mptrj", "omol25", "oc20", "spice", "rgd1", "matpes"],
     hasMultipleHeads: true,
     evidenceNotes:
       "2026-06-11: hasMultipleHeads verified — \"multi-head replay scheme on OMAT-24 ..., MPTraj, OMol ..., OC20 ..., SPICE, RGD1, and MATPES-r2SCAN heads\" (in-repo description). Other fields still needs_review.",
@@ -2664,6 +2671,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "hydragnn",
     type: "node",
+    trainedDatasets: ["mptrj", "omat24", "oc20", "ani1x", "transition1x", "omol25"],
     hasMultipleHeads: true,
     evidenceNotes:
       "2026-06-11: hasMultipleHeads verified — jointly pre-trained \"using shared message-passing layers and per-dataset output heads\" (in-repo description). Other fields still needs_review.",
@@ -2894,6 +2902,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "transip",
     type: "node",
+    trainedDatasets: ["omol25"],
     category: "Transformer",
     label: "TransIP",
     year: 2026,
@@ -4057,6 +4066,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "esen_moe",
     type: "node",
+    trainedDatasets: ["omol25"],
     hasMultipleExperts: true,
     evidenceNotes:
       "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of ... eSEN ... Routes through specialised expert kernels per chemical environment\" (in-repo description). Other fields still needs_review.",
@@ -4120,6 +4130,7 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "csp_mace_angstrom",
     type: "node",
+    trainedDatasets: ["omol25"],
     category: "Equivariant",
     label: "CSP-MACE-Å",
     year: 2026,
