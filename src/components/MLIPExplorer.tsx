@@ -102,6 +102,68 @@ const TRAINING_SCOPE_LABELS: Record<TrainingScope, string> = {
 // "very_low" -> "very low", "state_of_the_art" -> "state of the art"
 const prettyTier = (v: string) => v.replace(/_/g, " ");
 
+// Yes/no capability filter axes. Each reads a tri-state-ish model field; only
+// an explicit `true`/`false` matches "yes"/"no" — "unknown", `null`, and
+// absent are excluded when the axis is active and are NEVER coerced to false
+// (per the no-silent-claims rule). Driving the state, URL round-trip,
+// matching, and panel from one list keeps adding axes a one-line change.
+const BOOL_FILTER_AXES = [
+  {
+    key: "usesAttention",
+    label: "Attention",
+    param: "att",
+    tooltip: "The architecture is attention-based.",
+    get: (n: ModelNode) => n.usesAttention,
+  },
+  {
+    key: "longRange",
+    label: "Long-range",
+    param: "long",
+    tooltip: "Explicitly handles long-range electrostatics / Ewald summation.",
+    get: (n: ModelNode) => n.longRange,
+  },
+  {
+    key: "hasFoundationVariant",
+    label: "Foundation variant",
+    param: "foundation",
+    tooltip:
+      "A foundation-style pretrained variant exists in this model's family.",
+    get: (n: ModelNode) => n.hasFoundationVariant,
+  },
+  {
+    key: "hasDenoisingPretraining",
+    label: "Denoising pretraining",
+    param: "denoise",
+    tooltip:
+      "Pretrained with a denoising objective (de-noising perturbed structures).",
+    get: (n: ModelNode) => n.hasDenoisingPretraining,
+  },
+  {
+    key: "hasMultipleHeads",
+    label: "Multiple heads",
+    param: "heads",
+    tooltip:
+      "Has multiple prediction heads (e.g. multi-task or multi-fidelity outputs).",
+    get: (n: ModelNode) => n.hasMultipleHeads,
+  },
+  {
+    key: "hasMultipleExperts",
+    label: "Mixture of experts",
+    param: "moe",
+    tooltip: "Uses a mixture-of-experts (MoE) / multiple-expert design.",
+    get: (n: ModelNode) => n.hasMultipleExperts,
+  },
+  {
+    key: "hasUncertaintyEstimates",
+    label: "Uncertainty",
+    param: "uncertainty",
+    tooltip: "Provides uncertainty / error estimates on its predictions.",
+    get: (n: ModelNode) => n.hasUncertaintyEstimates,
+  },
+] as const;
+
+type BoolAxisKey = (typeof BOOL_FILTER_AXES)[number]["key"];
+
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
 const CARD_PADDING = 8;
@@ -883,16 +945,21 @@ export default function MLIPExplorer() {
   // with no selections imposes no constraint. Filter logic ANDs across axes
   // and ORs within an axis. Models with `null`/absent value on an axis that
   // has selections do NOT match (treated as unknown rather than wildcard).
-  const [tagFilters, setTagFilters] = useState<{
-    equivariance: Set<Equivariance>;
-    architecture: Set<Architecture>;
-    usesAttention: Set<"yes" | "no">;
-    longRange: Set<"yes" | "no">;
-  }>({
+  const [tagFilters, setTagFilters] = useState<
+    {
+      equivariance: Set<Equivariance>;
+      architecture: Set<Architecture>;
+    } & Record<BoolAxisKey, Set<"yes" | "no">>
+  >({
     equivariance: new Set(),
     architecture: new Set(),
     usesAttention: new Set(),
     longRange: new Set(),
+    hasFoundationVariant: new Set(),
+    hasDenoisingPretraining: new Set(),
+    hasMultipleHeads: new Set(),
+    hasMultipleExperts: new Set(),
+    hasUncertaintyEstimates: new Set(),
   });
   const [query, setQuery] = useState("");
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
@@ -1082,9 +1149,8 @@ export default function MLIPExplorer() {
     // Hydrate multi-axis tag filters: ?eq=constrained,learnt&arch=gnn&att=yes&long=no
     const eqParam = params.get("eq");
     const archParam = params.get("arch");
-    const attParam = params.get("att");
-    const longParam = params.get("long");
-    if (eqParam || archParam || attParam || longParam) {
+    const boolParams = BOOL_FILTER_AXES.map((a) => params.get(a.param));
+    if (eqParam || archParam || boolParams.some(Boolean)) {
       const splitToSet = <T extends string>(s: string | null, allowed: readonly T[]): Set<T> => {
         if (!s) return new Set<T>();
         const allowedSet = new Set(allowed as readonly string[]);
@@ -1092,12 +1158,24 @@ export default function MLIPExplorer() {
           s.split(",").map((v) => v.trim()).filter((v) => allowedSet.has(v)) as T[],
         );
       };
-      setTagFilters({
+      const next = {
         equivariance: splitToSet<Equivariance>(eqParam, EQUIVARIANCE_VALUES),
         architecture: splitToSet<Architecture>(archParam, ARCHITECTURE_VALUES),
-        usesAttention: splitToSet<"yes" | "no">(attParam, ["yes", "no"] as const),
-        longRange: splitToSet<"yes" | "no">(longParam, ["yes", "no"] as const),
-      });
+        usesAttention: new Set<"yes" | "no">(),
+        longRange: new Set<"yes" | "no">(),
+        hasFoundationVariant: new Set<"yes" | "no">(),
+        hasDenoisingPretraining: new Set<"yes" | "no">(),
+        hasMultipleHeads: new Set<"yes" | "no">(),
+        hasMultipleExperts: new Set<"yes" | "no">(),
+        hasUncertaintyEstimates: new Set<"yes" | "no">(),
+      };
+      for (const a of BOOL_FILTER_AXES) {
+        next[a.key] = splitToSet<"yes" | "no">(params.get(a.param), [
+          "yes",
+          "no",
+        ] as const);
+      }
+      setTagFilters(next);
     }
     urlInitialized.current = true;
   }, []);
@@ -1125,8 +1203,9 @@ export default function MLIPExplorer() {
     };
     setOrDelete("eq", tagFilters.equivariance as Set<string>);
     setOrDelete("arch", tagFilters.architecture as Set<string>);
-    setOrDelete("att", tagFilters.usesAttention as Set<string>);
-    setOrDelete("long", tagFilters.longRange as Set<string>);
+    for (const a of BOOL_FILTER_AXES) {
+      setOrDelete(a.param, tagFilters[a.key] as Set<string>);
+    }
     const next = params.toString();
     const url = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", url);
@@ -1667,16 +1746,14 @@ export default function MLIPExplorer() {
         if (!n.architecture || !tagFilters.architecture.has(n.architecture))
           return false;
       }
-      if (tagFilters.usesAttention.size > 0) {
-        if (n.usesAttention === null || n.usesAttention === undefined)
-          return false;
-        const v = n.usesAttention ? "yes" : "no";
-        if (!tagFilters.usesAttention.has(v as "yes" | "no")) return false;
-      }
-      if (tagFilters.longRange.size > 0) {
-        if (n.longRange === null || n.longRange === undefined) return false;
-        const v = n.longRange ? "yes" : "no";
-        if (!tagFilters.longRange.has(v as "yes" | "no")) return false;
+      for (const a of BOOL_FILTER_AXES) {
+        const set = tagFilters[a.key];
+        if (set.size === 0) continue;
+        const val = a.get(n);
+        // Only an explicit boolean matches; "unknown" / null / undefined are
+        // excluded (never treated as false) when the axis is active.
+        if (val !== true && val !== false) return false;
+        if (!set.has(val ? "yes" : "no")) return false;
       }
       return true;
     };
@@ -2407,10 +2484,11 @@ export default function MLIPExplorer() {
       parts.push(`equivariance=${Array.from(tagFilters.equivariance).sort().join(",")}`);
     if (tagFilters.architecture.size)
       parts.push(`architecture=${Array.from(tagFilters.architecture).sort().join(",")}`);
-    if (tagFilters.usesAttention.size)
-      parts.push(`attention=${Array.from(tagFilters.usesAttention).sort().join(",")}`);
-    if (tagFilters.longRange.size)
-      parts.push(`long-range=${Array.from(tagFilters.longRange).sort().join(",")}`);
+    for (const a of BOOL_FILTER_AXES) {
+      const set = tagFilters[a.key];
+      if (set.size)
+        parts.push(`${a.param}=${Array.from(set).sort().join(",")}`);
+    }
     const note = parts.join("; ");
     return `MLIP Hub. (${now.getFullYear()}). MLIP landscape, view: ${note}. Retrieved ${dateStr}, from ${url}`;
   };
@@ -3228,8 +3306,10 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     </div>
                     {(tagFilters.equivariance.size +
                       tagFilters.architecture.size +
-                      tagFilters.usesAttention.size +
-                      tagFilters.longRange.size) > 0 && (
+                      BOOL_FILTER_AXES.reduce(
+                        (acc, a) => acc + tagFilters[a.key].size,
+                        0,
+                      )) > 0 && (
                       <button
                         type="button"
                         onClick={() =>
@@ -3238,6 +3318,11 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                             architecture: new Set(),
                             usesAttention: new Set(),
                             longRange: new Set(),
+                            hasFoundationVariant: new Set(),
+                            hasDenoisingPretraining: new Set(),
+                            hasMultipleHeads: new Set(),
+                            hasMultipleExperts: new Set(),
+                            hasUncertaintyEstimates: new Set(),
                           })
                         }
                         className="text-[0.6875em] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
@@ -3253,27 +3338,35 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         axis: "equivariance" as const,
                         label: "Equivariance",
                         values: EQUIVARIANCE_VALUES as readonly string[],
+                        tooltip:
+                          "Symmetry handling baked into the architecture (constrained / learnt / invariant).",
                       },
                       {
                         axis: "architecture" as const,
                         label: "Architecture",
                         values: ARCHITECTURE_VALUES as readonly string[],
+                        tooltip:
+                          "Model family: hand-crafted descriptor vs graph neural network.",
                       },
-                      {
-                        axis: "usesAttention" as const,
-                        label: "Attention",
+                      ...BOOL_FILTER_AXES.map((a) => ({
+                        axis: a.key,
+                        label: a.label,
                         values: ["yes", "no"] as readonly string[],
-                      },
-                      {
-                        axis: "longRange" as const,
-                        label: "Long-range",
-                        values: ["yes", "no"] as readonly string[],
-                      },
+                        tooltip: a.tooltip,
+                      })),
                     ]
-                  ).map(({ axis, label, values }) => (
+                  ).map(({ axis, label, values, tooltip }) => (
                     <div key={axis} className="mb-2 last:mb-0">
-                      <div className="text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize">
+                      <div
+                        className="inline-flex items-center gap-1 text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize cursor-help"
+                        title={tooltip}
+                      >
                         {label}
+                        <HelpCircle
+                          size={10}
+                          aria-hidden="true"
+                          className="opacity-50"
+                        />
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {values.map((value) => {
@@ -3314,8 +3407,10 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     </div>
                   ))}
                   <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
-                    Models with unverified tag values are dimmed when an axis
-                    is active.
+                    Hover a tag name for its meaning. &ldquo;Yes&rdquo;/&ldquo;no&rdquo;
+                    match only verified values; models whose value is unknown or
+                    unreviewed are dimmed (never assumed &ldquo;no&rdquo;) while an
+                    axis is active.
                   </p>
                 </div>
 
