@@ -29,6 +29,17 @@ _Last updated: 2026-06-11 (manual)._
   `needs_review` until the systematic reference audit
   (`references_audit_report.md`) covers them. Do not treat the tag as a
   verified claim in the meantime.
+- **2026-06-11 Phase 3 capability seeding:** the new capability filters were
+  seeded only from definitional, in-repo-description-backed cases (each with a
+  per-model `evidenceNotes`): `hasMultipleExperts` (UMA, Allegro-MoE, eSEN-MoE,
+  MatRIS-MoE), `hasMultipleHeads` (MACE-MH-1, HydraGNN-GFM),
+  `hasUncertaintyEstimates` (FLARE, PET-UAFD). `hasDenoisingPretraining` is
+  **intentionally left empty** — no model's in-repo description documents a
+  denoising objective, and it was not guessed. ACNN was deliberately NOT marked
+  `hasMultipleHeads` (its "multi-head attention" is transformer attention, not
+  multiple output heads). These are per-claim checks only; the entries
+  otherwise remain `needs_review`. **TODO:** source-check denoising pretraining
+  (e.g. Orb / DPA families) and broaden capability coverage.
 
 <!-- AUTOGEN:START metadata-warnings -->
 | model id | field | current value | concern | severity | suggested action |
