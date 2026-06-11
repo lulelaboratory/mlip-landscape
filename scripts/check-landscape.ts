@@ -12,6 +12,8 @@ import {
   INFERENCE_COST_VALUES,
   ACCURACY_TIER_VALUES,
   SPEED_TIER_VALUES,
+  EDGE_CONFIDENCE_VALUES,
+  effectiveEdgeConfidence,
   type AnyNode,
   type ModelNode,
   type GroupNode,
@@ -138,8 +140,9 @@ for (const n of modelNodes) {
   }
 }
 
-// --- 4. Edge endpoint resolution ---
+// --- 4. Edge endpoint resolution + trust metadata ---
 const modelIds = new Set(modelNodes.map((n) => n.id));
+const VALID_EDGE_CONFIDENCE = new Set<string>(EDGE_CONFIDENCE_VALUES);
 for (const edge of INITIAL_EDGES as Edge[]) {
   if (!edge.from) push("edge-missing-from", `Edge missing 'from': ${JSON.stringify(edge)}`);
   if (!edge.to) push("edge-missing-to", `Edge missing 'to': ${JSON.stringify(edge)}`);
@@ -148,6 +151,22 @@ for (const edge of INITIAL_EDGES as Edge[]) {
   }
   if (edge.to && !modelIds.has(edge.to)) {
     push("edge-dangling", `Edge ${edge.from} -> ${edge.to}: 'to' does not resolve to a ModelNode`);
+  }
+  if (
+    edge.edgeConfidence !== undefined &&
+    !VALID_EDGE_CONFIDENCE.has(edge.edgeConfidence)
+  ) {
+    push(
+      "invalid-edgeConfidence",
+      `Edge ${edge.from} -> ${edge.to} has edgeConfidence "${edge.edgeConfidence}" (valid: ${[...VALID_EDGE_CONFIDENCE].join(", ")})`,
+    );
+  }
+  // No-silent-claims for edges: a "verified" relationship must cite a source.
+  if (edge.edgeConfidence === "verified" && !edge.edgeSource) {
+    push(
+      "edge-verified-without-source",
+      `Edge ${edge.from} -> ${edge.to} is "verified" but has no edgeSource`,
+    );
   }
 }
 
@@ -550,6 +569,14 @@ for (const n of modelNodes) {
 const modelCount = modelNodes.length;
 const groupCount = groupNodes.length;
 const edgeCount = (INITIAL_EDGES as Edge[]).length;
+const edgeConfidenceCounts = new Map<string, number>();
+for (const edge of INITIAL_EDGES as Edge[]) {
+  const c = effectiveEdgeConfidence(edge);
+  edgeConfidenceCounts.set(c, (edgeConfidenceCounts.get(c) ?? 0) + 1);
+}
+const edgeConfidenceSummary = EDGE_CONFIDENCE_VALUES.map(
+  (c) => `${edgeConfidenceCounts.get(c) ?? 0} ${c}`,
+).join(", ");
 
 const coverageLines = MODEL_META_FIELDS.map((field) => {
   const n = coverage[field];
@@ -559,7 +586,7 @@ const coverageLines = MODEL_META_FIELDS.map((field) => {
 
 const printSummary = () => {
   console.log(
-    `landscape check: ${modelCount} models, ${groupCount} zones, ${edgeCount} edges`,
+    `landscape check: ${modelCount} models, ${groupCount} zones, ${edgeCount} edges (${edgeConfidenceSummary})`,
   );
   console.log(`\n  metadata coverage (optional ModelMeta fields):`);
   console.log(coverageLines);

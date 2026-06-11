@@ -390,6 +390,25 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
 
 export type AnyNode = GroupNode | ModelNode;
 
+// Trust tier of a lineage edge (Phase 5 graph cleanup).
+// - "verified": the relationship was checked against a cited source
+//   (edgeSource required; validator-enforced).
+// - "probable": asserted by curators (the historical solid edges) but not yet
+//   source-verified.
+// - "speculative": weak / indirect link (the historical dashed edges).
+// - "unknown": not yet reviewed at all.
+// Only verified edges are drawn in the default "show connections" view;
+// probable/speculative require the explicit "include unverified" toggle and
+// are visually marked.
+export type EdgeConfidence = "verified" | "probable" | "speculative" | "unknown";
+
+export const EDGE_CONFIDENCE_VALUES: readonly EdgeConfidence[] = [
+  "verified",
+  "probable",
+  "speculative",
+  "unknown",
+] as const;
+
 export interface Edge {
   from: string;
   to: string;
@@ -399,6 +418,20 @@ export interface Edge {
   // models. Surfaces in the side panel when the user clicks the edge. The
   // short `label` stays as the on-graph annotation.
   description?: string;
+  // Trust metadata (Phase 5). Absent edgeConfidence falls back to the
+  // historical curation via effectiveEdgeConfidence: solid edges were curated
+  // as primary lineage ("probable"), dashed ones as weaker/speculative links
+  // ("speculative"). Setting "verified" requires edgeSource.
+  edgeConfidence?: EdgeConfidence;
+  edgeSource?: string;
+  edgeNotes?: string;
+}
+
+// Resolve the trust tier an edge should be treated as. An edge with no
+// explicit edgeConfidence inherits the curators' historical solid/dashed
+// distinction — it is NEVER treated as verified without a source.
+export function effectiveEdgeConfidence(edge: Edge): EdgeConfidence {
+  return edge.edgeConfidence ?? (edge.dashed ? "speculative" : "probable");
 }
 
 export const INITIAL_NODES: AnyNode[] = [
@@ -4210,7 +4243,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "orb", to: "orbmol", label: "Adds OMol25" , description: "OrbMol is the molecular variant of Orb-v3 trained on the OMol25 dataset, with the same Orb backbone plus charge/spin conditioning." },
   { from: "pet", to: "petmad", label: "MAD pretraining", description: "PET-MAD applies the Massive Atomic Diversity training recipe to the Point Edge Transformer architecture; PET supplies the unconstrained-equivariance graph-transformer backbone." },
   { from: "eqv2", to: "esen", label: "Smooth PES" , description: "eSEN is an equivariant GNN focused on producing a smooth, energy-conserving PES for stable MD; it sits in the same Meta FAIR equivariant lineage as Equiformer V2 but the abstract emphasises smoothness/expressivity rather than naming Equiformer V2 as a parent." },
-  { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture." },
+  { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2506.23971", edgeNotes: "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN." },
   { from: "gemnet", to: "jmp", label: "GemNet-OC backbone", description: "JMP uses a GemNet-OC backbone shared across all training datasets — GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top." },
   { from: "jmp", to: "uma", label: "Multi-task", dashed: true , description: "JMP demonstrated joint multi-domain pretraining across OC20/OC22/ANI-1x/Transition-1x and is widely framed as the precursor to UMA's universal multi-dataset foundation model." },
 
@@ -4258,8 +4291,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "liten", label: "4-body", dashed: true , description: "LiTEN-FF's quadrangle attention captures up to 4-body interactions, paralleling the higher-body-order messages that MACE introduced." },
 
   // 2026 additions
-  { from: "sevennet", to: "sevennet_omni", label: "Multi-fidelity" , description: "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets." },
-  { from: "sevennet_omni", to: "sevennet_nano", label: "Distillation" , description: "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy." },
+  { from: "sevennet", to: "sevennet_omni", label: "Multi-fidelity" , description: "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2510.11241", edgeNotes: "Verified 2026-06-11: SevenNet-Omni ships in the official MDIL-SNU/SevenNet codebase and is described as a SevenNet-family foundation model in arXiv:2604.10887; the SevenNet-MF backbone detail is from the entry description (full-text check pending)." },
+  { from: "sevennet_omni", to: "sevennet_nano", label: "Distillation" , description: "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2604.10887", edgeNotes: "Verified 2026-06-11 (abstract-level): SevenNet-Nano is distilled from the SevenNet-Omni teacher via knowledge distillation." },
 
   // 2025–2026 new foundation/follow-on models
   { from: "mace", to: "mace_polar1", label: "Polarisable MACE" , description: "MACE-POLAR-1 is the polarisable extension of MACE adding non-self-consistent atomic charge/spin densities and Fukui equilibration on top of the MACE backbone." },
@@ -4431,7 +4464,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa1", to: "dpa2", label: "v1 → v2", description: "DPA-2 is the direct second-generation successor to DPA-1 from the DeepModeling team, retaining DPA-1's pretrained descriptor + attention design while expanding to multi-task heads and broader cross-domain pretraining." },
 
   // MACE-MP-0 (2023/2024) — first MACE foundation model
-  { from: "mace", to: "mace_mp0", label: "+MPtrj foundation", description: "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals." },
+  { from: "mace", to: "mace_mp0", label: "+MPtrj foundation", description: "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2401.00096", edgeNotes: "Verified 2026-06-11 (abstract-level): MACE-MP-0 is a single MACE-architecture potential trained on MPtrj." },
   { from: "mace_mp0", to: "mace_osaka26", label: "MACE foundation lineage", description: "MACE-Osaka26 extends MACE-MP-0's universal-MLIP recipe to 97 elements with the new HE26 actinide dataset, sitting directly in the MACE-MP-0 foundation-model lineage." },
   { from: "mace_mp0", to: "mace_mh1", label: "Multi-head replay", dashed: true, description: "MACE-MH-1 builds on MACE-MP-0's MPtrj-pretrained MACE backbone with stronger element weight sharing, non-linear product-basis tensor decomposition, and a multi-head replay post-training scheme that unifies inorganic, surface, organic, and molecular-crystal data." },
   { from: "mace_mp0", to: "mace_mag", label: "Adds magnetism", dashed: true, description: "MACE-Magnetic builds on the MACE-MP foundation-model framework, extending the universal MACE backbone with explicit atomic magnetic moments and optional spin-orbit coupling for magnetic materials." },
