@@ -39,6 +39,11 @@ import {
   type EntityType,
   type TrainingScope,
 } from "@/data/landscape";
+import {
+  FILTERABLE_DATASET_IDS,
+  datasetDisplayName,
+  getDataset,
+} from "@/data/datasets";
 import OnboardingTour from "@/components/OnboardingTour";
 
 // Subtle curation-status pill shown in the model detail panel (next to the
@@ -949,10 +954,12 @@ export default function MLIPExplorer() {
     {
       equivariance: Set<Equivariance>;
       architecture: Set<Architecture>;
+      trainedDatasets: Set<string>;
     } & Record<BoolAxisKey, Set<"yes" | "no">>
   >({
     equivariance: new Set(),
     architecture: new Set(),
+    trainedDatasets: new Set(),
     usesAttention: new Set(),
     longRange: new Set(),
     hasFoundationVariant: new Set(),
@@ -1149,8 +1156,9 @@ export default function MLIPExplorer() {
     // Hydrate multi-axis tag filters: ?eq=constrained,learnt&arch=gnn&att=yes&long=no
     const eqParam = params.get("eq");
     const archParam = params.get("arch");
+    const datasetParam = params.get("dataset");
     const boolParams = BOOL_FILTER_AXES.map((a) => params.get(a.param));
-    if (eqParam || archParam || boolParams.some(Boolean)) {
+    if (eqParam || archParam || datasetParam || boolParams.some(Boolean)) {
       const splitToSet = <T extends string>(s: string | null, allowed: readonly T[]): Set<T> => {
         if (!s) return new Set<T>();
         const allowedSet = new Set(allowed as readonly string[]);
@@ -1161,6 +1169,7 @@ export default function MLIPExplorer() {
       const next = {
         equivariance: splitToSet<Equivariance>(eqParam, EQUIVARIANCE_VALUES),
         architecture: splitToSet<Architecture>(archParam, ARCHITECTURE_VALUES),
+        trainedDatasets: splitToSet<string>(datasetParam, FILTERABLE_DATASET_IDS),
         usesAttention: new Set<"yes" | "no">(),
         longRange: new Set<"yes" | "no">(),
         hasFoundationVariant: new Set<"yes" | "no">(),
@@ -1203,6 +1212,7 @@ export default function MLIPExplorer() {
     };
     setOrDelete("eq", tagFilters.equivariance as Set<string>);
     setOrDelete("arch", tagFilters.architecture as Set<string>);
+    setOrDelete("dataset", tagFilters.trainedDatasets);
     for (const a of BOOL_FILTER_AXES) {
       setOrDelete(a.param, tagFilters[a.key] as Set<string>);
     }
@@ -1754,6 +1764,13 @@ export default function MLIPExplorer() {
         // excluded (never treated as false) when the axis is active.
         if (val !== true && val !== false) return false;
         if (!set.has(val ? "yes" : "no")) return false;
+      }
+      if (tagFilters.trainedDatasets.size > 0) {
+        // Uses only the normalized `trainedDatasets`; models not yet normalized
+        // (absent) are excluded rather than inferred from `trainingData`.
+        const ds = n.trainedDatasets;
+        if (!ds || !ds.some((id) => tagFilters.trainedDatasets.has(id)))
+          return false;
       }
       return true;
     };
@@ -2484,6 +2501,8 @@ export default function MLIPExplorer() {
       parts.push(`equivariance=${Array.from(tagFilters.equivariance).sort().join(",")}`);
     if (tagFilters.architecture.size)
       parts.push(`architecture=${Array.from(tagFilters.architecture).sort().join(",")}`);
+    if (tagFilters.trainedDatasets.size)
+      parts.push(`dataset=${Array.from(tagFilters.trainedDatasets).sort().join(",")}`);
     for (const a of BOOL_FILTER_AXES) {
       const set = tagFilters[a.key];
       if (set.size)
@@ -3306,6 +3325,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     </div>
                     {(tagFilters.equivariance.size +
                       tagFilters.architecture.size +
+                      tagFilters.trainedDatasets.size +
                       BOOL_FILTER_AXES.reduce(
                         (acc, a) => acc + tagFilters[a.key].size,
                         0,
@@ -3316,6 +3336,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                           setTagFilters({
                             equivariance: new Set(),
                             architecture: new Set(),
+                            trainedDatasets: new Set(),
                             usesAttention: new Set(),
                             longRange: new Set(),
                             hasFoundationVariant: new Set(),
@@ -3412,6 +3433,57 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                     unreviewed are dimmed (never assumed &ldquo;no&rdquo;) while an
                     axis is active.
                   </p>
+
+                  {FILTERABLE_DATASET_IDS.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div
+                        className="inline-flex items-center gap-1 text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 cursor-help"
+                        title="Filter to models whose normalized training datasets include the selected dataset."
+                      >
+                        Trained on dataset
+                        <HelpCircle
+                          size={10}
+                          aria-hidden="true"
+                          className="opacity-50"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {FILTERABLE_DATASET_IDS.map((id) => {
+                          const active = tagFilters.trainedDatasets.has(id);
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              aria-pressed={active}
+                              title={getDataset(id)?.notes}
+                              onClick={() =>
+                                setTagFilters((prev) => {
+                                  const next = new Set(prev.trainedDatasets);
+                                  if (next.has(id)) next.delete(id);
+                                  else next.add(id);
+                                  return { ...prev, trainedDatasets: next };
+                                })
+                              }
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition ${
+                                active
+                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              {active && (
+                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
+                              )}
+                              {datasetDisplayName(id)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
+                        Only datasets with complete model coverage are shown;
+                        more appear as model&ndash;dataset links are verified.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
