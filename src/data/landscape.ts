@@ -513,21 +513,40 @@ export const INITIAL_NODES: AnyNode[] = [
     githubUrl: "https://github.com/ACEsuit/mace",
     paperUrl: "https://arxiv.org/abs/2206.07697",
     coverage: ["general materials", "organic molecules", "oxides"],
-    useCases: ["universal MLIP", "MD at scale", "high-throughput screening"],
+    useCases: ["MD at scale", "high-throughput screening"],
     properties: ["energy", "forces", "stress"],
     frameworks: ["ASE", "LAMMPS"],
     license: "MIT",
     maintenance: "active",
     lastReviewed: "2026-05-05",
-    trainingData: ["MPTrj", "Alexandria"],
-    tags: ["equivariant", "higher-order", "foundation model"],
+    tags: ["equivariant", "higher-order", "architecture"],
     supportsCharges: false,
     supportsSpins: false,
-    elementsCovered: "all elements covered by MPTrj / Alexandria (~89 elements)",
+    elementsCovered:
+      "dataset-dependent (architecture; ~89-element universal coverage via the MACE-MP foundation variants)",
     equivariance: "constrained",
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit (Tim's review): base MACE is the *architecture*, not a
+    // universal/foundation model — those labels belong to MACE-MP-0 et al.
+    entityType: "architecture",
+    architectureFamily: "MACE",
+    isFoundationModel: false,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      "arXiv:2206.07697 introduces the MACE architecture (benchmarked on rMD17, 3BPA, AcAc) with no universal/foundation claims; the universal foundation family is MACE-MP-0 and successors (arXiv:2401.00096), catalogued as separate entries.",
+    datasetEvidence:
+      "Removed trainingData [MPTrj, Alexandria] from this entry: those are training sets of the MACE-MP foundation variants, not of the 2022 architecture paper (which trains per-task models on rMD17 / 3BPA / AcAc).",
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2206.07697",
+      "https://arxiv.org/abs/2401.00096",
+    ],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: removed unsupported universal/foundation labels from the base architecture entry (identity claims source-checked). Remaining capability fields still pending full review.",
   },
   {
     id: "grace",
@@ -2259,14 +2278,14 @@ export const INITIAL_NODES: AnyNode[] = [
     paperUrl: "https://arxiv.org/abs/2604.10887",
     isNew: true,
     coverage: ["general materials"],
-    useCases: ["lightweight foundation MLIP", "thousand-atom MD"],
+    useCases: ["lightweight universal MLIP", "thousand-atom MD"],
     properties: ["energy", "forces", "stress"],
     frameworks: ["ASE", "LAMMPS", "PyTorch"],
     license: "MIT",
     maintenance: "active",
     lastReviewed: "2026-05-05",
     trainingData: ["distilled from SevenNet-Omni"],
-    tags: ["invariant", "distilled", "lightweight", "foundation model"],
+    tags: ["invariant", "distilled", "lightweight", "universal MLIP"],
     supportsCharges: false,
     supportsSpins: false,
     elementsCovered: "all elements covered by SevenNet-Omni",
@@ -2274,6 +2293,34 @@ export const INITIAL_NODES: AnyNode[] = [
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit (Tim's review): SevenNet-Nano was shown with a fabricated
+    // "high cost / high accuracy" label. It is a distilled lightweight model;
+    // cost/speed/accuracy are now separate, source-backed axes, and accuracy
+    // is explicitly "unknown" rather than guessed.
+    entityType: "trained_model",
+    architectureFamily: "SevenNet",
+    trainingScope: "universal_foundation",
+    isFoundationModel: "unknown",
+    hasFoundationVariant: true,
+    inferenceCost: "low",
+    speedTier: "fast",
+    accuracyTier: "unknown",
+    speedEvidence:
+      'Paper title/abstract: "A Lightweight Universal Machine-Learning Interatomic Potential via Knowledge Distillation for Scalable Atomistic Simulations" — compact distilled architecture aimed at scalable simulation (arXiv:2604.10887).',
+    accuracyEvidence:
+      "Paper claims high accuracy and strong transferability inherited from the SevenNet-Omni teacher (arXiv:2604.10887); no independent benchmark tier assessed yet, so the tier is kept 'unknown'.",
+    benchmarkContext:
+      "Cost/speed are relative to full-size universal MLIPs (its SevenNet-Omni teacher); paper benchmarks static and dynamical properties such as Li-ion diffusion and liquid densities.",
+    foundationModelEvidence:
+      "Distilled student of the SevenNet-Omni foundation model; the paper presents it as a lightweight *universal* MLIP rather than itself a foundation model, so isFoundationModel is recorded as 'unknown'.",
+    datasetEvidence:
+      "Trained by knowledge distillation from SevenNet-Omni (arXiv:2604.10887); dataset-registry linkage pending (Phase 4).",
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2604.10887"],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: replaced the fabricated combined inference label with separated cost/speed/accuracy axes; retagged 'foundation model' to 'universal MLIP' per the paper's own framing.",
   },
   {
     id: "sevennet_omni",
@@ -2307,6 +2354,24 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
     trainingSetSize: 250000000,
+    // Phase 2 audit: trained universal foundation model (teacher of
+    // SevenNet-Nano) built on the SevenNet architecture family.
+    entityType: "trained_model",
+    architectureFamily: "SevenNet",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      'Universal multi-task MLIP for cross-domain transfer (arXiv:2510.11241); described as "a large multi-task foundation model" in the SevenNet-Nano paper abstract (arXiv:2604.10887). Checkpoint publicly released.',
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2510.11241",
+      "https://arxiv.org/abs/2604.10887",
+    ],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: foundation status source-checked. Training-data composition (15 datasets, ~250M structures) and capability tiers still pending detailed review.",
   },
   {
     id: "pfp_v8",
@@ -2972,7 +3037,13 @@ export const INITIAL_NODES: AnyNode[] = [
     maintenance: "archived",
     lastReviewed: "2026-05-10",
     trainingData: ["Materials Project"],
-    tags: ["invariant", "crystal graph", "convolutional", "foundation"],
+    // Phase 2 audit: "foundation" tag replaced with "precursor" — CGCNN (2018)
+    // is a property-prediction GNN that predates pretrained universal
+    // potentials; its own description already records the ancestral influence.
+    tags: ["invariant", "crystal graph", "convolutional", "precursor"],
+    isFoundationModel: false,
+    foundationModelEvidence:
+      "CGCNN (arXiv:1710.10324, 2018) is a per-property crystal-graph prediction network from before the pretrained-universal-potential era; the previous 'foundation' tag referred to its ancestral influence (see description), not foundation-model status.",
     supportsCharges: false,
     supportsSpins: false,
     elementsCovered: "all elements covered by Materials Project",
@@ -3435,6 +3506,23 @@ export const INITIAL_NODES: AnyNode[] = [
     architecture: "gnn",
     usesAttention: false,
     longRange: false,
+    // Phase 2 audit: this is the trained foundation-model counterpart of the
+    // base MACE architecture entry.
+    entityType: "trained_model",
+    architectureFamily: "MACE",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      'Paper title: "A foundation model for atomistic materials chemistry" (arXiv:2401.00096); a single MACE potential trained on MPtrj, presented as an out-of-the-box foundation model.',
+    datasetEvidence:
+      "MPtrj (Materials Project trajectories, ~150k inorganic crystals, 89 elements) stated as the training set in arXiv:2401.00096.",
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2401.00096"],
+    lastVerifiedDate: "2026-06-11",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-06-11 audit: foundation status and training data source-checked. Benchmark/capability tiers still pending review.",
   },
   {
     id: "mpnice",
