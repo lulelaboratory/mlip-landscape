@@ -262,6 +262,20 @@ export interface ModelMeta {
   accuracyTier?: AccuracyTier;
   // Which benchmark/setting any tier claims refer to.
   benchmarkContext?: string;
+
+  // --- Capability flags (Phase 3 filters) ----------------------------------
+  // Tri-state (boolean | "unknown"); absent = not yet reviewed. Filters treat
+  // only an explicit `true`/`false` as a match — "unknown" and absent are
+  // never coerced to false.
+  hasDenoisingPretraining?: TriState;
+  hasMultipleHeads?: TriState;
+  hasMultipleExperts?: TriState; // mixture-of-experts (MoE)
+  hasUncertaintyEstimates?: TriState;
+  // Normalized, registry-linked training datasets. Kept SEPARATE from the
+  // free-form `trainingData` provenance text. Phase 4 populates these together
+  // with a dataset registry (stable ids + aliases). Absent = not yet
+  // normalized — do not infer from `trainingData`.
+  trainedDatasets?: string[];
 }
 
 export interface BaseNode {
@@ -367,6 +381,11 @@ export const MODEL_META_FIELDS: readonly (keyof ModelMeta)[] = [
   "speedTier",
   "accuracyTier",
   "benchmarkContext",
+  "hasDenoisingPretraining",
+  "hasMultipleHeads",
+  "hasMultipleExperts",
+  "hasUncertaintyEstimates",
+  "trainedDatasets",
 ] as const;
 
 export type AnyNode = GroupNode | ModelNode;
@@ -797,6 +816,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "uma",
     type: "node",
+    hasMultipleExperts: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleExperts verified — UMA is a \"Mixture of Linear Experts (MoLE)\" model (in-repo description; arXiv:2506.23971). Other fields still needs_review.",
     category: "Transformer",
     label: "UMA",
     year: 2025,
@@ -1138,6 +1160,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "allegro_moe",
     type: "node",
+    hasMultipleExperts: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleExperts verified — \"Multifidelity Mixture-of-Experts framework ... assigns Allegro experts of different capacity\" (in-repo description). Other fields still needs_review.",
     category: "Equivariant",
     label: "Allegro-MoE",
     year: 2026,
@@ -1573,6 +1598,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "matris_moe",
     type: "node",
+    hasMultipleExperts: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of MatRIS ... sparse expert modules ... a message-update MoE ... and a feature-update MoE\" (in-repo description). Other fields still needs_review.",
     category: "Invariant",
     label: "MatRIS-MoE",
     year: 2026,
@@ -1694,6 +1722,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "flare",
     type: "node",
+    hasUncertaintyEstimates: true,
+    evidenceNotes:
+      "2026-06-11: hasUncertaintyEstimates verified — Gaussian-process Bayesian potential \"with GP-uncertainty driving when to call DFT vs. trust the surrogate\" (in-repo description). Other fields still needs_review.",
     category: "Descriptor",
     label: "FLARE",
     year: 2020,
@@ -2568,6 +2599,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "mace_mh1",
     type: "node",
+    hasMultipleHeads: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleHeads verified — \"multi-head replay scheme on OMAT-24 ..., MPTraj, OMol ..., OC20 ..., SPICE, RGD1, and MATPES-r2SCAN heads\" (in-repo description). Other fields still needs_review.",
     category: "Equivariant",
     label: "MACE-MH-1",
     year: 2026,
@@ -2630,6 +2664,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "hydragnn",
     type: "node",
+    hasMultipleHeads: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleHeads verified — jointly pre-trained \"using shared message-passing layers and per-dataset output heads\" (in-repo description). Other fields still needs_review.",
     category: "Equivariant",
     label: "HydraGNN-GFM",
     year: 2026,
@@ -3987,6 +4024,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "pet_uafd",
     type: "node",
+    hasUncertaintyEstimates: true,
+    evidenceNotes:
+      "2026-06-11: hasUncertaintyEstimates verified — \"Uncertainty-aware ensemble ... the ensemble spread reports prediction reliability\" (in-repo description). Other fields still needs_review.",
     category: "Transformer",
     label: "PET-UAFD",
     year: 2026,
@@ -4017,6 +4057,9 @@ export const INITIAL_NODES: AnyNode[] = [
   {
     id: "esen_moe",
     type: "node",
+    hasMultipleExperts: true,
+    evidenceNotes:
+      "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of ... eSEN ... Routes through specialised expert kernels per chemical environment\" (in-repo description). Other fields still needs_review.",
     category: "Equivariant",
     label: "eSEN-MoE",
     year: 2026,

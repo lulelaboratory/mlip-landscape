@@ -298,12 +298,30 @@ for (const n of modelNodes) {
       `Model ${n.id} has accuracyTier "${n.accuracyTier}" (valid: ${[...VALID_ACCURACY_TIER].join(", ")})`,
     );
   }
-  for (const field of ["isFoundationModel", "hasFoundationVariant"] as const) {
+  for (const field of [
+    "isFoundationModel",
+    "hasFoundationVariant",
+    "hasDenoisingPretraining",
+    "hasMultipleHeads",
+    "hasMultipleExperts",
+    "hasUncertaintyEstimates",
+  ] as const) {
     const v = n[field];
     if (v !== undefined && typeof v !== "boolean" && v !== "unknown") {
       push(
         `invalid-${field}`,
         `Model ${n.id} ${field} must be boolean or "unknown" (got: ${JSON.stringify(v)})`,
+      );
+    }
+  }
+  if (n.trainedDatasets !== undefined) {
+    if (
+      !Array.isArray(n.trainedDatasets) ||
+      n.trainedDatasets.some((d) => typeof d !== "string" || d.trim() === "")
+    ) {
+      push(
+        "invalid-trainedDatasets",
+        `Model ${n.id} trainedDatasets must be an array of non-empty strings`,
       );
     }
   }
