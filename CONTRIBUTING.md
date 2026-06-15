@@ -77,8 +77,21 @@ There are currently two zones: `zone_eq` (Equivariant & Transformers) and `zone_
   to: string;                       // ModelNode.id
   label?: string;                   // short label drawn along the curve
   dashed?: boolean;                 // dashed line for weaker / speculative links
+  description?: string;            // long-form explanation (edge detail panel)
+  edgeConfidence?: "verified" | "probable" | "speculative" | "unknown";
+  edgeSource?: string;             // citation backing the relationship
+  edgeNotes?: string;              // what was checked / what's pending
 }
 ```
+
+Edge trust rules: an edge with no explicit `edgeConfidence` inherits the
+historical curation via `effectiveEdgeConfidence` — solid edges count as
+`probable`, dashed ones as `speculative`; neither is ever treated as verified.
+Setting `edgeConfidence: "verified"` **requires** `edgeSource`
+(validator-enforced). The graph shows no edges by default; the
+"Show connections" view draws only verified edges unless the user explicitly
+enables "Include unverified edges", and selecting a model reveals just that
+model's own connections with unverified ones faded/dashed.
 
 ---
 
@@ -225,6 +238,28 @@ Ground rules: **prefer `"unknown"` over a guess**; never combine cost/speed/
 accuracy into one label; `"unknown"` and *absent* are different (`"unknown"` =
 reviewed but undetermined, absent = not yet reviewed) and neither ever counts
 as `false`.
+
+### Datasets (`src/data/datasets.ts`)
+
+Datasets are normalized in a registry so the same dataset isn't double-counted
+under different spellings (`MPTrj` / `MPtrj` / `MPTraj`). Each entry has a stable
+`datasetId`, a canonical `name`, the `aliases` seen in the wild, `domain[]`, and
+optional `sourceUrl` / `paperUrl` / `license` / `notes` / `verificationStatus`.
+Only source-checked datasets carry a `paperUrl` / `license`; the rest are
+`needs_review` with **no guessed links**.
+
+- Connect a model to datasets with `trainedDatasets: string[]` on the model,
+  using **`datasetId`s** (e.g. `["omol25", "omat24"]`). `check:landscape` fails
+  if an id isn't in the registry. Keep this separate from the free-form
+  `trainingData` provenance text — do not infer one from the other.
+- A dataset becomes selectable in the explorer's **Trained on dataset** filter
+  only when its id is added to `FILTERABLE_DATASET_IDS`, which should happen
+  **only after every model trained on it has a normalized `trainedDatasets`** —
+  otherwise the filter under-reports. OMol25 is fully normalized; others are
+  TODO.
+- `fineTuningDatasets` / `evaluationDatasets` / `benchmarkDatasets` relationship
+  types are **not implemented yet** (Phase 4 did `trainedDatasets` first); add
+  them the same way when needed.
 
 ### Required-for-new-entries fields
 

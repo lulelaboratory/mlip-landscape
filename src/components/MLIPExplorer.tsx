@@ -35,10 +35,17 @@ import {
   EQUIVARIANCE_VALUES,
   ARCHITECTURE_VALUES,
   effectiveVerificationStatus,
+  effectiveEdgeConfidence,
   type VerificationStatus,
   type EntityType,
   type TrainingScope,
+  type EdgeConfidence,
 } from "@/data/landscape";
+import {
+  FILTERABLE_DATASET_IDS,
+  datasetDisplayName,
+  getDataset,
+} from "@/data/datasets";
 import OnboardingTour from "@/components/OnboardingTour";
 
 // Subtle curation-status pill shown in the model detail panel (next to the
@@ -101,6 +108,68 @@ const TRAINING_SCOPE_LABELS: Record<TrainingScope, string> = {
 };
 // "very_low" -> "very low", "state_of_the_art" -> "state of the art"
 const prettyTier = (v: string) => v.replace(/_/g, " ");
+
+// Yes/no capability filter axes. Each reads a tri-state-ish model field; only
+// an explicit `true`/`false` matches "yes"/"no" — "unknown", `null`, and
+// absent are excluded when the axis is active and are NEVER coerced to false
+// (per the no-silent-claims rule). Driving the state, URL round-trip,
+// matching, and panel from one list keeps adding axes a one-line change.
+const BOOL_FILTER_AXES = [
+  {
+    key: "usesAttention",
+    label: "Attention",
+    param: "att",
+    tooltip: "The architecture is attention-based.",
+    get: (n: ModelNode) => n.usesAttention,
+  },
+  {
+    key: "longRange",
+    label: "Long-range",
+    param: "long",
+    tooltip: "Explicitly handles long-range electrostatics / Ewald summation.",
+    get: (n: ModelNode) => n.longRange,
+  },
+  {
+    key: "hasFoundationVariant",
+    label: "Foundation variant",
+    param: "foundation",
+    tooltip:
+      "A foundation-style pretrained variant exists in this model's family.",
+    get: (n: ModelNode) => n.hasFoundationVariant,
+  },
+  {
+    key: "hasDenoisingPretraining",
+    label: "Denoising pretraining",
+    param: "denoise",
+    tooltip:
+      "Pretrained with a denoising objective (de-noising perturbed structures).",
+    get: (n: ModelNode) => n.hasDenoisingPretraining,
+  },
+  {
+    key: "hasMultipleHeads",
+    label: "Multiple heads",
+    param: "heads",
+    tooltip:
+      "Has multiple prediction heads (e.g. multi-task or multi-fidelity outputs).",
+    get: (n: ModelNode) => n.hasMultipleHeads,
+  },
+  {
+    key: "hasMultipleExperts",
+    label: "Mixture of experts",
+    param: "moe",
+    tooltip: "Uses a mixture-of-experts (MoE) / multiple-expert design.",
+    get: (n: ModelNode) => n.hasMultipleExperts,
+  },
+  {
+    key: "hasUncertaintyEstimates",
+    label: "Uncertainty",
+    param: "uncertainty",
+    tooltip: "Provides uncertainty / error estimates on its predictions.",
+    get: (n: ModelNode) => n.hasUncertaintyEstimates,
+  },
+] as const;
+
+type BoolAxisKey = (typeof BOOL_FILTER_AXES)[number]["key"];
 
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
@@ -256,6 +325,17 @@ type DeviceType = "mobile" | "tablet" | "desktop";
 type LayoutMode = "layered" | "force" | "timeline";
 const LAYOUT_STORAGE_KEY = "mliphub.layout";
 const EDGE_LABELS_STORAGE_KEY = "mliphub.edgeLabels";
+const SHOW_CONNECTIONS_STORAGE_KEY = "mliphub.showConnections";
+const UNVERIFIED_EDGES_STORAGE_KEY = "mliphub.unverifiedEdges";
+
+// Human-readable wording for each edge trust tier, used by tooltips and the
+// connection detail panel so unverified links are always clearly marked.
+const EDGE_CONFIDENCE_LABELS: Record<EdgeConfidence, string> = {
+  verified: "verified",
+  probable: "probable (not yet source-verified)",
+  speculative: "speculative (weak link)",
+  unknown: "unverified",
+};
 const FORCE_OVERRIDES_STORAGE_KEY = "mliphub.forceOverrides";
 
 const isLayoutMode = (value: string | null): value is LayoutMode =>
@@ -883,16 +963,23 @@ export default function MLIPExplorer() {
   // with no selections imposes no constraint. Filter logic ANDs across axes
   // and ORs within an axis. Models with `null`/absent value on an axis that
   // has selections do NOT match (treated as unknown rather than wildcard).
-  const [tagFilters, setTagFilters] = useState<{
-    equivariance: Set<Equivariance>;
-    architecture: Set<Architecture>;
-    usesAttention: Set<"yes" | "no">;
-    longRange: Set<"yes" | "no">;
-  }>({
+  const [tagFilters, setTagFilters] = useState<
+    {
+      equivariance: Set<Equivariance>;
+      architecture: Set<Architecture>;
+      trainedDatasets: Set<string>;
+    } & Record<BoolAxisKey, Set<"yes" | "no">>
+  >({
     equivariance: new Set(),
     architecture: new Set(),
+    trainedDatasets: new Set(),
     usesAttention: new Set(),
     longRange: new Set(),
+    hasFoundationVariant: new Set(),
+    hasDenoisingPretraining: new Set(),
+    hasMultipleHeads: new Set(),
+    hasMultipleExperts: new Set(),
+    hasUncertaintyEstimates: new Set(),
   });
   const [query, setQuery] = useState("");
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
@@ -904,7 +991,12 @@ export default function MLIPExplorer() {
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [layout, setLayout] = useState<LayoutMode>("layered");
-  const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(true);
+  // Phase 5 graph cleanup: connections and edge labels are OFF by default so
+  // the landscape opens clean; selecting a model still reveals its own edges.
+  const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(false);
+  const [showConnections, setShowConnections] = useState(false);
+  const [showUnverifiedEdges, setShowUnverifiedEdges] = useState(false);
+  const [hoveredEdgeIdx, setHoveredEdgeIdx] = useState<number | null>(null);
   const [forceOverrides, setForceOverrides] = useState<Record<string, Vec2>>({});
   const [viewCitationCopied, setViewCitationCopied] = useState(false);
   const CATEGORY_STYLES = CATEGORY_STYLES_DEFAULT;
@@ -1003,6 +1095,12 @@ export default function MLIPExplorer() {
     const labels = window.localStorage.getItem(EDGE_LABELS_STORAGE_KEY);
     if (labels === "off") setEdgeLabelsVisible(false);
     if (labels === "on") setEdgeLabelsVisible(true);
+    const connections = window.localStorage.getItem(SHOW_CONNECTIONS_STORAGE_KEY);
+    if (connections === "on") setShowConnections(true);
+    if (connections === "off") setShowConnections(false);
+    const unverified = window.localStorage.getItem(UNVERIFIED_EDGES_STORAGE_KEY);
+    if (unverified === "on") setShowUnverifiedEdges(true);
+    if (unverified === "off") setShowUnverifiedEdges(false);
     try {
       const raw = window.localStorage.getItem(FORCE_OVERRIDES_STORAGE_KEY);
       if (raw) {
@@ -1025,6 +1123,20 @@ export default function MLIPExplorer() {
     setEdgeLabelsVisible(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(EDGE_LABELS_STORAGE_KEY, next ? "on" : "off");
+    }
+  };
+
+  const updateShowConnections = (next: boolean) => {
+    setShowConnections(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SHOW_CONNECTIONS_STORAGE_KEY, next ? "on" : "off");
+    }
+  };
+
+  const updateShowUnverifiedEdges = (next: boolean) => {
+    setShowUnverifiedEdges(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(UNVERIFIED_EDGES_STORAGE_KEY, next ? "on" : "off");
     }
   };
 
@@ -1082,9 +1194,9 @@ export default function MLIPExplorer() {
     // Hydrate multi-axis tag filters: ?eq=constrained,learnt&arch=gnn&att=yes&long=no
     const eqParam = params.get("eq");
     const archParam = params.get("arch");
-    const attParam = params.get("att");
-    const longParam = params.get("long");
-    if (eqParam || archParam || attParam || longParam) {
+    const datasetParam = params.get("dataset");
+    const boolParams = BOOL_FILTER_AXES.map((a) => params.get(a.param));
+    if (eqParam || archParam || datasetParam || boolParams.some(Boolean)) {
       const splitToSet = <T extends string>(s: string | null, allowed: readonly T[]): Set<T> => {
         if (!s) return new Set<T>();
         const allowedSet = new Set(allowed as readonly string[]);
@@ -1092,12 +1204,25 @@ export default function MLIPExplorer() {
           s.split(",").map((v) => v.trim()).filter((v) => allowedSet.has(v)) as T[],
         );
       };
-      setTagFilters({
+      const next = {
         equivariance: splitToSet<Equivariance>(eqParam, EQUIVARIANCE_VALUES),
         architecture: splitToSet<Architecture>(archParam, ARCHITECTURE_VALUES),
-        usesAttention: splitToSet<"yes" | "no">(attParam, ["yes", "no"] as const),
-        longRange: splitToSet<"yes" | "no">(longParam, ["yes", "no"] as const),
-      });
+        trainedDatasets: splitToSet<string>(datasetParam, FILTERABLE_DATASET_IDS),
+        usesAttention: new Set<"yes" | "no">(),
+        longRange: new Set<"yes" | "no">(),
+        hasFoundationVariant: new Set<"yes" | "no">(),
+        hasDenoisingPretraining: new Set<"yes" | "no">(),
+        hasMultipleHeads: new Set<"yes" | "no">(),
+        hasMultipleExperts: new Set<"yes" | "no">(),
+        hasUncertaintyEstimates: new Set<"yes" | "no">(),
+      };
+      for (const a of BOOL_FILTER_AXES) {
+        next[a.key] = splitToSet<"yes" | "no">(params.get(a.param), [
+          "yes",
+          "no",
+        ] as const);
+      }
+      setTagFilters(next);
     }
     urlInitialized.current = true;
   }, []);
@@ -1125,8 +1250,10 @@ export default function MLIPExplorer() {
     };
     setOrDelete("eq", tagFilters.equivariance as Set<string>);
     setOrDelete("arch", tagFilters.architecture as Set<string>);
-    setOrDelete("att", tagFilters.usesAttention as Set<string>);
-    setOrDelete("long", tagFilters.longRange as Set<string>);
+    setOrDelete("dataset", tagFilters.trainedDatasets);
+    for (const a of BOOL_FILTER_AXES) {
+      setOrDelete(a.param, tagFilters[a.key] as Set<string>);
+    }
     const next = params.toString();
     const url = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash}`;
     window.history.replaceState(null, "", url);
@@ -1667,16 +1794,21 @@ export default function MLIPExplorer() {
         if (!n.architecture || !tagFilters.architecture.has(n.architecture))
           return false;
       }
-      if (tagFilters.usesAttention.size > 0) {
-        if (n.usesAttention === null || n.usesAttention === undefined)
-          return false;
-        const v = n.usesAttention ? "yes" : "no";
-        if (!tagFilters.usesAttention.has(v as "yes" | "no")) return false;
+      for (const a of BOOL_FILTER_AXES) {
+        const set = tagFilters[a.key];
+        if (set.size === 0) continue;
+        const val = a.get(n);
+        // Only an explicit boolean matches; "unknown" / null / undefined are
+        // excluded (never treated as false) when the axis is active.
+        if (val !== true && val !== false) return false;
+        if (!set.has(val ? "yes" : "no")) return false;
       }
-      if (tagFilters.longRange.size > 0) {
-        if (n.longRange === null || n.longRange === undefined) return false;
-        const v = n.longRange ? "yes" : "no";
-        if (!tagFilters.longRange.has(v as "yes" | "no")) return false;
+      if (tagFilters.trainedDatasets.size > 0) {
+        // Uses only the normalized `trainedDatasets`; models not yet normalized
+        // (absent) are excluded rather than inferred from `trainingData`.
+        const ds = n.trainedDatasets;
+        if (!ds || !ds.some((id) => tagFilters.trainedDatasets.has(id)))
+          return false;
       }
       return true;
     };
@@ -1891,17 +2023,51 @@ export default function MLIPExplorer() {
   }, [compactLayeredLayout]);
 
   // Format the human-readable tooltip for an edge: "<from> → <to> · <label>"
-  // when a label exists, falling back to just the endpoints. The dashed flag
-  // is appended in parentheses so screen readers and hover tooltips both
-  // surface the "weaker / speculative" status.
+  // when a label exists, falling back to just the endpoints. The trust tier is
+  // always appended so screen readers and hover tooltips surface whether the
+  // relationship is verified, probable, or speculative — even when on-graph
+  // labels are switched off, hovering an edge reveals the relation this way.
   const formatEdgeTooltip = (edge: Edge) => {
     const fromLabel = positionedModels.find((n) => n.id === edge.from)?.label ?? edge.from;
     const toLabel = positionedModels.find((n) => n.id === edge.to)?.label ?? edge.to;
     const head = `${fromLabel} → ${toLabel}`;
     const body = edge.label ? ` · ${edge.label}` : "";
-    const note = edge.dashed ? " (weaker / speculative link)" : "";
+    const note = ` · ${EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(edge)]}`;
     return `${head}${body}${note}`;
   };
+
+  // Phase 5 graph cleanup — which edges are drawn at all:
+  // - the clicked (selected) edge always stays visible;
+  // - selecting a model reveals only that model's own connections ("relevant
+  //   edges only"), any confidence, with unverified ones visually marked;
+  // - otherwise nothing is drawn unless "Show connections" is on, and that
+  //   global view includes only VERIFIED edges unless the explicit
+  //   "Include unverified edges" toggle is also enabled.
+  const visibleEdgeIdx = useMemo(() => {
+    const visible = new Set<number>();
+    edges.forEach((edge, idx) => {
+      const isSelectedEdge =
+        selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      if (isSelectedEdge) {
+        visible.add(idx);
+        return;
+      }
+      if (selectedNode) {
+        if (edge.from === selectedNode.id || edge.to === selectedNode.id) {
+          visible.add(idx);
+        }
+        return;
+      }
+      if (!showConnections) return;
+      if (
+        effectiveEdgeConfidence(edge) === "verified" ||
+        showUnverifiedEdges
+      ) {
+        visible.add(idx);
+      }
+    });
+    return visible;
+  }, [edges, selectedEdge, selectedNode, showConnections, showUnverifiedEdges]);
 
   // Resolve an edge's SVG path and label anchor for the active layout. Shared
   // by the renderer and the label de-overlap pass below so both agree on
@@ -1998,12 +2164,16 @@ export default function MLIPExplorer() {
     const padY = 3;
 
     edges.forEach((edge, idx) => {
+      // Hidden edges neither render nor claim label space — otherwise an
+      // invisible edge's label box could cull a visible neighbour's label.
+      if (!visibleEdgeIdx.has(idx)) return;
       const geometry = computeEdgeGeometry(edge, idx);
       if (!geometry) return;
       geometries.set(idx, geometry);
       if (!edge.label) return;
       const selected =
         selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const hovered = hoveredEdgeIdx === idx;
       const w = edge.label.length * approxCharW + padX * 2;
       const h = labelFontSize + padY * 2;
       boxes.push({
@@ -2012,7 +2182,7 @@ export default function MLIPExplorer() {
         y: geometry.labelY - labelFontSize + padY,
         w,
         h,
-        priority: selected ? 0 : edge.dashed ? 2 : 1,
+        priority: selected || hovered ? 0 : edge.dashed ? 2 : 1,
       });
     });
 
@@ -2035,20 +2205,25 @@ export default function MLIPExplorer() {
     }
 
     return { geometries, visible };
-  }, [edges, computeEdgeGeometry, fontScale, selectedEdge]);
+  }, [edges, computeEdgeGeometry, fontScale, selectedEdge, visibleEdgeIdx, hoveredEdgeIdx]);
 
   const renderEdges = (mode: "lines" | "labels" | "hit" = "lines") =>
     edges.map((edge, idx) => {
+      if (!visibleEdgeIdx.has(idx)) return null;
       const geometry = edgeLabelLayout.geometries.get(idx);
       if (!geometry) return null;
       const { path, labelX, labelY } = geometry;
 
       const tooltip = formatEdgeTooltip(edge);
+      const confidence = effectiveEdgeConfidence(edge);
       const isSelected =
         selectedEdge?.from === edge.from && selectedEdge?.to === edge.to;
+      const isHovered = hoveredEdgeIdx === idx;
       const baseStrokeWidth = isSelected
         ? (edge.dashed ? 3.5 : 4)
-        : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
+        : isHovered
+          ? (edge.dashed ? 3 : 3.25)
+          : edge.dashed ? 2 : deviceType === "mobile" ? 3 : 2.25;
 
       // Three render modes, each on a dedicated SVG layer so we can stack
       // them around the card layer:
@@ -2087,6 +2262,14 @@ export default function MLIPExplorer() {
                 handleEdgeClick(edge);
               }
             }}
+            onMouseEnter={() => setHoveredEdgeIdx(idx)}
+            onMouseLeave={() =>
+              setHoveredEdgeIdx((cur) => (cur === idx ? null : cur))
+            }
+            onFocus={() => setHoveredEdgeIdx(idx)}
+            onBlur={() =>
+              setHoveredEdgeIdx((cur) => (cur === idx ? null : cur))
+            }
           >
             <title>{tooltip}</title>
             <path
@@ -2101,7 +2284,11 @@ export default function MLIPExplorer() {
       }
 
       if (mode === "labels") {
-        if (!edge.label || !edgeLabelsVisible) return null;
+        if (!edge.label) return null;
+        // Even with global edge labels off, the hovered or selected edge's
+        // relation label is shown so users can always discover what a line
+        // means without flooding the canvas.
+        if (!edgeLabelsVisible && !isSelected && !isHovered) return null;
         if (!edgeLabelLayout.visible.has(idx)) return null;
         // Approximate the rendered text width so we can draw a background
         // rect that masks whatever card the label overlaps. SVG <text> has
@@ -2169,7 +2356,17 @@ export default function MLIPExplorer() {
             strokeDasharray={edge.dashed ? "6,4" : undefined}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={isSelected ? "opacity-100" : "opacity-90"}
+            className={
+              // Unverified edges are visibly faded (plus dashed when
+              // speculative) so they are never mistaken for verified ones.
+              isSelected || isHovered
+                ? "opacity-100"
+                : confidence === "verified"
+                  ? "opacity-90"
+                  : confidence === "probable"
+                    ? "opacity-70"
+                    : "opacity-50"
+            }
             markerEnd="url(#edge-arrow)"
           />
         </g>
@@ -2407,10 +2604,13 @@ export default function MLIPExplorer() {
       parts.push(`equivariance=${Array.from(tagFilters.equivariance).sort().join(",")}`);
     if (tagFilters.architecture.size)
       parts.push(`architecture=${Array.from(tagFilters.architecture).sort().join(",")}`);
-    if (tagFilters.usesAttention.size)
-      parts.push(`attention=${Array.from(tagFilters.usesAttention).sort().join(",")}`);
-    if (tagFilters.longRange.size)
-      parts.push(`long-range=${Array.from(tagFilters.longRange).sort().join(",")}`);
+    if (tagFilters.trainedDatasets.size)
+      parts.push(`dataset=${Array.from(tagFilters.trainedDatasets).sort().join(",")}`);
+    for (const a of BOOL_FILTER_AXES) {
+      const set = tagFilters[a.key];
+      if (set.size)
+        parts.push(`${a.param}=${Array.from(set).sort().join(",")}`);
+    }
     const note = parts.join("; ");
     return `MLIP Hub. (${now.getFullYear()}). MLIP landscape, view: ${note}. Retrieved ${dateStr}, from ${url}`;
   };
@@ -2496,7 +2696,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">
             <span className="inline-block uppercase tracking-widest font-bold text-[0.75em] sm:text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
-              Connection {selectedEdge.dashed ? "(speculative)" : ""}
+              Connection ·{" "}
+              {EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(selectedEdge)]}
             </span>
             <h2 className="text-[1.25em] md:text-[1.5em] font-bold text-slate-900 dark:text-slate-100 leading-snug">
               {fromNode?.label ?? selectedEdge.from}
@@ -2540,6 +2741,45 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             edge in <code>landscape.ts</code> to fill this in.
           </p>
         )}
+
+        <div>
+          <div className="uppercase tracking-widest font-bold text-[0.6875em] text-slate-400 dark:text-slate-500 mb-1">
+            Verification
+          </div>
+          {effectiveEdgeConfidence(selectedEdge) === "verified" ? (
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug">
+              This relationship was checked against a source
+              {selectedEdge.edgeSource && (
+                <>
+                  {": "}
+                  <a
+                    href={selectedEdge.edgeSource}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                  >
+                    {selectedEdge.edgeSource}
+                  </a>
+                </>
+              )}
+              .
+            </p>
+          ) : (
+            <p className="text-[0.8125em] text-slate-600 dark:text-slate-300 leading-snug">
+              This relationship is{" "}
+              <strong>
+                {EDGE_CONFIDENCE_LABELS[effectiveEdgeConfidence(selectedEdge)]}
+              </strong>{" "}
+              — curated but not yet checked against a source. Treat it as
+              provisional.
+            </p>
+          )}
+          {selectedEdge.edgeNotes && (
+            <p className="mt-1 text-[0.75em] text-slate-500 dark:text-slate-400 leading-snug">
+              {selectedEdge.edgeNotes}
+            </p>
+          )}
+        </div>
 
         {fromNode && (
           <button
@@ -3222,147 +3462,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   </span>
                 </label>
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      Filter tags
-                    </div>
-                    {(tagFilters.equivariance.size +
-                      tagFilters.architecture.size +
-                      tagFilters.usesAttention.size +
-                      tagFilters.longRange.size) > 0 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setTagFilters({
-                            equivariance: new Set(),
-                            architecture: new Set(),
-                            usesAttention: new Set(),
-                            longRange: new Set(),
-                          })
-                        }
-                        className="text-[0.6875em] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {(
-                    [
-                      {
-                        axis: "equivariance" as const,
-                        label: "Equivariance",
-                        values: EQUIVARIANCE_VALUES as readonly string[],
-                      },
-                      {
-                        axis: "architecture" as const,
-                        label: "Architecture",
-                        values: ARCHITECTURE_VALUES as readonly string[],
-                      },
-                      {
-                        axis: "usesAttention" as const,
-                        label: "Attention",
-                        values: ["yes", "no"] as readonly string[],
-                      },
-                      {
-                        axis: "longRange" as const,
-                        label: "Long-range",
-                        values: ["yes", "no"] as readonly string[],
-                      },
-                    ]
-                  ).map(({ axis, label, values }) => (
-                    <div key={axis} className="mb-2 last:mb-0">
-                      <div className="text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize">
-                        {label}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {values.map((value) => {
-                          const set = tagFilters[axis] as Set<string>;
-                          const active = set.has(value);
-                          return (
-                            <button
-                              key={value}
-                              type="button"
-                              aria-pressed={active}
-                              onClick={() => {
-                                setTagFilters((prev) => {
-                                  const next = new Set(prev[axis] as Set<string>);
-                                  if (next.has(value)) next.delete(value);
-                                  else next.add(value);
-                                  return {
-                                    ...prev,
-                                    [axis]: next,
-                                  } as typeof prev;
-                                });
-                              }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
-                                active
-                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
-                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                              }`}
-                            >
-                              {active && (
-                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
-                              )}
-                              {/* "gnn" is an acronym — render upper-case (the
-                                  `capitalize` class would otherwise show "Gnn"). */}
-                              {value === "gnn" ? "GNN" : value}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
-                    Models with unverified tag values are dimmed when an axis
-                    is active.
-                  </p>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <div className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                    Colour key
-                  </div>
-                  <ul className="flex flex-col gap-1">
-                    {(
-                      [
-                        "eq-gnn",
-                        "inv-gnn",
-                        "descriptor",
-                        "learnt",
-                        "unknown",
-                      ] as const
-                    ).map((bucket) => (
-                      <li
-                        key={bucket}
-                        className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] text-slate-600 dark:text-slate-300"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 ${BUCKET_SWATCH[bucket]}`}
-                        />
-                        {BUCKET_LABEL[bucket]}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
-                  <label
-                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={edgeLabelsVisible}
-                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
-                      aria-label="Show edge labels on the landscape graph"
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
-                    />
-                    Show edge labels
-                  </label>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <div
                     className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest"
                     id="mliphub-layout-label"
@@ -3452,6 +3551,251 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       architecture family. Minor ticks mark months.
                     </p>
                   )}
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                      Filter tags
+                    </div>
+                    {(tagFilters.equivariance.size +
+                      tagFilters.architecture.size +
+                      tagFilters.trainedDatasets.size +
+                      BOOL_FILTER_AXES.reduce(
+                        (acc, a) => acc + tagFilters[a.key].size,
+                        0,
+                      )) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTagFilters({
+                            equivariance: new Set(),
+                            architecture: new Set(),
+                            trainedDatasets: new Set(),
+                            usesAttention: new Set(),
+                            longRange: new Set(),
+                            hasFoundationVariant: new Set(),
+                            hasDenoisingPretraining: new Set(),
+                            hasMultipleHeads: new Set(),
+                            hasMultipleExperts: new Set(),
+                            hasUncertaintyEstimates: new Set(),
+                          })
+                        }
+                        className="text-[0.6875em] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {(
+                    [
+                      {
+                        axis: "equivariance" as const,
+                        label: "Equivariance",
+                        values: EQUIVARIANCE_VALUES as readonly string[],
+                        tooltip:
+                          "Symmetry handling baked into the architecture (constrained / learnt / invariant).",
+                      },
+                      {
+                        axis: "architecture" as const,
+                        label: "Architecture",
+                        values: ARCHITECTURE_VALUES as readonly string[],
+                        tooltip:
+                          "Model family: hand-crafted descriptor vs graph neural network.",
+                      },
+                      ...BOOL_FILTER_AXES.map((a) => ({
+                        axis: a.key,
+                        label: a.label,
+                        values: ["yes", "no"] as readonly string[],
+                        tooltip: a.tooltip,
+                      })),
+                    ]
+                  ).map(({ axis, label, values, tooltip }) => (
+                    <div key={axis} className="mb-2 last:mb-0">
+                      <div
+                        className="inline-flex items-center gap-1 text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize cursor-help"
+                        title={tooltip}
+                      >
+                        {label}
+                        <HelpCircle
+                          size={10}
+                          aria-hidden="true"
+                          className="opacity-50"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {values.map((value) => {
+                          const set = tagFilters[axis] as Set<string>;
+                          const active = set.has(value);
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => {
+                                setTagFilters((prev) => {
+                                  const next = new Set(prev[axis] as Set<string>);
+                                  if (next.has(value)) next.delete(value);
+                                  else next.add(value);
+                                  return {
+                                    ...prev,
+                                    [axis]: next,
+                                  } as typeof prev;
+                                });
+                              }}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
+                                active
+                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              {active && (
+                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
+                              )}
+                              {/* "gnn" is an acronym — render upper-case (the
+                                  `capitalize` class would otherwise show "Gnn"). */}
+                              {value === "gnn" ? "GNN" : value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
+                    Hover a tag name for its meaning. &ldquo;Yes&rdquo;/&ldquo;no&rdquo;
+                    match only verified values; models whose value is unknown or
+                    unreviewed are dimmed (never assumed &ldquo;no&rdquo;) while an
+                    axis is active.
+                  </p>
+
+                  {FILTERABLE_DATASET_IDS.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div
+                        className="inline-flex items-center gap-1 text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 cursor-help"
+                        title="Filter to models whose normalized training datasets include the selected dataset."
+                      >
+                        Trained on dataset
+                        <HelpCircle
+                          size={10}
+                          aria-hidden="true"
+                          className="opacity-50"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {FILTERABLE_DATASET_IDS.map((id) => {
+                          const active = tagFilters.trainedDatasets.has(id);
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              aria-pressed={active}
+                              title={getDataset(id)?.notes}
+                              onClick={() =>
+                                setTagFilters((prev) => {
+                                  const next = new Set(prev.trainedDatasets);
+                                  if (next.has(id)) next.delete(id);
+                                  else next.add(id);
+                                  return { ...prev, trainedDatasets: next };
+                                })
+                              }
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition ${
+                                active
+                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              {active && (
+                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
+                              )}
+                              {datasetDisplayName(id)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
+                        Only datasets with complete model coverage are shown;
+                        more appear as model&ndash;dataset links are verified.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="text-[0.6875em] md:text-[0.625em] font-bold mb-2 text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                    Colour key
+                  </div>
+                  <ul className="flex flex-col gap-1">
+                    {(
+                      [
+                        "eq-gnn",
+                        "inv-gnn",
+                        "descriptor",
+                        "learnt",
+                        "unknown",
+                      ] as const
+                    ).map((bucket) => (
+                      <li
+                        key={bucket}
+                        className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] text-slate-600 dark:text-slate-300"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 ${BUCKET_SWATCH[bucket]}`}
+                        />
+                        {BUCKET_LABEL[bucket]}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 space-y-2">
+                  <label
+                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showConnections}
+                      onChange={(e) => updateShowConnections(e.target.checked)}
+                      aria-label="Show connections between models on the landscape graph"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                    />
+                    Show connections
+                  </label>
+                  {showConnections && (
+                    <label
+                      className="flex items-center gap-2 pl-6 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={showUnverifiedEdges}
+                        onChange={(e) =>
+                          updateShowUnverifiedEdges(e.target.checked)
+                        }
+                        aria-label="Also show unverified (probable or speculative) connections"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                      />
+                      Include unverified edges
+                    </label>
+                  )}
+                  <label
+                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={edgeLabelsVisible}
+                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
+                      aria-label="Show edge labels on the landscape graph"
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
+                    />
+                    Show edge labels
+                  </label>
+                  <p className="text-[0.625em] text-slate-400 dark:text-slate-500 leading-snug">
+                    Connections are off by default for a clean view; the
+                    default view shows source-verified links only. Selecting a
+                    model always reveals its own connections (unverified ones
+                    are faded / dashed), and hovering an edge shows its
+                    relationship.
+                  </p>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">

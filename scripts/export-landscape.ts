@@ -79,6 +79,7 @@ const CSV_COLUMNS: Array<keyof ModelNode> = [
   "supportsCharges",
   "supportsSpins",
   "elementsCovered",
+  "trainedDatasets",
 ];
 
 const escapeCsv = (v: unknown): string => {

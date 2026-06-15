@@ -12,12 +12,15 @@ import {
   INFERENCE_COST_VALUES,
   ACCURACY_TIER_VALUES,
   SPEED_TIER_VALUES,
+  EDGE_CONFIDENCE_VALUES,
+  effectiveEdgeConfidence,
   type AnyNode,
   type ModelNode,
   type GroupNode,
   type Edge,
   type ModelMeta,
 } from "../src/data/landscape";
+import { DATASETS, DATASET_BY_ID } from "../src/data/datasets";
 
 const CARD_WIDTH = 176;
 const CARD_HEIGHT = 72;
@@ -137,8 +140,9 @@ for (const n of modelNodes) {
   }
 }
 
-// --- 4. Edge endpoint resolution ---
+// --- 4. Edge endpoint resolution + trust metadata ---
 const modelIds = new Set(modelNodes.map((n) => n.id));
+const VALID_EDGE_CONFIDENCE = new Set<string>(EDGE_CONFIDENCE_VALUES);
 for (const edge of INITIAL_EDGES as Edge[]) {
   if (!edge.from) push("edge-missing-from", `Edge missing 'from': ${JSON.stringify(edge)}`);
   if (!edge.to) push("edge-missing-to", `Edge missing 'to': ${JSON.stringify(edge)}`);
@@ -147,6 +151,22 @@ for (const edge of INITIAL_EDGES as Edge[]) {
   }
   if (edge.to && !modelIds.has(edge.to)) {
     push("edge-dangling", `Edge ${edge.from} -> ${edge.to}: 'to' does not resolve to a ModelNode`);
+  }
+  if (
+    edge.edgeConfidence !== undefined &&
+    !VALID_EDGE_CONFIDENCE.has(edge.edgeConfidence)
+  ) {
+    push(
+      "invalid-edgeConfidence",
+      `Edge ${edge.from} -> ${edge.to} has edgeConfidence "${edge.edgeConfidence}" (valid: ${[...VALID_EDGE_CONFIDENCE].join(", ")})`,
+    );
+  }
+  // No-silent-claims for edges: a "verified" relationship must cite a source.
+  if (edge.edgeConfidence === "verified" && !edge.edgeSource) {
+    push(
+      "edge-verified-without-source",
+      `Edge ${edge.from} -> ${edge.to} is "verified" but has no edgeSource`,
+    );
   }
 }
 
@@ -298,13 +318,40 @@ for (const n of modelNodes) {
       `Model ${n.id} has accuracyTier "${n.accuracyTier}" (valid: ${[...VALID_ACCURACY_TIER].join(", ")})`,
     );
   }
-  for (const field of ["isFoundationModel", "hasFoundationVariant"] as const) {
+  for (const field of [
+    "isFoundationModel",
+    "hasFoundationVariant",
+    "hasDenoisingPretraining",
+    "hasMultipleHeads",
+    "hasMultipleExperts",
+    "hasUncertaintyEstimates",
+  ] as const) {
     const v = n[field];
     if (v !== undefined && typeof v !== "boolean" && v !== "unknown") {
       push(
         `invalid-${field}`,
         `Model ${n.id} ${field} must be boolean or "unknown" (got: ${JSON.stringify(v)})`,
       );
+    }
+  }
+  if (n.trainedDatasets !== undefined) {
+    if (
+      !Array.isArray(n.trainedDatasets) ||
+      n.trainedDatasets.some((d) => typeof d !== "string" || d.trim() === "")
+    ) {
+      push(
+        "invalid-trainedDatasets",
+        `Model ${n.id} trainedDatasets must be an array of non-empty strings`,
+      );
+    } else {
+      for (const id of n.trainedDatasets) {
+        if (!DATASET_BY_ID.has(id)) {
+          push(
+            "unknown-dataset-id",
+            `Model ${n.id} trainedDatasets references "${id}" which is not a datasetId in the registry (src/data/datasets.ts)`,
+          );
+        }
+      }
     }
   }
 
@@ -464,6 +511,49 @@ for (const n of modelNodes) {
   }
 }
 
+// --- 8b. Dataset registry integrity ---
+const datasetIdCounts = new Map<string, number>();
+for (const d of DATASETS) {
+  datasetIdCounts.set(d.datasetId, (datasetIdCounts.get(d.datasetId) ?? 0) + 1);
+  if (!d.datasetId || !/^[a-z0-9_]+$/.test(d.datasetId)) {
+    push(
+      "dataset-bad-id",
+      `Dataset id "${d.datasetId}" must be lowercase alphanumeric/underscore`,
+    );
+  }
+  if (!d.name || !Array.isArray(d.aliases) || d.aliases.length === 0) {
+    push(
+      "dataset-missing-field",
+      `Dataset ${d.datasetId} must have a name and at least one alias`,
+    );
+  }
+  if (
+    d.verificationStatus !== undefined &&
+    !VALID_VERIFICATION_STATUS.has(d.verificationStatus)
+  ) {
+    push(
+      "dataset-bad-status",
+      `Dataset ${d.datasetId} has invalid verificationStatus "${d.verificationStatus}"`,
+    );
+  }
+  // A dataset can only be "verified"/"partially_verified" with a real source.
+  if (
+    (d.verificationStatus === "verified" ||
+      d.verificationStatus === "partially_verified") &&
+    !d.paperUrl &&
+    !d.sourceUrl
+  ) {
+    push(
+      "dataset-verified-without-source",
+      `Dataset ${d.datasetId} is "${d.verificationStatus}" but has no paperUrl/sourceUrl`,
+    );
+  }
+}
+for (const [id, count] of datasetIdCounts) {
+  if (count > 1)
+    push("dataset-duplicate-id", `Dataset id "${id}" used ${count} times`);
+}
+
 // --- 9. Metadata coverage report (non-blocking) ---
 const coverage: Record<string, number> = {};
 for (const field of MODEL_META_FIELDS) coverage[field] = 0;
@@ -479,6 +569,14 @@ for (const n of modelNodes) {
 const modelCount = modelNodes.length;
 const groupCount = groupNodes.length;
 const edgeCount = (INITIAL_EDGES as Edge[]).length;
+const edgeConfidenceCounts = new Map<string, number>();
+for (const edge of INITIAL_EDGES as Edge[]) {
+  const c = effectiveEdgeConfidence(edge);
+  edgeConfidenceCounts.set(c, (edgeConfidenceCounts.get(c) ?? 0) + 1);
+}
+const edgeConfidenceSummary = EDGE_CONFIDENCE_VALUES.map(
+  (c) => `${edgeConfidenceCounts.get(c) ?? 0} ${c}`,
+).join(", ");
 
 const coverageLines = MODEL_META_FIELDS.map((field) => {
   const n = coverage[field];
@@ -488,7 +586,7 @@ const coverageLines = MODEL_META_FIELDS.map((field) => {
 
 const printSummary = () => {
   console.log(
-    `landscape check: ${modelCount} models, ${groupCount} zones, ${edgeCount} edges`,
+    `landscape check: ${modelCount} models, ${groupCount} zones, ${edgeCount} edges (${edgeConfidenceSummary})`,
   );
   console.log(`\n  metadata coverage (optional ModelMeta fields):`);
   console.log(coverageLines);

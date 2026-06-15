@@ -364,6 +364,9 @@
     {
       "id": "orbmol",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
       "category": "Transformer",
       "label": "OrbMol",
       "year": 2025,
@@ -411,6 +414,83 @@
       "trainingSetSize": 100000000,
       "usesAttention": true,
       "longRange": false
+    },
+    {
+      "id": "orbmol_v2",
+      "type": "node",
+      "category": "Transformer",
+      "label": "OrbMol-v2",
+      "year": 2026,
+      "author": "Orbital Materials",
+      "x": 8500,
+      "y": 320,
+      "desc": "Second-generation OrbMol adding learnable per-atom electrostatics to the OrbMol molecular potential: a LatentChargeHead predicts per-atom latent charges constrained to the system total charge, and a CoulombModule adds long-range Coulomb energy (direct summation for non-periodic systems, particle-mesh Ewald for periodic ones). Trained on OMol25 and OPoly26 at the ωB97M-V/def2-TZVPD level.",
+      "githubUrl": "https://github.com/orbital-materials/orb-models",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "electrolytes",
+        "metal complexes",
+        "biomolecules",
+        "polymers"
+      ],
+      "useCases": [
+        "molecular MD",
+        "electrolyte design",
+        "polymer simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "Apache-2.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-06-11",
+      "trainingData": [
+        "OMol25",
+        "OPoly26"
+      ],
+      "trainedDatasets": [
+        "omol25",
+        "opoly26"
+      ],
+      "tags": [
+        "transformer",
+        "charge-aware",
+        "spin-aware",
+        "long-range-electrostatics",
+        "molecular"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "elementsCovered": "elements present in OMol25 / OPoly26 (organic, electrolyte, metal-complex, polymer chemistry)",
+      "equivariance": "learnt",
+      "architecture": "gnn",
+      "trainingSetSize": 100000000,
+      "usesAttention": true,
+      "longRange": true,
+      "entityType": "trained_model",
+      "architectureFamily": "Orb",
+      "trainingScope": "domain_specific",
+      "isFoundationModel": "unknown",
+      "accuracyTier": "unknown",
+      "accuracyEvidence": "Developer-reported: GSCDB138 normalized error ratio improves 6.05 -> 1.62 vs OrbMol-v1 ('comparable to a good DFT functional'; orb-models release notes / HF model card, checked 2026-06-11). No independent benchmark tier assessed yet.",
+      "benchmarkContext": "Developer-reported GSCDB138 molecular benchmark, relative to OrbMol-v1.",
+      "chargeSpinEvidence": "ChargeSpinConditioner mixes the system's net charge and spin multiplicity into the backbone; LatentChargeHead + ChargeConditionedEnergyHead handle per-atom charges (HF model card / orb-models release notes, checked 2026-06-11).",
+      "datasetEvidence": "Trained on OMol25 and OPoly26 (wB97M-V/def2-TZVPD) per the Orbital-Materials/orbmol-v2 model card, checked 2026-06-11. OPoly26 itself is needs_review in the dataset registry pending a primary source.",
+      "licenseEvidence": "Apache-2.0 per the HF model card (checked 2026-06-11).",
+      "foundationModelEvidence": "Pretrained broad molecular potential; the sources checked do not describe it as a 'foundation model', so this is recorded as 'unknown' rather than asserted.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://huggingface.co/Orbital-Materials/orbmol-v2",
+        "https://github.com/orbital-materials/orb-models"
+      ],
+      "lastVerifiedDate": "2026-06-11",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-06-11 (Phase 6): details corroborated across two independent web-search passes of the official HF model card and orb-models release notes (direct page fetch blocked by network policy); full model-card review pending. properties/frameworks inherited from the OrbMol entry pending confirmation. One search summary mis-attributed arXiv:2505.08762 (the OMol25 dataset paper) as an 'OrbMol-v2 paper' — rejected, so no paper is cited."
     },
     {
       "id": "tfn",
@@ -612,6 +692,15 @@
     {
       "id": "uma",
       "type": "node",
+      "trainedDatasets": [
+        "oc20",
+        "odac23",
+        "omat24",
+        "omc25",
+        "omol25"
+      ],
+      "hasMultipleExperts": true,
+      "evidenceNotes": "2026-06-11: hasMultipleExperts verified — UMA is a \"Mixture of Linear Experts (MoLE)\" model (in-repo description; arXiv:2506.23971). Other fields still needs_review.",
       "category": "Transformer",
       "label": "UMA",
       "year": 2025,
@@ -879,6 +968,9 @@
     {
       "id": "mace_polar1",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
       "category": "Equivariant",
       "label": "MACE-POLAR-1",
       "year": 2026,
@@ -1086,6 +1178,11 @@
     {
       "id": "allscaip",
       "type": "node",
+      "trainedDatasets": [
+        "omol25",
+        "omat24",
+        "oc20"
+      ],
       "category": "Transformer",
       "label": "AllScAIP",
       "year": 2026,
@@ -1189,6 +1286,8 @@
     {
       "id": "allegro_moe",
       "type": "node",
+      "hasMultipleExperts": true,
+      "evidenceNotes": "2026-06-11: hasMultipleExperts verified — \"Multifidelity Mixture-of-Experts framework ... assigns Allegro experts of different capacity\" (in-repo description). Other fields still needs_review.",
       "category": "Equivariant",
       "label": "Allegro-MoE",
       "year": 2026,
@@ -1886,6 +1985,16 @@
     {
       "id": "matris_moe",
       "type": "node",
+      "trainedDatasets": [
+        "omat24",
+        "mptrj",
+        "salex",
+        "omol25",
+        "oc20",
+        "odac23"
+      ],
+      "hasMultipleExperts": true,
+      "evidenceNotes": "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of MatRIS ... sparse expert modules ... a message-update MoE ... and a feature-update MoE\" (in-repo description). Other fields still needs_review.",
       "category": "Invariant",
       "label": "MatRIS-MoE",
       "year": 2026,
@@ -2088,6 +2197,8 @@
     {
       "id": "flare",
       "type": "node",
+      "hasUncertaintyEstimates": true,
+      "evidenceNotes": "2026-06-11: hasUncertaintyEstimates verified — Gaussian-process Bayesian potential \"with GP-uncertainty driving when to call DFT vs. trust the surrogate\" (in-repo description). Other fields still needs_review.",
       "category": "Descriptor",
       "label": "FLARE",
       "year": 2020,
@@ -3298,6 +3409,9 @@
     {
       "id": "omnimol",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
       "category": "Transformer",
       "label": "OmniMol",
       "year": 2026,
@@ -3390,6 +3504,17 @@
     {
       "id": "mace_mh1",
       "type": "node",
+      "trainedDatasets": [
+        "omat24",
+        "mptrj",
+        "omol25",
+        "oc20",
+        "spice",
+        "rgd1",
+        "matpes"
+      ],
+      "hasMultipleHeads": true,
+      "evidenceNotes": "2026-06-11: hasMultipleHeads verified — \"multi-head replay scheme on OMAT-24 ..., MPTraj, OMol ..., OC20 ..., SPICE, RGD1, and MATPES-r2SCAN heads\" (in-repo description). Other fields still needs_review.",
       "category": "Equivariant",
       "label": "MACE-MH-1",
       "year": 2026,
@@ -3502,6 +3627,16 @@
     {
       "id": "hydragnn",
       "type": "node",
+      "trainedDatasets": [
+        "mptrj",
+        "omat24",
+        "oc20",
+        "ani1x",
+        "transition1x",
+        "omol25"
+      ],
+      "hasMultipleHeads": true,
+      "evidenceNotes": "2026-06-11: hasMultipleHeads verified — jointly pre-trained \"using shared message-passing layers and per-dataset output heads\" (in-repo description). Other fields still needs_review.",
       "category": "Equivariant",
       "label": "HydraGNN-GFM",
       "year": 2026,
@@ -3892,6 +4027,9 @@
     {
       "id": "transip",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
       "category": "Transformer",
       "label": "TransIP",
       "year": 2026,
@@ -5697,6 +5835,8 @@
     {
       "id": "pet_uafd",
       "type": "node",
+      "hasUncertaintyEstimates": true,
+      "evidenceNotes": "2026-06-11: hasUncertaintyEstimates verified — \"Uncertainty-aware ensemble ... the ensemble spread reports prediction reliability\" (in-repo description). Other fields still needs_review.",
       "category": "Transformer",
       "label": "PET-UAFD",
       "year": 2026,
@@ -5750,6 +5890,11 @@
     {
       "id": "esen_moe",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
+      "hasMultipleExperts": true,
+      "evidenceNotes": "2026-06-11: hasMultipleExperts verified — \"Mixture-of-Experts extension of ... eSEN ... Routes through specialised expert kernels per chemical environment\" (in-repo description). Other fields still needs_review.",
       "category": "Equivariant",
       "label": "eSEN-MoE",
       "year": 2026,
@@ -5852,6 +5997,9 @@
     {
       "id": "csp_mace_angstrom",
       "type": "node",
+      "trainedDatasets": [
+        "omol25"
+      ],
       "category": "Equivariant",
       "label": "CSP-MACE-Å",
       "year": 2026,
@@ -6039,6 +6187,15 @@
       "description": "OrbMol is the molecular variant of Orb-v3 trained on the OMol25 dataset, with the same Orb backbone plus charge/spin conditioning."
     },
     {
+      "from": "orbmol",
+      "to": "orbmol_v2",
+      "label": "+Electrostatics",
+      "description": "OrbMol-v2 extends the OrbMol architecture with learnable per-atom electrostatics: a LatentChargeHead predicting per-atom latent charges constrained to the system total charge, and a CoulombModule adding long-range Coulomb energy (direct summation for non-periodic systems, particle-mesh Ewald for periodic ones), trained on OMol25 + OPoly26.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://huggingface.co/Orbital-Materials/orbmol-v2",
+      "edgeNotes": "Verified 2026-06-11 against the official HF model card / orb-models release notes (corroborated across two independent search passes; direct page fetch blocked by network policy)."
+    },
+    {
       "from": "pet",
       "to": "petmad",
       "label": "MAD pretraining",
@@ -6054,7 +6211,10 @@
       "from": "esen",
       "to": "uma",
       "label": "Backbone",
-      "description": "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture."
+      "description": "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2506.23971",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN."
     },
     {
       "from": "gemnet",
@@ -6242,13 +6402,19 @@
       "from": "sevennet",
       "to": "sevennet_omni",
       "label": "Multi-fidelity",
-      "description": "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets."
+      "description": "SevenNet-Omni is a multi-fidelity universal foundation extension of the SevenNet equivariant family, using a SevenNet-MF backbone trained across ~15 datasets.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2510.11241",
+      "edgeNotes": "Verified 2026-06-11: SevenNet-Omni ships in the official MDIL-SNU/SevenNet codebase and is described as a SevenNet-family foundation model in arXiv:2604.10887; the SevenNet-MF backbone detail is from the entry description (full-text check pending)."
     },
     {
       "from": "sevennet_omni",
       "to": "sevennet_nano",
       "label": "Distillation",
-      "description": "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy."
+      "description": "SevenNet-Nano is a distilled lightweight model with SevenNet-Omni as the teacher, delivering an order-of-magnitude speedup at retained accuracy.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2604.10887",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): SevenNet-Nano is distilled from the SevenNet-Omni teacher via knowledge distillation."
     },
     {
       "from": "mace",
@@ -6818,7 +6984,10 @@
       "from": "mace",
       "to": "mace_mp0",
       "label": "+MPtrj foundation",
-      "description": "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals."
+      "description": "MACE-MP-0 is the first MACE foundation model: the MACE architecture trained on the Materials Project trajectory dataset (MPtrj) for broadly transferable accuracy across inorganic crystals, surfaces, defects, and molecular crystals.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2401.00096",
+      "edgeNotes": "Verified 2026-06-11 (abstract-level): MACE-MP-0 is a single MACE-architecture potential trained on MPtrj."
     },
     {
       "from": "mace_mp0",
