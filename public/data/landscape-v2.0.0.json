@@ -2003,7 +2003,7 @@
       "y": 550,
       "desc": "Deep Potential Molecular Dynamics: local frame descriptors + deep networks giving ab-initio-level accuracy with linear scaling, widely used for large MD.",
       "githubUrl": "https://github.com/deepmodeling/deepmd-kit",
-      "paperUrl": "https://doi.org/10.1016/j.cpc.2018.02.017",
+      "paperUrl": "https://doi.org/10.1016/j.cpc.2018.03.016",
       "coverage": [
         "general materials",
         "molecules"
@@ -2191,7 +2191,7 @@
       "author": "Microsoft",
       "x": 950,
       "y": 550,
-      "desc": "Microsoft foundation MLIP using a Graphormer transformer backbone with explicit translation/periodic-boundary invariance and equivariant features for materials. Trained on large-scale ab-initio data spanning 0-5000 K and pressures up to 1000 GPa as a reusable simulator for materials discovery and high-throughput computation.",
+      "desc": "MatterSim is Microsoft's foundation MLIP covering 89 elements, trained on large-scale first-principles data spanning 0-5000 K and pressures up to 1000 GPa for materials discovery and high-throughput computation. It uses two backbones: the M3GNet graph neural network (used for the open-source v1 checkpoints) and a Graphormer transformer; both are invariant architectures.",
       "githubUrl": "https://github.com/microsoft/mattersim",
       "paperUrl": "https://arxiv.org/abs/2405.04967",
       "coverage": [
@@ -2771,7 +2771,7 @@
       "y": 650,
       "desc": "Original Atoms-in-Molecules Network: a self-consistent message-passing potential that propagates atomic environment vectors through repeated neighbour updates, learning charge-aware atomic representations for organic chemistry. The conceptual precursor to AIMNet-NSE and AIMNet2.",
       "githubUrl": "https://github.com/aiqm/aimnet",
-      "paperUrl": "https://pubs.rsc.org/en/content/articlehtml/2019/sc/c9sc00531e",
+      "paperUrl": "https://www.science.org/doi/10.1126/sciadv.aav6490",
       "coverage": [
         "organic molecules"
       ],
@@ -2828,7 +2828,7 @@
       "x": 2340,
       "y": 650,
       "desc": "Neural Spin Equilibration variant of AIMNet that handles arbitrary total charge and spin multiplicity through an SCF-like message-passing loop, predicting transferable atomic charges and spins. The conceptual ancestor of charge/spin-conditioned models like AIMNet2 and SpookyNet.",
-      "githubUrl": "https://github.com/zubatyuk/aimnet-nse",
+      "githubUrl": "https://github.com/isayevlab/aimnetnse",
       "paperUrl": "https://www.nature.com/articles/s41467-021-24904-0",
       "coverage": [
         "organic molecules",
@@ -3440,8 +3440,8 @@
       "x": 950,
       "y": 750,
       "desc": "High-capacity spherical message-passing architecture used in the OC20/OC22 benchmarks; very strong for catalyst adsorption and surface chemistry.",
-      "githubUrl": "https://github.com/OpenCatalystProject/ocp",
-      "paperUrl": "https://arxiv.org/abs/2106.08903",
+      "githubUrl": "https://github.com/facebookresearch/fairchem",
+      "paperUrl": "https://arxiv.org/abs/2204.02782",
       "coverage": [
         "catalysts",
         "surfaces",
