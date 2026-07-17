@@ -6108,6 +6108,90 @@
       "usesAttention": true,
       "longRange": false,
       "numElements": 89
+    },
+    {
+      "id": "tece",
+      "type": "node",
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "category": "Equivariant",
+      "label": "TECE",
+      "year": 2026,
+      "author": "Zemin Xu, Wenbo Xie, P. Hu",
+      "x": 8780,
+      "y": 320,
+      "desc": "Tensor Edge Cluster Expansion: an equivariant successor to TACE that builds many-body interactions on edges via an Edge Complex Product Basis and adds Radial Rotary Complex Attention for extrapolation. Its OMat24/sAlex/MPtrj-pretrained TECE-OAM-RRA-1.0 tops Matbench Discovery.",
+      "githubUrl": "https://github.com/xvzemin/tace",
+      "paperUrl": "https://arxiv.org/abs/2607.10664",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "universal materials MLIP",
+        "high-throughput materials discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-07-17",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "ACE",
+        "cluster expansion",
+        "edge features",
+        "rotary attention",
+        "SO(2)",
+        "SO(3)",
+        "foundation model"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "all elements covered by OMat24 / sAlex / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": null,
+      "trainingSetSize": 100000000,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.10664",
+        "https://github.com/xvzemin/tace",
+        "https://github.com/xvzemin/tace-foundations"
+      ],
+      "lastVerifiedDate": "2026-07-17",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "arXiv ID, title, authors (Zemin Xu, Wenbo Xie, P. Hu) and training sets (OMat24/sAlex/MPtrj) confirmed via arXiv listing and web search; public code and MIT license confirmed from the github.com/xvzemin/tace repo, which references TACE/TECE, cites arXiv 2607.10664, and links foundation checkpoints at xvzemin/tace-foundations. Charge/spin conditioning and inference speed were not independently verified.",
+      "accuracyEvidence": "Reported state-of-the-art on the Matbench Discovery leaderboard for the TECE-OAM-RRA-1.0 foundation model (arXiv 2607.10664).",
+      "datasetEvidence": "Trained on OMat24, sAlex and MPtrj per arXiv 2607.10664.",
+      "foundationModelEvidence": "arXiv 2607.10664 releases TECE-OAM-RRA-1.0, an OMat24/sAlex/MPtrj-pretrained materials foundation model reported SOTA on Matbench Discovery.",
+      "licenseEvidence": "TACE/TECE code released under the MIT License (github.com/xvzemin/tace README).",
+      "entityType": "trained_model",
+      "architectureFamily": "TACE",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "hasFoundationVariant": true,
+      "accuracyTier": "state_of_the_art",
+      "benchmarkContext": "Matbench Discovery (inorganic materials stability / thermodynamic-property prediction)."
     }
   ],
   "groups": [
@@ -7316,6 +7400,21 @@
       "label": "Pareto frontier",
       "dashed": true,
       "description": "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs."
+    },
+    {
+      "from": "tace",
+      "to": "tece",
+      "label": "Edge cluster expansion",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://github.com/xvzemin/tace",
+      "description": "TECE is the direct successor to TACE from the same author (Zemin Xu): it moves the tensor cluster expansion from atoms onto edges via an Edge Complex Product Basis (Generalized Asymmetric Contraction) and adds Radial Rotary Complex Attention. The github.com/xvzemin/tace framework references both TACE/TECE and cites arXiv 2607.10664, with foundation checkpoints at xvzemin/tace-foundations."
+    },
+    {
+      "from": "eqv3",
+      "to": "tece",
+      "label": "SO(2)/rotary attention",
+      "dashed": true,
+      "description": "TECE's systematic SO(2)-vs-SO(3) analysis and its Radial Rotary Complex Attention build on the SO(2)-equivariant, attention-based transformer lineage that EquiformerV3 (SwiGLU-S2) advances, which TECE benchmarks against on Matbench Discovery."
     }
   ]
 }
