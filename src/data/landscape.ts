@@ -4289,6 +4289,47 @@ export const INITIAL_NODES: AnyNode[] = [
     longRange: false,
     numElements: 89,
   },
+  {
+    id: "equifilm",
+    type: "node",
+    category: "Equivariant",
+    label: "EquiFiLM",
+    year: 2026,
+    author: "Stanford / SLAC / USC (Sahel-Schackis, Linker et al.)",
+    x: 7380,
+    y: 150,
+    desc:
+      "Per-layer Feature-wise Linear Modulation (FiLM) block adding external conditioning (applied field / net charge) to any equivariant foundation MLFF; it modulates only scalar channels, preserving exact E(3)-equivariance while learning field-driven PES changes from minimal data.",
+    paperUrl: "https://arxiv.org/abs/2607.05559",
+    isNew: true,
+    coverage: ["charged liquid water", "molecular systems"],
+    useCases: ["external-field response", "charge-conditioned MD"],
+    properties: ["energy", "forces"],
+    maintenance: "experimental",
+    lastReviewed: "2026-07-19",
+    tags: ["equivariant", "FiLM", "charge-aware", "external-field conditioning"],
+    supportsCharges: true,
+    supportsSpins: null,
+    elementsCovered:
+      "backbone-dependent (demonstrated on H, O in charged liquid water)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    // Phase (auto-update 2026-07-19): a conditioning module wrapping an
+    // existing equivariant foundation MLFF, not a standalone trained model.
+    entityType: "architecture",
+    architectureFamily: "EquiFiLM",
+    isFoundationModel: false,
+    accuracyEvidence:
+      "Developer-reported: with MACE-MatPES as the backbone (yielding 'E-MACE'), EquiFiLM gives ~3.1x lower force RMSE and ~61x lower per-atom energy RMSE on charged liquid water vs a baseline without FiLM conditioning (arXiv:2607.05559 abstract, checked 2026-07-19). No independent benchmark tier assessed.",
+    chargeSpinEvidence:
+      "A per-layer FiLM block modulates only scalar channels on an external conditioning signal (applied field / net charge), preserving E(3)-equivariance exactly; charge conditioning is the demonstrated use (arXiv:2607.05559 abstract, checked 2026-07-19). Spin conditioning not established, so supportsSpins is left null.",
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2607.05559"],
+    lastVerifiedDate: "2026-07-19",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-07-19 auto-update: arXiv ID, title, authors (Sahel-Schackis, Nomura, Nakano, Kling, Linker; Stanford/SLAC/USC) and abstract corroborated across multiple web-search passes; direct arXiv/HF fetch blocked by network egress policy, so full text was not read. No public code repository was found at review time (paperUrl only). properties inferred as energy/forces (a force field); frameworks/license left unset pending confirmation.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -4619,4 +4660,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs." },
+
+  // EquiFiLM (2026): external-field / charge conditioning via FiLM on an equivariant backbone
+  { from: "mace", to: "equifilm", label: "FiLM conditioning", description: "EquiFiLM is demonstrated by wrapping a MACE-family foundation backbone (MACE-MatPES) with per-layer FiLM blocks that add external-field/charge conditioning while modulating only scalar channels; MACE supplies the underlying E(3)-equivariant message-passing potential.", edgeConfidence: "probable", edgeSource: "https://arxiv.org/abs/2607.05559", edgeNotes: "Abstract-level (2026-07-19): EquiFiLM demonstrates on MACE-MatPES as the backbone; full text not fetched (arXiv blocked by egress policy)." },
+  { from: "spookynet", to: "equifilm", label: "Charge conditioning", dashed: true, description: "Both condition an equivariant / message-passing potential on total charge; EquiFiLM generalises external conditioning through a per-layer FiLM block rather than SpookyNet's built-in charge/spin embeddings.", edgeConfidence: "speculative" },
 ];
