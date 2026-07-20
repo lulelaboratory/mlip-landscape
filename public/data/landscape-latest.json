@@ -7517,6 +7517,140 @@
       "evidenceNotes": "arXiv 2606.02419 'DPA4: Pushing the Accuracy-Cost Frontier of Interatomic Potentials with EMFA SO(2) Convolution' confirms: SE(3)-equivariant EMFA (Edge-conditioned Multi-Focus Attention) SO(2) convolution, Lebedev-grid projection preserving SO(3)-equivariance, DPA4-Air (2.76M params) beating the 30.1M eSEN-30M-MP baseline (10.9x fewer params, 42.9x less compute), and DPA4-Pro topping the compliant Matbench Discovery CPS leaderboard. Part of the DeepModeling/deepmd-kit ecosystem. numElements=89 reflects the standard MPtrj / Matbench-Discovery element coverage for MP-trained foundation models rather than a directly quoted figure.",
       "isFoundationModel": true,
       "foundationModelEvidence": "SE(3)-equivariant foundation-MLIP on Matbench Discovery; DPA4-Pro attains the best Combined Performance Score on the compliant leaderboard, and DPA4-Air exceeds the 30.1M eSEN-30M-MP baseline at far lower cost."
+    },
+    {
+      "id": "tece",
+      "type": "node",
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "category": "Equivariant",
+      "label": "TECE",
+      "year": 2026,
+      "author": "Zemin Xu, Wenbo Xie, P. Hu",
+      "x": 8780,
+      "y": 320,
+      "desc": "Tensor Edge Cluster Expansion: an equivariant successor to TACE that builds many-body interactions on edges via an Edge Complex Product Basis and adds Radial Rotary Complex Attention for extrapolation. Its OMat24/sAlex/MPtrj-pretrained TECE-OAM-RRA-1.0 tops Matbench Discovery.",
+      "githubUrl": "https://github.com/xvzemin/tace",
+      "paperUrl": "https://arxiv.org/abs/2607.10664",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "universal materials MLIP",
+        "high-throughput materials discovery"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-07-17",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "ACE",
+        "cluster expansion",
+        "edge features",
+        "rotary attention",
+        "SO(2)",
+        "SO(3)",
+        "foundation model"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "all elements covered by OMat24 / sAlex / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "longRange": null,
+      "trainingSetSize": 100000000,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.10664",
+        "https://github.com/xvzemin/tace",
+        "https://github.com/xvzemin/tace-foundations"
+      ],
+      "lastVerifiedDate": "2026-07-17",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "arXiv ID, title, authors (Zemin Xu, Wenbo Xie, P. Hu) and training sets (OMat24/sAlex/MPtrj) confirmed via arXiv listing and web search; public code and MIT license confirmed from the github.com/xvzemin/tace repo, which references TACE/TECE, cites arXiv 2607.10664, and links foundation checkpoints at xvzemin/tace-foundations. Charge/spin conditioning and inference speed were not independently verified.",
+      "accuracyEvidence": "Reported state-of-the-art on the Matbench Discovery leaderboard for the TECE-OAM-RRA-1.0 foundation model (arXiv 2607.10664).",
+      "datasetEvidence": "Trained on OMat24, sAlex and MPtrj per arXiv 2607.10664.",
+      "foundationModelEvidence": "arXiv 2607.10664 releases TECE-OAM-RRA-1.0, an OMat24/sAlex/MPtrj-pretrained materials foundation model reported SOTA on Matbench Discovery.",
+      "licenseEvidence": "TACE/TECE code released under the MIT License (github.com/xvzemin/tace README).",
+      "entityType": "trained_model",
+      "architectureFamily": "TACE",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "hasFoundationVariant": true,
+      "accuracyTier": "state_of_the_art",
+      "benchmarkContext": "Matbench Discovery (inorganic materials stability / thermodynamic-property prediction)."
+    },
+    {
+      "id": "equifilm",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "EquiFiLM",
+      "year": 2026,
+      "author": "Stanford / SLAC / USC (Sahel-Schackis, Linker et al.)",
+      "x": 7380,
+      "y": 150,
+      "desc": "Per-layer Feature-wise Linear Modulation (FiLM) block adding external conditioning (applied field / net charge) to any equivariant foundation MLFF; it modulates only scalar channels, preserving exact E(3)-equivariance while learning field-driven PES changes from minimal data.",
+      "paperUrl": "https://arxiv.org/abs/2607.05559",
+      "isNew": true,
+      "coverage": [
+        "charged liquid water",
+        "molecular systems"
+      ],
+      "useCases": [
+        "external-field response",
+        "charge-conditioned MD"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-07-19",
+      "tags": [
+        "equivariant",
+        "FiLM",
+        "charge-aware",
+        "external-field conditioning"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": null,
+      "elementsCovered": "backbone-dependent (demonstrated on H, O in charged liquid water)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "entityType": "architecture",
+      "architectureFamily": "EquiFiLM",
+      "isFoundationModel": false,
+      "accuracyEvidence": "Developer-reported: with MACE-MatPES as the backbone (yielding 'E-MACE'), EquiFiLM gives ~3.1x lower force RMSE and ~61x lower per-atom energy RMSE on charged liquid water vs a baseline without FiLM conditioning (arXiv:2607.05559 abstract, checked 2026-07-19). No independent benchmark tier assessed.",
+      "chargeSpinEvidence": "A per-layer FiLM block modulates only scalar channels on an external conditioning signal (applied field / net charge), preserving E(3)-equivariance exactly; charge conditioning is the demonstrated use (arXiv:2607.05559 abstract, checked 2026-07-19). Spin conditioning not established, so supportsSpins is left null.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.05559"
+      ],
+      "lastVerifiedDate": "2026-07-19",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-07-19 auto-update: arXiv ID, title, authors (Sahel-Schackis, Nomura, Nakano, Kling, Linker; Stanford/SLAC/USC) and abstract corroborated across multiple web-search passes; direct arXiv/HF fetch blocked by network egress policy, so full text was not read. No public code repository was found at review time (paperUrl only). properties inferred as energy/forces (a force field); frameworks/license left unset pending confirmation."
     }
   ],
   "groups": [
@@ -9136,6 +9270,38 @@
       "description": "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs.",
       "edgeConfidence": "speculative",
       "edgeNotes": "Abstract/snippet-level: DPA4 (DeepModeling OpenLAM, DPA-family, EMFA SO(2) convolution) only uses eSEN-30M-MP as a Matbench Discovery baseline it outperforms. Benchmark comparison, not architectural descent; DPA4 descends from DPA1-3, not eSEN."
+    },
+    {
+      "from": "tace",
+      "to": "tece",
+      "label": "Edge cluster expansion",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://github.com/xvzemin/tace",
+      "description": "TECE is the direct successor to TACE from the same author (Zemin Xu): it moves the tensor cluster expansion from atoms onto edges via an Edge Complex Product Basis (Generalized Asymmetric Contraction) and adds Radial Rotary Complex Attention. The github.com/xvzemin/tace framework references both TACE/TECE and cites arXiv 2607.10664, with foundation checkpoints at xvzemin/tace-foundations."
+    },
+    {
+      "from": "eqv3",
+      "to": "tece",
+      "label": "SO(2)/rotary attention",
+      "dashed": true,
+      "description": "TECE's systematic SO(2)-vs-SO(3) analysis and its Radial Rotary Complex Attention build on the SO(2)-equivariant, attention-based transformer lineage that EquiformerV3 (SwiGLU-S2) advances, which TECE benchmarks against on Matbench Discovery."
+    },
+    {
+      "from": "mace",
+      "to": "equifilm",
+      "label": "FiLM conditioning",
+      "description": "EquiFiLM is demonstrated by wrapping a MACE-family foundation backbone (MACE-MatPES) with per-layer FiLM blocks that add external-field/charge conditioning while modulating only scalar channels; MACE supplies the underlying E(3)-equivariant message-passing potential.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2607.05559",
+      "edgeNotes": "Abstract-level (2026-07-19): EquiFiLM demonstrates on MACE-MatPES as the backbone; full text not fetched (arXiv blocked by egress policy)."
+    },
+    {
+      "from": "spookynet",
+      "to": "equifilm",
+      "label": "Charge conditioning",
+      "dashed": true,
+      "description": "Both condition an equivariant / message-passing potential on total charge; EquiFiLM generalises external conditioning through a per-layer FiLM block rather than SpookyNet's built-in charge/spin embeddings.",
+      "edgeConfidence": "speculative"
     }
   ]
 }
