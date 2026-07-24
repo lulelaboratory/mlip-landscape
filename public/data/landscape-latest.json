@@ -7651,6 +7651,59 @@
       "lastVerifiedDate": "2026-07-19",
       "verifiedBy": "llm_assisted",
       "evidenceNotes": "2026-07-19 auto-update: arXiv ID, title, authors (Sahel-Schackis, Nomura, Nakano, Kling, Linker; Stanford/SLAC/USC) and abstract corroborated across multiple web-search passes; direct arXiv/HF fetch blocked by network egress policy, so full text was not read. No public code repository was found at review time (paperUrl only). properties inferred as energy/forces (a force field); frameworks/license left unset pending confirmation."
+    },
+    {
+      "id": "step",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "STEP",
+      "year": 2026,
+      "author": "Gao et al.",
+      "x": 7940,
+      "y": 150,
+      "desc": "Equivariant magnetic MLIP treating vector magnetic moments as geometric degrees of freedom, coupling each central spin to its local spin-lattice environment via a Center-Environment Tensor Product with SO(3) equivariance and time-reversal symmetry for data-efficient magnetic PES.",
+      "paperUrl": "https://arxiv.org/abs/2607.17129",
+      "isNew": true,
+      "coverage": [
+        "magnetic materials",
+        "2D magnets"
+      ],
+      "useCases": [
+        "non-collinear spin-lattice dynamics",
+        "magnetic potential energy surfaces"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "magnetic_moment"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-07-23",
+      "tags": [
+        "equivariant",
+        "magnetic moments",
+        "spin-lattice",
+        "time-reversal",
+        "SO(3)",
+        "tensor product"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": true,
+      "elementsCovered": "backbone-dependent (demonstrated on Cr, I in monolayer CrI3)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "entityType": "architecture",
+      "architectureFamily": "STEP (spin tensor equivariant potential)",
+      "trainingScope": "domain_specific",
+      "isFoundationModel": false,
+      "chargeSpinEvidence": "STEP embeds vector magnetic moments as continuous geometric degrees of freedom and couples each central spin to its local spin-lattice environment through a Center-Environment Tensor Product, with feature-level time-reversal symmetrization (arXiv:2607.17129 abstract). Spin support established; no charge conditioning described, so supportsCharges is set false.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.17129"
+      ],
+      "lastVerifiedDate": "2026-07-23",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation."
     }
   ],
   "groups": [
@@ -9302,6 +9355,24 @@
       "dashed": true,
       "description": "Both condition an equivariant / message-passing potential on total charge; EquiFiLM generalises external conditioning through a per-layer FiLM block rather than SpookyNet's built-in charge/spin embeddings.",
       "edgeConfidence": "speculative"
+    },
+    {
+      "from": "mace_mag",
+      "to": "step",
+      "label": "Magnetic MLIP peers",
+      "dashed": true,
+      "description": "Sibling 2026 equivariant magnetic potentials that embed atomic magnetic moments as explicit degrees of freedom: MACE-Magnetic extends the MACE many-body message-passing framework with spin-aware layers, while STEP couples each central spin to its local spin-lattice environment through a Center-Environment Tensor Product with SO(3) equivariance and time-reversal symmetrization.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract-level (2026-07-23): both are 2026 equivariant magnetic MLIPs embedding vector magnetic moments as DOFs; no source states descent, so kept speculative/dashed. arXiv 2607.17129 vs 2604.08143."
+    },
+    {
+      "from": "tfn",
+      "to": "step",
+      "label": "Equivariant tensor products",
+      "dashed": true,
+      "description": "STEP's Center-Environment Tensor Product and higher-order tensor channels sit in the E(3)/SO(3)-equivariant spherical-tensor lineage pioneered by Tensor Field Networks, here extended to spin degrees of freedom with feature-level time-reversal symmetrization for magnetic potential energy surfaces.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract-level (2026-07-23): family link via equivariant tensor-product machinery; STEP (arXiv 2607.17129) is spin-augmented. No explicit descent claim, kept speculative."
     }
   ]
 }
