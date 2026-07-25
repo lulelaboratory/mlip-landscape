@@ -16,6 +16,11 @@ export default function HomePage() {
           (MLIPs). Each entry lists the model name, category, release year,
           authoring group, and a short description.
         </p>
+        {/* Kept deliberately lean: name, category, year, author, description
+            and links. Richer per-model metadata (license, tags, datasets…)
+            lives on /models and in the published JSON snapshot — repeating it
+            here roughly doubled the home page's HTML weight (the markup is
+            also serialized a second time into the RSC payload). */}
         <ul>
           {models.map((m) => (
             <li key={m.id}>
@@ -26,48 +31,22 @@ export default function HomePage() {
               >
                 <h2 itemProp="name">{m.label}</h2>
                 <p>
-                  <strong>Category:</strong>{" "}
                   <span itemProp="applicationCategory">{m.category}</span> ·{" "}
-                  <strong>Year:</strong>{" "}
                   <time itemProp="datePublished" dateTime={String(m.year)}>
                     {m.year}
                   </time>{" "}
-                  ·{" "}
-                  <strong>Authors:</strong>{" "}
-                  <span
-                    itemProp="author"
-                    itemScope
-                    itemType="https://schema.org/Organization"
-                  >
-                    <span itemProp="name">{m.author}</span>
-                  </span>
+                  · <span itemProp="author">{m.author}</span>
                 </p>
                 <p itemProp="description">{m.desc}</p>
-                {m.license && (
-                  <p>
-                    License: <span itemProp="license">{m.license}</span>
-                  </p>
-                )}
-                {m.tags && m.tags.length > 0 && (
-                  <p>
-                    Tags: <span itemProp="keywords">{m.tags.join(", ")}</span>
-                  </p>
-                )}
                 {m.paperUrl && (
-                  <p>
-                    Paper:{" "}
-                    <a href={m.paperUrl} itemProp="url">
-                      {m.paperUrl}
-                    </a>
-                  </p>
+                  <a href={m.paperUrl} itemProp="url">
+                    Paper: {m.label}
+                  </a>
                 )}
                 {m.githubUrl && (
-                  <p>
-                    Code:{" "}
-                    <a href={m.githubUrl} itemProp="codeRepository">
-                      {m.githubUrl}
-                    </a>
-                  </p>
+                  <a href={m.githubUrl} itemProp="codeRepository">
+                    Code: {m.label}
+                  </a>
                 )}
               </article>
             </li>

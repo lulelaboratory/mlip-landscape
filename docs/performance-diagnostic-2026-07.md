@@ -142,3 +142,29 @@ Shrinking the HTML (finding 3) is the only in-repo lever that helps here.
 
 Findings 1 + 2 alone should move RES from ~40 into the 80–95 band for most
 visitors; no infrastructure change is required.
+
+## Implemented (2026-07-25, this branch)
+
+Findings 1–3 are fixed on this branch; measured against a fresh production
+build with a headless-Chromium smoke test:
+
+- **Force simulation** now runs lazily (only when the user selects the force
+  layout), deferred behind a timeout, cached per session — and its hot loop
+  was rewritten on flat typed arrays (no string-keyed Set, no per-tick
+  allocations). Loop-shape benchmark: **2,071 ms → 72 ms (~29×)**. In the
+  browser the force layout is ready ~300 ms after the click. Page load no
+  longer runs it at all.
+- **Canvas is client-mounted** after the real viewport is measured, replacing
+  a fixed-position "Preparing the map…" placeholder; cards never render at
+  the guessed 1200×800 geometry and then jump. Measured CLS on load:
+  **0.016 (mobile 390 px), 0.0001 (desktop 1440 px)** — field p75 was 0.58.
+- **Catalogue de-duplication**: per-model `ItemList` JSON-LD removed from the
+  root layout (microdata on the home directory and `/models` remain), and the
+  home page's `sr-only` directory slimmed to name/category/year/author/
+  description/links. HTML sizes (raw): `/` **969 → 326 KB**, `/models`
+  771 → 561 KB, `/compare` 514 → 311 KB, `/learn` 438 → 237 KB, 404
+  229 → 32 KB.
+- Verified in-browser: layered/force/timeline switching, detail panel,
+  `?model=` deep links, and persisted-layout reloads all behave as before.
+
+Finding 4 (card vs. detail data split) remains open as a follow-up.

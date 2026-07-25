@@ -382,7 +382,6 @@ function computeForcePositions(
   edges: Edge[],
 ): Record<string, Vec2> {
   const positions: Record<string, Vec2> = {};
-  const velocities: Record<string, Vec2> = {};
 
   // Seed by category cluster: each category occupies a quadrant centred at
   // a fixed offset from the origin, with cards within a category packed in
@@ -427,7 +426,6 @@ function computeForcePositions(
       const dx = (col - (cols - 1) / 2) * cellW;
       const dy = (row - (cols - 1) / 2) * cellH;
       positions[n.id] = { x: center.x + dx, y: center.y + dy };
-      velocities[n.id] = { x: 0, y: 0 };
     });
   }
 
@@ -452,17 +450,50 @@ function computeForcePositions(
   const halfW = CARD_WIDTH / 2 + PAD_X;
   const halfH = CARD_HEIGHT / 2 + PAD_Y;
 
-  const ids = modelNodes.map((n) => n.id);
-  // Look up each id's category once (used inside the tick loop).
-  const idCategory: Record<string, Category> = {};
-  for (const n of modelNodes) idCategory[n.id] = n.category;
+  // Hot-loop data layout: the simulation below is O(N² · ticks), so it runs
+  // on flat typed arrays indexed by node position instead of Records keyed
+  // by id — no string hashing and no per-tick object allocation. This is a
+  // pure data-structure change; the maths and iteration order match the
+  // previous Record-based implementation.
+  const indexOf = new Map<string, number>();
+  modelNodes.forEach((n, i) => indexOf.set(n.id, i));
+  const px = new Float64Array(N);
+  const py = new Float64Array(N);
+  const vx = new Float64Array(N);
+  const vy = new Float64Array(N);
+  for (let i = 0; i < N; i += 1) {
+    const seed = positions[modelNodes[i].id];
+    px[i] = seed.x;
+    py[i] = seed.y;
+  }
+  const fx = new Float64Array(N);
+  const fy = new Float64Array(N);
+
+  // Category cluster centre per node index (used inside the tick loop).
+  const ccx = new Float64Array(N);
+  const ccy = new Float64Array(N);
+  for (let i = 0; i < N; i += 1) {
+    const center = clusterCenter[modelNodes[i].category];
+    ccx[i] = center.x;
+    ccy[i] = center.y;
+  }
 
   // Adjacency-aware repulsion: cards that aren't connected by an edge
   // push each other harder than connected pairs, so unrelated cards never
-  // end up neighbours and edges stay short.
-  const linked = new Set<string>();
-  const linkKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
-  for (const e of edges) linked.add(linkKey(e.from, e.to));
+  // end up neighbours and edges stay short. Flat N×N byte matrix for O(1)
+  // lookups in the pair loop.
+  const linked = new Uint8Array(N * N);
+  const edgeA: number[] = [];
+  const edgeB: number[] = [];
+  for (const e of edges) {
+    const a = indexOf.get(e.from);
+    const b = indexOf.get(e.to);
+    if (a === undefined || b === undefined) continue;
+    linked[a * N + b] = 1;
+    linked[b * N + a] = 1;
+    edgeA.push(a);
+    edgeB.push(b);
+  }
 
   // More iterations for larger graphs — extra ticks give the bigger graph
   // time to unfold without changing the steady-state geometry.
@@ -474,18 +505,16 @@ function computeForcePositions(
     const progress = tick / TICKS;
     const damping = 0.92 - progress * 0.37;
 
-    const forces: Record<string, Vec2> = {};
-    for (const id of ids) forces[id] = { x: 0, y: 0 };
+    fx.fill(0);
+    fy.fill(0);
 
     // Repulsive (Coulomb-like) between every pair, with a soft cutoff so
     // very close pairs don't get an unbounded force. Unlinked pairs get a
     // stronger repulsion so they fan out further.
-    for (let i = 0; i < ids.length; i += 1) {
-      for (let j = i + 1; j < ids.length; j += 1) {
-        const a = positions[ids[i]];
-        const b = positions[ids[j]];
-        let dx = a.x - b.x;
-        let dy = a.y - b.y;
+    for (let i = 0; i < N; i += 1) {
+      for (let j = i + 1; j < N; j += 1) {
+        let dx = px[i] - px[j];
+        let dy = py[i] - py[j];
         let d2 = dx * dx + dy * dy;
         if (d2 < 1) {
           dx = (Math.random() - 0.5) * 2;
@@ -493,57 +522,54 @@ function computeForcePositions(
           d2 = dx * dx + dy * dy + 0.1;
         }
         const d = Math.sqrt(d2);
-        const isLinked = linked.has(linkKey(ids[i], ids[j]));
-        const localRepulsion = isLinked ? repulsion * 0.7 : repulsion * 1.15;
+        const localRepulsion = linked[i * N + j]
+          ? repulsion * 0.7
+          : repulsion * 1.15;
         const f = localRepulsion / Math.max(d2, 600);
-        const fx = (dx / d) * f;
-        const fy = (dy / d) * f;
-        forces[ids[i]].x += fx;
-        forces[ids[i]].y += fy;
-        forces[ids[j]].x -= fx;
-        forces[ids[j]].y -= fy;
+        const dfx = (dx / d) * f;
+        const dfy = (dy / d) * f;
+        fx[i] += dfx;
+        fy[i] += dfy;
+        fx[j] -= dfx;
+        fy[j] -= dfy;
       }
     }
 
     // Spring along edges.
-    for (const e of edges) {
-      const a = positions[e.from];
-      const b = positions[e.to];
-      if (!a || !b) continue;
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
+    for (let k = 0; k < edgeA.length; k += 1) {
+      const a = edgeA[k];
+      const b = edgeB[k];
+      const dx = px[b] - px[a];
+      const dy = py[b] - py[a];
       const d = Math.sqrt(dx * dx + dy * dy) || 1;
       const f = (d - idealLink) * linkStrength;
-      const fx = (dx / d) * f;
-      const fy = (dy / d) * f;
-      forces[e.from].x += fx;
-      forces[e.from].y += fy;
-      forces[e.to].x -= fx;
-      forces[e.to].y -= fy;
+      const dfx = (dx / d) * f;
+      const dfy = (dy / d) * f;
+      fx[a] += dfx;
+      fy[a] += dfy;
+      fx[b] -= dfx;
+      fy[b] -= dfy;
     }
 
     // Pull each card toward (0, 0) and toward its category cluster centre.
-    for (const id of ids) {
-      forces[id].x += -positions[id].x * centerStrength;
-      forces[id].y += -positions[id].y * centerStrength;
-      const center = clusterCenter[idCategory[id]];
-      forces[id].x += (center.x - positions[id].x) * categoryCohesion;
-      forces[id].y += (center.y - positions[id].y) * categoryCohesion;
+    for (let i = 0; i < N; i += 1) {
+      fx[i] += -px[i] * centerStrength + (ccx[i] - px[i]) * categoryCohesion;
+      fy[i] += -py[i] * centerStrength + (ccy[i] - py[i]) * categoryCohesion;
     }
 
     // Integrate.
-    for (const id of ids) {
-      velocities[id].x = (velocities[id].x + forces[id].x) * damping;
-      velocities[id].y = (velocities[id].y + forces[id].y) * damping;
+    for (let i = 0; i < N; i += 1) {
+      vx[i] = (vx[i] + fx[i]) * damping;
+      vy[i] = (vy[i] + fy[i]) * damping;
       // Clamp velocity so cards can't shoot off to infinity early on.
-      const speed = Math.hypot(velocities[id].x, velocities[id].y);
+      const speed = Math.hypot(vx[i], vy[i]);
       const maxSpeed = 80;
       if (speed > maxSpeed) {
-        velocities[id].x = (velocities[id].x / speed) * maxSpeed;
-        velocities[id].y = (velocities[id].y / speed) * maxSpeed;
+        vx[i] = (vx[i] / speed) * maxSpeed;
+        vy[i] = (vy[i] / speed) * maxSpeed;
       }
-      positions[id].x += velocities[id].x;
-      positions[id].y += velocities[id].y;
+      px[i] += vx[i];
+      py[i] += vy[i];
     }
 
     // Rectangular collision pass — resolve any pair whose padded card
@@ -553,23 +579,21 @@ function computeForcePositions(
     // free even when the simulation has nearly cooled off.
     const collisionPasses = progress > 0.5 ? 2 : 1;
     for (let pass = 0; pass < collisionPasses; pass += 1) {
-      for (let i = 0; i < ids.length; i += 1) {
-        for (let j = i + 1; j < ids.length; j += 1) {
-          const a = positions[ids[i]];
-          const b = positions[ids[j]];
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
+      for (let i = 0; i < N; i += 1) {
+        for (let j = i + 1; j < N; j += 1) {
+          const dx = px[j] - px[i];
+          const dy = py[j] - py[i];
           const overlapX = halfW * 2 - Math.abs(dx);
           const overlapY = halfH * 2 - Math.abs(dy);
           if (overlapX <= 0 || overlapY <= 0) continue;
           if (overlapX < overlapY) {
             const push = (overlapX / 2) * (dx >= 0 ? 1 : -1);
-            a.x -= push;
-            b.x += push;
+            px[i] -= push;
+            px[j] += push;
           } else {
             const push = (overlapY / 2) * (dy >= 0 ? 1 : -1);
-            a.y -= push;
-            b.y += push;
+            py[i] -= push;
+            py[j] += push;
           }
         }
       }
@@ -578,10 +602,10 @@ function computeForcePositions(
 
   // Convert back from card-centre to top-left coordinates.
   const out: Record<string, Vec2> = {};
-  for (const id of ids) {
-    out[id] = {
-      x: positions[id].x - CARD_WIDTH / 2,
-      y: positions[id].y - CARD_HEIGHT / 2,
+  for (let i = 0; i < N; i += 1) {
+    out[modelNodes[i].id] = {
+      x: px[i] - CARD_WIDTH / 2,
+      y: py[i] - CARD_HEIGHT / 2,
     };
   }
   return out;
@@ -983,6 +1007,12 @@ export default function MLIPExplorer() {
   });
   const [query, setQuery] = useState("");
   const [viewport, setViewport] = useState({ width: 1200, height: 800 });
+  // True once the real window has been measured after mount. Until then the
+  // viewport above is only a server-side guess, so the canvas contents are
+  // not rendered at all (see `canvasReady` below) — rendering them against
+  // the guessed size and then re-fitting was the site's dominant source of
+  // Cumulative Layout Shift.
+  const [viewportReady, setViewportReady] = useState(false);
   const [baseScale, setBaseScale] = useState(0.8);
   const [userScale, setUserScale] = useState(1);
   const [userPan, setUserPan] = useState({ x: 0, y: 0 });
@@ -1055,6 +1085,7 @@ export default function MLIPExplorer() {
       setViewport({ width: window.innerWidth, height: window.innerHeight });
 
     handleResize();
+    setViewportReady(true);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -1289,16 +1320,51 @@ export default function MLIPExplorer() {
   const canShrinkFont = fontScaleIndex > 0;
   const canGrowFont = fontScaleIndex >= 0 && fontScaleIndex < FONT_SCALES.length - 1;
 
-  // Stable force-directed positions, computed once from the original layered
-  // coordinates. Recomputing on every render would jitter nodes — instead we
-  // memoise the deterministic simulation output and let user drags and the
-  // "Reset layout" button move things from there.
-  const forcePositions = useMemo(() => {
-    const modelItems = nodes.filter(
-      (n): n is ModelNode => n.type === "node",
-    );
-    return computeForcePositions(modelItems, edges);
-  }, [nodes, edges]);
+  // Stable force-directed positions, computed once per nodes/edges identity.
+  // The O(N²·ticks) simulation used to run eagerly inside a useMemo on the
+  // very first render — a multi-second main-thread block during hydration on
+  // every page load, even though the default layered layout never reads it.
+  // It now runs lazily the first time the user actually selects the force
+  // layout, deferred behind a short timeout so the layout-button click paints
+  // before the simulation starts, and the result is cached for the session.
+  // User drags and the "Reset layout" button move things from there.
+  const [forcePositions, setForcePositions] = useState<Record<
+    string,
+    Vec2
+  > | null>(null);
+  const forceCacheRef = useRef<{
+    nodes: AnyNode[];
+    edges: Edge[];
+    positions: Record<string, Vec2>;
+  } | null>(null);
+  useEffect(() => {
+    if (layout !== "force") return;
+    const cached = forceCacheRef.current;
+    if (cached && cached.nodes === nodes && cached.edges === edges) {
+      setForcePositions(cached.positions);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      const modelItems = nodes.filter(
+        (n): n is ModelNode => n.type === "node",
+      );
+      const positions = computeForcePositions(modelItems, edges);
+      forceCacheRef.current = { nodes, edges, positions };
+      setForcePositions(positions);
+    }, 30);
+    return () => window.clearTimeout(handle);
+  }, [layout, nodes, edges]);
+
+  // The canvas contents mount client-side only, once the real viewport is
+  // known (and, in force layout, once positions exist). Server-rendering them
+  // was actively harmful: the HTML assumed a 1200×800 window, so on real
+  // devices every card's position changed right after hydration — a large
+  // Cumulative Layout Shift on every visit — and the ~120 pre-rendered cards
+  // added several hundred KB (twice: HTML + RSC payload) to the page.
+  // Crawlers and assistive tech get the semantic model directory rendered by
+  // src/app/page.tsx instead, so nothing is lost for SEO.
+  const canvasReady =
+    viewportReady && (layout !== "force" || forcePositions !== null);
 
   // Timeline ("Tree of Life") positions plus the year range — used by the
   // timeline-layout axis renderer to draw year ticks across the full span.
@@ -1357,7 +1423,7 @@ export default function MLIPExplorer() {
       if (layout === "force") {
         const override = forceOverrides[node.id];
         if (override) return override;
-        const fp = forcePositions[node.id];
+        const fp = forcePositions?.[node.id];
         if (fp) return fp;
       }
       if (layout === "timeline") {
@@ -3094,6 +3160,23 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
             }}
           />
 
+          {/* Lightweight placeholder shown before the client-side canvas
+              mounts (and while the force simulation is computing). It is
+              absolutely positioned, so its replacement by the canvas causes
+              no layout shift. */}
+          {!canvasReady && (
+            <div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              aria-hidden="true"
+            >
+              <span className="rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-4 py-1.5 text-sm text-slate-500 dark:text-slate-400 shadow-sm">
+                {viewportReady && layout === "force"
+                  ? "Computing force layout…"
+                  : "Preparing the map…"}
+              </span>
+            </div>
+          )}
+          {canvasReady && (
           <div
             className={`absolute origin-top-left ease-out ${
               isDragging || isWheelZooming || isPinching
@@ -3348,6 +3431,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
               );
             })}
           </div>
+          )}
         </div>
 
         {/* FILTER + ZOOM CONTROL */}
