@@ -4,7 +4,6 @@ import "./globals.css";
 import TopNav from "@/components/TopNav";
 import SiteFooter from "@/components/SiteFooter";
 import FeedbackButton from "@/components/FeedbackButton";
-import { INITIAL_NODES, type ModelNode } from "@/data/landscape";
 import pkg from "../../package.json";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -96,8 +95,12 @@ const THEME_INIT_SCRIPT = `(() => {
 
 const version = (pkg as { version: string }).version;
 
-const models = INITIAL_NODES.filter((n): n is ModelNode => n.type === "node");
-
+// Site-level JSON-LD only. The per-model ItemList that used to live here
+// serialized the entire catalogue (~94 KB) into every page's <head> — twice,
+// counting the RSC payload — including 404s. Per-model structured data is
+// exposed as microdata on the home page's semantic directory and on /models,
+// and the Dataset entry below points crawlers at the machine-readable
+// JSON/CSV snapshots.
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -145,26 +148,6 @@ const structuredData = {
           contentUrl: `${SITE_URL}/data/landscape-v${version}.csv`,
         },
       ],
-    },
-    {
-      "@type": "ItemList",
-      "@id": `${SITE_URL}/#model-list`,
-      name: "Machine-learning interatomic potentials",
-      numberOfItems: models.length,
-      itemListElement: models.map((m, idx) => ({
-        "@type": "ListItem",
-        position: idx + 1,
-        item: {
-          "@type": "SoftwareSourceCode",
-          name: m.label,
-          description: m.desc,
-          author: { "@type": "Organization", name: m.author },
-          datePublished: String(m.year),
-          codeRepository: m.githubUrl,
-          url: m.paperUrl ?? m.githubUrl ?? SITE_URL,
-          keywords: [m.category, ...(m.tags ?? [])].join(", "),
-        },
-      })),
     },
   ],
 };
