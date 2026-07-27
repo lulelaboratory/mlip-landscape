@@ -240,6 +240,17 @@ export const DATASETS: DatasetEntry[] = [
     domain: ["molecules"],
     verificationStatus: "needs_review",
   },
+  {
+    datasetId: "opengem26",
+    name: "OpenGEM26 (Open Generated Ensemble of Molecules 2026)",
+    aliases: ["OpenGEM26", "OpenGEM", "Open Generated Ensemble of Molecules"],
+    domain: ["molecules"],
+    sourceUrl: "https://github.com/atomly-materials-research-lab/GPTFF",
+    paperUrl: "https://arxiv.org/abs/2607.21369",
+    notes:
+      "200k unique organic molecules and 4.4M conformations over H, C, N, O, S, Cl with up to ten heavy atoms; full DFT optimization trajectories plus non-equilibrium structures at wB97X-D/def2-SVP and def2-TZVPD with dispersion corrections. Introduced with GPTFF-mol.",
+    verificationStatus: "partially_verified",
+  },
 ];
 
 export const DATASET_BY_ID: ReadonlyMap<string, DatasetEntry> = new Map(

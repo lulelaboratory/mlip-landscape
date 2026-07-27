@@ -7704,6 +7704,71 @@
       "lastVerifiedDate": "2026-07-23",
       "verifiedBy": "llm_assisted",
       "evidenceNotes": "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation."
+    },
+    {
+      "id": "gptff_mol",
+      "type": "node",
+      "category": "Transformer",
+      "label": "GPTFF-mol",
+      "year": 2026,
+      "author": "Huang, Xie, Zheng, Lu, Meng, Liu (IOP CAS / atomly)",
+      "x": 8220,
+      "y": 150,
+      "desc": "Graph attention transformer force field extending the GPTFF architecture to organic molecules, trained on the OpenGEM26 dataset (200k molecules, 4.4M wB97X-D optimization-trajectory conformations over H, C, N, O, S, Cl with up to ten heavy atoms).",
+      "githubUrl": "https://github.com/atomly-materials-research-lab/GPTFF",
+      "paperUrl": "https://arxiv.org/abs/2607.21369",
+      "isNew": true,
+      "coverage": [
+        "organic molecules"
+      ],
+      "useCases": [
+        "molecular MD",
+        "conformer energetics",
+        "geometry optimization"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "GPL-3.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-07-27",
+      "trainingData": [
+        "OpenGEM26"
+      ],
+      "trainedDatasets": [
+        "opengem26"
+      ],
+      "tags": [
+        "transformer",
+        "graph attention",
+        "molecular",
+        "force field"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "H, C, N, O, S, Cl",
+      "equivariance": "invariant",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "entityType": "trained_model",
+      "architectureFamily": "GPTFF",
+      "trainingScope": "domain_specific",
+      "isFoundationModel": "unknown",
+      "datasetEvidence": "arXiv 2607.21369 abstract states GPTFF-mol is trained on OpenGEM26 (200k molecules, 4.4M conformations, H/C/N/O/S/Cl, <=10 heavy atoms) computed at wB97X-D/def2-SVP and def2-TZVPD with dispersion. OpenGEM26 added to the dataset registry as partially_verified.",
+      "licenseEvidence": "GPL-3.0 per the atomly-materials-research-lab/GPTFF repository (checked 2026-07-27).",
+      "foundationModelEvidence": "A pretrained, transferable organic-molecule potential, but the sources checked do not describe it as a 'foundation model'; recorded as 'unknown' rather than asserted.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.21369",
+        "https://github.com/atomly-materials-research-lab/GPTFF"
+      ],
+      "lastVerifiedDate": "2026-07-27",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-07-27 auto-update: arXiv ID 2607.21369 ('Graph Neural Network Force Fields (GPTFF-mol) for Organic Molecules from Optimization Trajectories (OpenGEM26)'), authors Yifan Huang, Fankai Xie, Jiangnan Zheng, Tenglong Lu, Sheng Meng, Miao Liu, title/abstract/authors corroborated across multiple independent web-search passes. The atomly-materials-research-lab/GPTFF repo was confirmed to host OpenGEM26 organic-molecule checkpoints. Direct arXiv fetch blocked by network egress policy, so full text was not read: reported energy MAE ~0.82 meV/atom noted for context but not asserted as an accuracy tier; charge/spin conditioning not described in the sources checked, so supportsCharges/supportsSpins left null."
     }
   ],
   "groups": [
@@ -9373,6 +9438,24 @@
       "description": "STEP's Center-Environment Tensor Product and higher-order tensor channels sit in the E(3)/SO(3)-equivariant spherical-tensor lineage pioneered by Tensor Field Networks, here extended to spin degrees of freedom with feature-level time-reversal symmetrization for magnetic potential energy surfaces.",
       "edgeConfidence": "speculative",
       "edgeNotes": "Abstract-level (2026-07-23): family link via equivariant tensor-product machinery; STEP (arXiv 2607.17129) is spin-augmented. No explicit descent claim, kept speculative."
+    },
+    {
+      "from": "mace_off",
+      "to": "gptff_mol",
+      "label": "Organic-molecule FF",
+      "dashed": true,
+      "description": "Both are transferable neural-network force fields for neutral organic molecules; GPTFF-mol is a graph-attention transformer trained on wB97X-D optimization trajectories (OpenGEM26), whereas MACE-OFF uses E(3)-equivariant message passing on SPICE. Same problem domain, independent architectures.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract-level (2026-07-27): same-domain conceptual link (transferable organic-molecule potentials); no source states architectural descent, kept speculative. arXiv 2607.21369."
+    },
+    {
+      "from": "aimnet2",
+      "to": "gptff_mol",
+      "label": "Molecular potential peers",
+      "dashed": true,
+      "description": "Contemporary machine-learning potentials for organic molecular chemistry trained on large DFT datasets of small molecules; GPTFF-mol learns from full geometry-optimization trajectories in OpenGEM26 rather than curated equilibrium/near-equilibrium sets.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract-level (2026-07-27): same-domain peer link; no descent claim, kept speculative. arXiv 2607.21369."
     }
   ]
 }
