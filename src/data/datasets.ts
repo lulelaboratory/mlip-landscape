@@ -240,6 +240,16 @@ export const DATASETS: DatasetEntry[] = [
     domain: ["molecules"],
     verificationStatus: "needs_review",
   },
+  {
+    datasetId: "opengem26",
+    name: "OpenGEM26 (Open Generated Ensemble of Molecules 2026)",
+    aliases: ["OpenGEM26", "OpenGEM-26", "Open Generated Ensemble of Molecules 2026"],
+    domain: ["molecules"],
+    paperUrl: "https://arxiv.org/abs/2607.21369",
+    notes:
+      "~200k organic molecules / 4.4M conformations (H, C, N, O, S, Cl; up to 10 heavy atoms) with full optimization trajectories and non-equilibrium structures, at ωB97X-D/Def2-SVP & Def2-TZVP; introduced alongside GPTFF-mol (arXiv:2607.21369). Primary-source page fetch blocked by network policy — abstract corroborated across multiple web-search passes.",
+    verificationStatus: "partially_verified",
+  },
 ];
 
 export const DATASET_BY_ID: ReadonlyMap<string, DatasetEntry> = new Map(
