@@ -5459,6 +5459,46 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation.",
   },
+  {
+    id: "trace",
+    type: "node",
+    category: "Transformer",
+    label: "TRACE",
+    year: 2026,
+    author: "Paramvir Ahlawat",
+    x: 8220,
+    y: 150,
+    desc:
+      "Energy-conserving transformer potential fusing Atomic Cluster Expansion density correlations with local multihead cross-attention: a per-center O(3)-equivariant ACE state queries fixed tensorial neighbor features, passing no learned state between atoms. Laptop-trainable.",
+    githubUrl: "https://github.com/paramvir3/TRACE",
+    paperUrl: "https://arxiv.org/abs/2607.25652",
+    isNew: true,
+    coverage: ["halide perovskites", "molecular liquids", "reactive molecules"],
+    useCases: ["molecular dynamics", "system-specific potentials", "reaction sampling"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE"],
+    license: "MIT",
+    maintenance: "experimental",
+    lastReviewed: "2026-07-31",
+    tags: ["transformer", "cross-attention", "atomic cluster expansion", "equivariant", "energy-conserving"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "demonstrated on Cs, Pb, I (CsPbI3), H, O (liquid water), C, H (methyl migration)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    entityType: "architecture",
+    architectureFamily: "TRACE (transformer atomic cluster expansion)",
+    isFoundationModel: false,
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2607.25652",
+      "https://github.com/paramvir3/TRACE",
+    ],
+    lastVerifiedDate: "2026-07-31",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-07-31 auto-update: arXiv ID 2607.25652 ('Transformer Atomic Cluster Expansion: TRACE', submitted 2026-07-28, single author Paramvir Ahlawat) and abstract corroborated across multiple independent web-search passes; direct arXiv fetch blocked by network egress policy, so full text was not read. Public code repo github.com/paramvir3/TRACE confirmed via web fetch (MIT license, Python, arXiv badge citing 2607.25652). Architecture: ACE density correlations form a per-center O(3)-equivariant state combined with local multihead cross-attention over fixed tensorial neighbor features; forces/stress are energy gradients (energy-conserving). Demonstrated on polymorphic CsPbI3, liquid water and intramolecular methyl migration, trained/tested on a MacBook-M1. Categorized Transformer for its cross-attention core. Charge/spin conditioning not described (left null=unknown, not false); no universal foundation checkpoint reported so isFoundationModel=false. Speed/accuracy tiers left unset pending independent benchmarks.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -5801,4 +5841,9 @@ export const INITIAL_EDGES: Edge[] = [
   // STEP (2026): spin-tensor equivariant potential for magnetic potential energy surfaces
   { from: "mace_mag", to: "step", label: "Magnetic MLIP peers", dashed: true, description: "Sibling 2026 equivariant magnetic potentials that embed atomic magnetic moments as explicit degrees of freedom: MACE-Magnetic extends the MACE many-body message-passing framework with spin-aware layers, while STEP couples each central spin to its local spin-lattice environment through a Center-Environment Tensor Product with SO(3) equivariance and time-reversal symmetrization.", edgeConfidence: "speculative", edgeNotes: "Abstract-level (2026-07-23): both are 2026 equivariant magnetic MLIPs embedding vector magnetic moments as DOFs; no source states descent, so kept speculative/dashed. arXiv 2607.17129 vs 2604.08143." },
   { from: "tfn", to: "step", label: "Equivariant tensor products", dashed: true, description: "STEP's Center-Environment Tensor Product and higher-order tensor channels sit in the E(3)/SO(3)-equivariant spherical-tensor lineage pioneered by Tensor Field Networks, here extended to spin degrees of freedom with feature-level time-reversal symmetrization for magnetic potential energy surfaces.", edgeConfidence: "speculative", edgeNotes: "Abstract-level (2026-07-23): family link via equivariant tensor-product machinery; STEP (arXiv 2607.17129) is spin-augmented. No explicit descent claim, kept speculative." },
+
+  // TRACE (2026): transformer atomic cluster expansion — ACE density correlations + local cross-attention
+  { from: "ace", to: "trace", label: "ACE correlations", description: "TRACE builds its per-center many-body state from Atomic Cluster Expansion density correlations, then combines that O(3)-equivariant state with local multihead cross-attention over fixed tensorial neighbor features — a transformer front-end on the ACE basis.", edgeConfidence: "probable", edgeSource: "https://arxiv.org/abs/2607.25652", edgeNotes: "Abstract-level (2026-07-31): TRACE (Ahlawat, arXiv 2607.25652) explicitly 'combines atomic cluster expansion density correlations with local multihead cross-attention'; direct ACE-basis descent. Full text not fetched (arXiv blocked by egress policy)." },
+  { from: "tace", to: "trace", label: "ACE + attention", dashed: true, description: "Naming-similar sibling ACE hybrids: TACE (Tensor ACE) reformulates the cluster expansion in irreducible Cartesian tensors, while TRACE (Transformer ACE) keeps spherical ACE correlations and grafts local multihead cross-attention on top. Different groups; no descent evidence.", edgeConfidence: "speculative", edgeNotes: "Abstract-level (2026-07-31): both extend ACE (TACE=Xu et al. tensor reformulation 2509.14961; TRACE=Ahlawat transformer 2607.25652). Sibling-only, kept speculative/dashed." },
+  { from: "pet", to: "trace", label: "Local attention potential", dashed: true, description: "Peer attention-based potentials: PET applies a transformer over local point/edge features, while TRACE applies local multihead cross-attention over ACE-derived tensorial neighbor features, both keeping attention local rather than passing learned messages between atoms.", edgeConfidence: "speculative", edgeNotes: "Abstract-level (2026-07-31): conceptual peer link on local attention; no explicit descent claim between PET and TRACE." },
 ];
