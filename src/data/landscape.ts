@@ -5459,6 +5459,101 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation.",
   },
+  // July 2026 ADDITIONS — auto-update sweep (TRACE, Allegro-OAM)
+  {
+    id: "trace",
+    type: "node",
+    category: "Transformer",
+    label: "TRACE",
+    year: 2026,
+    author: "Paramvir Ahlawat (Cambridge / EPFL)",
+    x: 9060,
+    y: 150,
+    desc:
+      "Transformer Atomic Cluster Expansion: an energy-conserving architecture that forms an O(3)-equivariant ACE density-correlation state per center, then queries fixed tensorial neighbour features via local multihead cross-attention with no learned state passed between atoms.",
+    githubUrl: "https://github.com/paramvir3/TRACE",
+    paperUrl: "https://arxiv.org/abs/2607.25652",
+    isNew: true,
+    coverage: ["halide perovskites", "liquid water", "molecular systems"],
+    useCases: ["molecular dynamics", "reaction sampling", "single-system potentials"],
+    properties: ["energy", "forces"],
+    maintenance: "experimental",
+    lastReviewed: "2026-08-01",
+    tags: ["transformer", "cross-attention", "ACE", "cluster expansion", "O(3)-equivariant", "energy-conserving"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "system-specific (demonstrated on Cs, Pb, I, C, H, O)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    usesAttention: true,
+    entityType: "architecture",
+    architectureFamily: "TRACE",
+    trainingScope: "single_system",
+    isFoundationModel: false,
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2607.25652",
+      "https://github.com/paramvir3/TRACE",
+    ],
+    lastVerifiedDate: "2026-08-01",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-08-01 auto-update: arXiv ID 2607.25652 ('Transformer Atomic Cluster Expansion: TRACE', submitted ~2026-07-28), title, mechanism (ACE density correlations + local multihead cross-attention forming an O(3)-equivariant per-center state that queries fixed tensorial neighbour features, no learned inter-atomic state), single author (Paramvir Ahlawat, Cambridge/EPFL) and public repo github.com/paramvir3/TRACE corroborated across multiple independent web-search passes; direct arXiv/GitHub fetch blocked by network egress policy, so full text/README were not read. Demonstrated by training/testing on a MacBook M1 for polymorphic CsPbI3, liquid water, and intramolecular methyl migration. Distinct from the TACE (Tensor ACE) node. Charge/spin conditioning, frameworks and license left unset/null pending confirmation.",
+  },
+  {
+    id: "allegro_oam",
+    type: "node",
+    trainedDatasets: ["omat24", "salex", "mptrj"],
+    category: "Equivariant",
+    label: "Allegro-OAM",
+    year: 2026,
+    author: "Kozinsky group (mir-group) — Batzner, Musaelian, Smidt et al.",
+    x: 9060,
+    y: 320,
+    desc:
+      "Family of foundation potentials in the strictly-local E(3)-equivariant Allegro and message-passing NequIP frameworks, pretrained on OMat24 (~101M frames) and fine-tuned on sAlex + MPtrj; the Allegro-OAM-L / NequIP-OAM-L/XL checkpoints target the speed-accuracy Pareto front on Matbench Discovery.",
+    githubUrl: "https://github.com/mir-group/allegro",
+    paperUrl: "https://arxiv.org/abs/2607.28461",
+    isNew: true,
+    coverage: ["general materials", "inorganic crystals"],
+    useCases: ["foundation MLIP", "large-scale molecular dynamics", "Matbench Discovery", "fine-tuning backbone"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["LAMMPS", "ASE", "PyTorch"],
+    maintenance: "active",
+    lastReviewed: "2026-08-01",
+    trainingData: ["OMat24", "sAlex", "MPtrj"],
+    tags: ["equivariant", "strictly local", "tensor product", "foundation model", "OMat24", "NequIP", "Allegro"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "all elements covered by OMat24 / sAlex / MPtrj (~89 elements)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    numElements: 89,
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2607.28461",
+      "https://github.com/mir-group/allegro",
+      "https://github.com/mir-group/nequip",
+      "https://zenodo.org/records/16980200",
+      "https://matbench-discovery.materialsproject.org/models/allegro-oam-l-0.1",
+    ],
+    lastVerifiedDate: "2026-08-01",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-08-01 auto-update: arXiv ID 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials'), title, mir-group authorship (Kozinsky, Batzner, Musaelian, Smidt et al.), training recipe (OMat24 ~101M frames pretraining, fine-tuned on sAlex ~10.5M + MPtrj ~1.5M), and released checkpoints (Allegro-OAM-L, NequIP-OAM-L, NequIP-OAM-XL) corroborated across multiple web-search passes plus Matbench Discovery model pages, the Zenodo record (16980200) and nequip.net model listings; direct arXiv/page fetch blocked by network egress policy, so full text was not read. numElements=89 reflects standard OMat24/MPtrj element coverage rather than a directly quoted figure; charge/spin conditioning not described, so both set false.",
+    datasetEvidence: "Pretrained on OMat24 (~101M frames), fine-tuned on sAlex (~10.5M) and MPtrj (~1.5M) per arXiv 2607.28461 and the Matbench Discovery model card.",
+    accuracyEvidence:
+      "Developer-reported: the NequIP/Allegro OAM foundation potentials sit on the upper-right (speed-accuracy) Pareto front of Matbench Discovery, ranking among the more accurate foundation models (arXiv 2607.28461, Matbench Discovery allegro-oam-l-0.1 model page). No independent re-benchmark performed.",
+    foundationModelEvidence:
+      "arXiv 2607.28461 releases OMat24-pretrained, sAlex/MPtrj-fine-tuned foundation potentials (Allegro-OAM-L, NequIP-OAM-L/XL) evaluated on Matbench Discovery as universal materials MLIPs.",
+    entityType: "model_family",
+    architectureFamily: "NequIP / Allegro",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    accuracyTier: "high",
+    benchmarkContext: "Matbench Discovery (inorganic materials stability / thermodynamic-property prediction).",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -5478,6 +5573,14 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2506.23971", edgeNotes: "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN." },
   { from: "gemnet", to: "jmp", label: "GemNet-OC backbone", description: "JMP uses a GemNet-OC backbone shared across all training datasets — GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2310.16802", edgeNotes: "Abstract/snippet-level: JMP paper (arXiv 2310.16802) explicitly trains one shared GemNet-OC backbone jointly on OC20/OC22/ANI-1x/Transition-1x with per-dataset heads. Architecture = GemNet-OC; contribution = joint pretraining. Matches current desc." },
   { from: "jmp", to: "uma", label: "Multi-task", dashed: true , description: "JMP demonstrated joint multi-domain pretraining across OC20/OC22/ANI-1x/Transition-1x and is widely framed as the precursor to UMA's universal multi-dataset foundation model.", edgeConfidence: "probable", edgeNotes: "Same FAIR/CMU core authors (Wood, Kitchin, Ulissi, Zitnick) on both JMP (2310.16802) and UMA (2506.23971); JMP = multi-task/multi-domain pretraining, UMA = same group's universal multi-dataset model carrying that concept forward. Abstract/snippet-level; no single source states \"based on\" outright, and backbones differ (GemNet-OC vs eSEN/MoLE)." },
+
+  // July 2026 auto-update — Allegro-OAM foundation potentials (mir-group)
+  { from: "allegro", to: "allegro_oam", label: "OMat24 foundation", description: "Allegro-OAM is the mir-group's foundation-scale application of the strictly-local E(3)-equivariant Allegro architecture, pretrained on OMat24 and fine-tuned on sAlex/MPtrj; same group, same architecture scaled to a universal potential.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2607.28461", edgeNotes: "Abstract/snippet-level: arXiv 2607.28461 (Kozinsky/mir-group) releases foundation potentials in the Allegro and NequIP frameworks; the Allegro-OAM-L checkpoint (Matbench Discovery, nequip.net, Zenodo 16980200) is the Allegro architecture trained as a universal MLIP. Same group as Allegro (mir-group/allegro)." },
+  { from: "nequip", to: "allegro_oam", label: "NequIP framework", dashed: true, description: "The same arXiv 2607.28461 release also provides NequIP-framework foundation potentials (NequIP-OAM-L/XL); the OAM family spans both the message-passing NequIP and strictly-local Allegro architectures from the Kozinsky group.", edgeConfidence: "probable", edgeNotes: "Abstract/snippet-level: the paper presents foundation potentials in both NequIP and Allegro frameworks; NequIP-OAM-L/XL checkpoints appear on Matbench Discovery and nequip.net. Same group; the node is labelled after the Allegro-OAM-L checkpoint but represents the joint NequIP/Allegro OAM family." },
+
+  // July 2026 auto-update — TRACE (attention over ACE density correlations)
+  { from: "ace", to: "trace", label: "ACE + attention", description: "TRACE builds an O(3)-equivariant per-center state from Atomic Cluster Expansion density correlations, then adds local multihead cross-attention over fixed tensorial neighbour features; the ACE many-body density expansion is its representational core.", edgeConfidence: "probable", edgeNotes: "Abstract/snippet-level: arXiv 2607.25652 (Ahlawat) describes TRACE as combining ACE density correlations with local multihead cross-attention. ACE supplies the many-body density-correlation basis; TRACE adds attention. Genuine conceptual descent, verified only at abstract level." },
+  { from: "mace", to: "trace", label: "ACE family", dashed: true, description: "MACE and TRACE are sibling ACE-based potentials: MACE constructs higher-body-order messages from the ACE basis via equivariant message passing, while TRACE keeps ACE density correlations local and replaces inter-atomic message passing with cross-attention over fixed neighbour features.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: both build many-body interactions on the ACE density-correlation basis; TRACE explicitly avoids passing learned state between atoms (attention over fixed features), contrasting MACE's message passing. Sibling-only under ACE, no evidence TRACE descends from MACE." },
 
   // Lane 2 (Descriptors) – keep edges purely horizontal to avoid messy crossings
   { from: "bpnn", to: "gap", label: "Kernels" , description: "GAP (Bartók et al., 2010) was developed as a kernel-based alternative to the Behler-Parrinello descriptor framework, sharing the local-environment / atomic-energy decomposition but replacing the per-element neural network with Gaussian process regression on SOAP descriptors.", edgeConfidence: "probable", edgeNotes: "Abstract/snippet-level: reviews consistently frame BPNN (2007, NN) and GAP (2010, kernel/GPR on SOAP) as two foundational ML-potential families sharing the local atomic-energy decomposition; one review snippet says GAP \"built upon Behler-Parrinello's decomposition.\" Sibling/adopted-paradigm rather than strict descent, so probable not verified." },
