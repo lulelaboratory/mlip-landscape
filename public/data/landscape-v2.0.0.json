@@ -128,6 +128,154 @@
       "isFoundationModel": false
     },
     {
+      "id": "allegro_oam",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "Allegro-OAM",
+      "year": 2026,
+      "author": "Harvard (Kozinsky lab / MIR group)",
+      "x": 8220,
+      "y": 150,
+      "desc": "Foundation potential in the strictly-local Allegro architecture, pre-trained on OMat24 (~101M frames) and fine-tuned on subsampled Alexandria + MPtrj (the OAM recipe). Released as a NequIP/Allegro foundation-model family using accelerated NequIP-infrastructure training; the large 'L' variant targets leading inference speed and scalability at high accuracy on community materials benchmarks.",
+      "githubUrl": "https://github.com/mir-group/allegro",
+      "paperUrl": "https://arxiv.org/abs/2607.28461",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "large-scale MD",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-08-03",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "tags": [
+        "equivariant",
+        "strictly local",
+        "foundation model",
+        "OAM"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.28461",
+        "https://github.com/mir-group/allegro",
+        "https://zenodo.org/records/16980200"
+      ],
+      "lastVerifiedDate": "2026-08-03",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "Allegro / e3nn equivariant (strictly local)",
+      "trainingScope": "universal_foundation",
+      "evidenceNotes": "arXiv 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials', MIR group / Kozinsky lab, submitted ~2026-07-30) presents foundation potentials in the NequIP and Allegro architectures. Search hits confirm the title and the OAM recipe (OMat24 pretrain -> sAlex + MPtrj fine-tune); the Allegro-OAM-L 'large' variant is distributed via nequip.net and Zenodo 16980200. Abstract/README-level; exact benchmark numbers not read this session (arXiv HTML/PDF fetch blocked), so speed/accuracy tiers left unset.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "Allegro foundation potential pre-trained on OMat24 and fine-tuned on subsampled Alexandria + MPtrj (the OAM mixture) for inorganic materials; released as a family of NequIP/Allegro foundation models in arXiv 2607.28461."
+    },
+    {
+      "id": "nequip_oam",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "NequIP-OAM",
+      "year": 2026,
+      "author": "Harvard (Kozinsky lab / MIR group)",
+      "x": 8500,
+      "y": 150,
+      "desc": "Message-passing foundation potential in the NequIP architecture, pre-trained on OMat24 and fine-tuned on subsampled Alexandria + MPtrj (the OAM recipe). The NequIP counterpart to Allegro-OAM in the same release; accelerations in the NequIP infrastructure cut the cost of training high-accuracy foundation potentials on ultra-large datasets.",
+      "githubUrl": "https://github.com/mir-group/nequip",
+      "paperUrl": "https://arxiv.org/abs/2607.28461",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "molecular dynamics",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-08-03",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "tags": [
+        "equivariant",
+        "message passing",
+        "foundation model",
+        "OAM"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.28461",
+        "https://github.com/mir-group/nequip",
+        "https://zenodo.org/records/16980200"
+      ],
+      "lastVerifiedDate": "2026-08-03",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "NequIP / e3nn equivariant",
+      "trainingScope": "universal_foundation",
+      "evidenceNotes": "arXiv 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials', MIR group / Kozinsky lab, submitted ~2026-07-30) presents foundation potentials in the NequIP and Allegro architectures, with accelerations in the NequIP infrastructure enabling training on ultra-large datasets. Search hits confirm the title and OAM recipe (OMat24 pretrain -> sAlex + MPtrj fine-tune); models distributed via nequip.net and Zenodo 16980200. Abstract/README-level; benchmark numbers not read this session (arXiv fetch blocked), so speed/accuracy tiers left unset.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "NequIP message-passing foundation potential pre-trained on OMat24 and fine-tuned on subsampled Alexandria + MPtrj (the OAM mixture); released alongside Allegro-OAM in arXiv 2607.28461."
+    },
+    {
       "id": "eqv2",
       "type": "node",
       "category": "Transformer",
@@ -7753,6 +7901,33 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://github.com/mir-group/allegro",
       "edgeNotes": "Abstract/snippet-level: same group (mir-group/Kozinsky), shared authors incl. NequIP lead Batzner; Allegro is a NequIP-framework extension that drops message passing for strict locality while keeping E(3)-equivariant tensor products. arXiv 2204.05249."
+    },
+    {
+      "from": "allegro",
+      "to": "allegro_oam",
+      "label": "Foundation",
+      "description": "Allegro-OAM is the OMat24-pretrained, sAlex+MPtrj-finetuned foundation-model release of the strictly-local Allegro architecture from the same group (Kozinsky lab / MIR group).",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "arXiv 2607.28461 presents foundation potentials in the NequIP and Allegro architectures (OAM data mixture). Direct descent: same architecture and group as base Allegro."
+    },
+    {
+      "from": "nequip",
+      "to": "nequip_oam",
+      "label": "Foundation",
+      "description": "NequIP-OAM is the OMat24-pretrained, sAlex+MPtrj-finetuned foundation-model release of the message-passing NequIP architecture, using accelerated NequIP-infrastructure training.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "arXiv 2607.28461 introduces NequIP/Allegro foundation potentials. Direct descent from the base NequIP architecture (same group)."
+    },
+    {
+      "from": "nequip_oam",
+      "to": "allegro_oam",
+      "label": "Locality",
+      "description": "Within the same OAM foundation-model release, Allegro-OAM is the strictly-local (message-passing-free) counterpart to NequIP-OAM, mirroring the original NequIP->Allegro relationship.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "Both released together in arXiv 2607.28461 as a NequIP/Allegro foundation-model family sharing the OAM training recipe."
     },
     {
       "from": "nequip",
