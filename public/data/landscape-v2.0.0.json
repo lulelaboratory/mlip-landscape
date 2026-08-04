@@ -7704,6 +7704,85 @@
       "lastVerifiedDate": "2026-07-23",
       "verifiedBy": "llm_assisted",
       "evidenceNotes": "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation."
+    },
+    {
+      "id": "nequip_oam",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "NequIP-OAM",
+      "year": 2026,
+      "author": "Kavanagh et al. (mir-group / Kozinsky group)",
+      "x": 8220,
+      "y": 150,
+      "desc": "OMat24-pretrained E(3)-equivariant foundation potentials from the Kozinsky group's NequIP/Allegro line: NequIP-OAM-S/M/L/XL message-passing checkpoints and a strictly-local Allegro-OAM-L sibling, fine-tuned on MPtrj + subsampled Alexandria and ranked on Matbench Discovery.",
+      "githubUrl": "https://github.com/mir-group/nequip",
+      "paperUrl": "https://arxiv.org/abs/2607.28461",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "Matbench Discovery screening",
+        "large-scale MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-08-04",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "tags": [
+        "equivariant",
+        "NequIP",
+        "Allegro",
+        "foundation model",
+        "OMat24",
+        "Matbench Discovery"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.28461",
+        "https://arxiv.org/abs/2504.16068",
+        "https://github.com/mir-group/nequip",
+        "https://github.com/mir-group/allegro",
+        "https://matbench-discovery.materialsproject.org/models/nequip-oam-xl-0.1",
+        "https://matbench-discovery.materialsproject.org/models/allegro-oam-l-0.1",
+        "https://www.nequip.net/"
+      ],
+      "lastVerifiedDate": "2026-08-04",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "NequIP / Allegro (E(3)-equivariant, e3nn)",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "NequIP-OAM (S/M/L/XL) and Allegro-OAM-L are OMat24-pretrained, MPtrj+sAlex-fine-tuned E(3)-equivariant foundation potentials distributed via nequip.net and ranked on the Matbench Discovery leaderboard (nequip-oam-xl-0.1, allegro-oam-l-0.1); described in arXiv 2607.28461.",
+      "evidenceNotes": "2026-08-04 auto-update: arXiv 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials', Kavanagh et al., submitted 2026-07-30) describes the mir-group/Kozinsky NequIP-OAM (S/M/L/XL) and Allegro-OAM-L foundation potentials — pretrained on OMat24, fine-tuned on MPtrj + subsampled Alexandria (sAlex), distributed via nequip.net and ranked on Matbench Discovery (nequip-oam-xl-0.1 Discovery-F1 #11; allegro-oam-l-0.1 #15). The checkpoints were first released ~Feb 2026; the dedicated paper is the new last-7-days publication. Corroborated across multiple independent web-search passes citing the arXiv abstract, nequip.net model pages and the Matbench Discovery leaderboard; direct arXiv/nequip.net/Matbench fetch was blocked by network egress policy, so the pages were not read in full. numElements (89) is inferred from the shared OMat24/MPtrj data mixture (as for sibling OAM foundation entries), not stated verbatim for these checkpoints; exact parameter counts and checkpoint license left unset pending confirmation."
     }
   ],
   "groups": [
@@ -7753,6 +7832,25 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://github.com/mir-group/allegro",
       "edgeNotes": "Abstract/snippet-level: same group (mir-group/Kozinsky), shared authors incl. NequIP lead Batzner; Allegro is a NequIP-framework extension that drops message passing for strict locality while keeping E(3)-equivariant tensor products. arXiv 2204.05249."
+    },
+    {
+      "from": "nequip",
+      "to": "nequip_oam",
+      "label": "OMat24 foundation",
+      "description": "NequIP-OAM is the OMat24-pretrained, MPtrj+sAlex-fine-tuned foundation-checkpoint family of the NequIP message-passing architecture, released by the same Kozinsky group (mir-group) and packaged via nequip.net.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "Snippet-level: arXiv 2607.28461 (Kavanagh et al., 2026) presents foundation potentials in the NequIP architecture pretrained on OMat24 and fine-tuned on MPtrj+sAlex; distributed at nequip.net (mir-group/NequIP-OAM-*). Same group as NequIP. Direct foundation-checkpoint descent."
+    },
+    {
+      "from": "allegro",
+      "to": "nequip_oam",
+      "label": "Allegro-OAM sibling",
+      "dashed": true,
+      "description": "The strictly-local Allegro-OAM-L checkpoint ships in the same NequIP-OAM foundation family/paper, applying the OMat24 → MPtrj+sAlex recipe to the Allegro architecture.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://matbench-discovery.materialsproject.org/models/allegro-oam-l-0.1",
+      "edgeNotes": "Snippet-level: Matbench Discovery lists allegro-oam-l-0.1 (mir-group) alongside nequip-oam-xl-0.1; both released together and described in arXiv 2607.28461. Allegro-OAM is the strictly-local sibling of the NequIP-OAM message-passing checkpoints."
     },
     {
       "from": "nequip",
