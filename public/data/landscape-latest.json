@@ -4810,6 +4810,172 @@
       "foundationModelEvidence": "Extra-large unconstrained PET trained on OMat24 + subsampled Alexandria + MPtrj (the OAM mixture) for materials discovery; reached top of the Matbench Discovery leaderboard at release."
     },
     {
+      "id": "nequip_oam",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "NequIP-OAM",
+      "year": 2026,
+      "author": "Harvard (Kozinsky lab / mir-group)",
+      "x": 8220,
+      "y": 150,
+      "desc": "NequIP-OAM foundation models (L/XL) on the E(3)-equivariant NequIP architecture, pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM data mixture) over ~89 elements. Reported leading inference speed with top-tier Matbench Discovery accuracy.",
+      "githubUrl": "https://github.com/mir-group/nequip",
+      "paperUrl": "https://arxiv.org/abs/2607.28461",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "Matbench Discovery screening",
+        "large-scale MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-08-06",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "NequIP",
+        "foundation model",
+        "Matbench Discovery",
+        "OAM"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.28461",
+        "https://matbench-discovery.materialsproject.org/models/nequip-oam-l-0.1",
+        "https://matbench-discovery.materialsproject.org/models/nequip-oam-xl-0.1",
+        "https://www.nequip.net/models/mir-group/NequIP-OAM-L:0.1",
+        "https://github.com/mir-group/nequip"
+      ],
+      "lastVerifiedDate": "2026-08-06",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "NequIP / e3nn equivariant",
+      "trainingScope": "universal_foundation",
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "evidenceNotes": "arXiv 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials', mir-group/Kozinsky lab, submitted 2026-07-30) introduces NequIP-OAM foundation models. Matbench Discovery pages (nequip-oam-l-0.1, nequip-oam-xl-0.1) and nequip.net model pages confirm the OAM recipe: pretrain on OMat24 (~101M frames), fine-tune on sAlex (~10.5M) + MPtrj (~1.5M), ~89 elements. Search-snippet level; arXiv/matbench/nequip.net pages blocked by network policy for direct fetch, github.com/mir-group/nequip (MIT) confirmed live.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "Universal/foundation interatomic potential in the NequIP E(3)-equivariant architecture, pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM mixture) covering ~89 elements; benchmarked on Matbench Discovery (arXiv 2607.28461).",
+      "hasFoundationVariant": true,
+      "speedTier": "fast",
+      "speedEvidence": "Paper title and abstract ('Fast and Accurate Foundation Models...') report leading inference speeds and strong scalability for the NequIP/Allegro foundation family (arXiv 2607.28461).",
+      "accuracyTier": "high",
+      "accuracyEvidence": "Matbench Discovery full test set: NequIP-OAM-L reported accuracy 0.955 (matbench-discovery.materialsproject.org/models/nequip-oam-l-0.1).",
+      "benchmarkContext": "Matbench Discovery"
+    },
+    {
+      "id": "allegro_oam",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "Allegro-OAM",
+      "year": 2026,
+      "author": "Harvard (Kozinsky lab / mir-group)",
+      "x": 8500,
+      "y": 150,
+      "desc": "Allegro-OAM-L foundation model on the strictly local E(3)-equivariant Allegro architecture, pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM mixture). Strict locality enables massively parallel MD at top-tier Matbench Discovery accuracy over ~89 elements.",
+      "githubUrl": "https://github.com/mir-group/allegro",
+      "paperUrl": "https://arxiv.org/abs/2607.28461",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals"
+      ],
+      "useCases": [
+        "materials discovery",
+        "massive parallel MD",
+        "large-scale MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-08-06",
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj"
+      ],
+      "tags": [
+        "equivariant",
+        "Allegro",
+        "strictly local",
+        "foundation model",
+        "Matbench Discovery",
+        "OAM"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPtrj (~89 elements)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 89,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2607.28461",
+        "https://matbench-discovery.materialsproject.org/models/allegro-oam-l-0.1",
+        "https://www.nequip.net/models/mir-group/Allegro-OAM-L:0.1",
+        "https://github.com/mir-group/allegro"
+      ],
+      "lastVerifiedDate": "2026-08-06",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "Allegro / e3nn equivariant (strictly local)",
+      "trainingScope": "universal_foundation",
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj"
+      ],
+      "evidenceNotes": "arXiv 2607.28461 ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials', mir-group/Kozinsky lab, submitted 2026-07-30) introduces Allegro-OAM-L. Matbench Discovery (allegro-oam-l-0.1) and nequip.net model page confirm the OAM recipe: pretrain on OMat24 (~101M frames), fine-tune on sAlex (~10.5M) + MPtrj (~1.5M), ~89 elements. Search-snippet level; arXiv/matbench/nequip.net pages blocked by network policy for direct fetch, github.com/mir-group/allegro (MIT) confirmed live.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "Universal/foundation interatomic potential in the strictly local Allegro E(3)-equivariant architecture, pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM mixture) covering ~89 elements; benchmarked on Matbench Discovery (arXiv 2607.28461).",
+      "hasFoundationVariant": true,
+      "speedTier": "fast",
+      "speedEvidence": "Paper title and abstract ('Fast and Accurate Foundation Models...') report leading inference speeds and strong scalability; Allegro's strict locality enables large-scale parallel inference (arXiv 2607.28461).",
+      "accuracyTier": "high",
+      "accuracyEvidence": "Matbench Discovery full test set: Allegro-OAM-L reported accuracy 0.954 (matbench-discovery.materialsproject.org/models/allegro-oam-l-0.1).",
+      "benchmarkContext": "Matbench Discovery"
+    },
+    {
       "id": "alphanet",
       "type": "node",
       "category": "Equivariant",
@@ -7744,6 +7910,33 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/pdf/2006.10503",
       "edgeNotes": "Abstract/snippet-level: multiple sources state SE(3)-Transformer \"builds on tensor field networks by adding data-dependent attention weights,\" with equivariant value messages from the TFN convolution. Direct descent, not false friend."
+    },
+    {
+      "from": "nequip",
+      "to": "nequip_oam",
+      "label": "OAM foundation",
+      "description": "NequIP-OAM is a foundation-model release in the NequIP E(3)-equivariant architecture (mir-group), pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM mixture) and benchmarked on Matbench Discovery.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "arXiv 2607.28461 (2026-07-30) presents foundation models in the NequIP architecture; nequip.net/matbench-discovery list NequIP-OAM-L/XL. Same group (mir-group/Kozinsky) that authored NequIP. Snippet-level; direct pages blocked by network policy."
+    },
+    {
+      "from": "allegro",
+      "to": "allegro_oam",
+      "label": "OAM foundation",
+      "description": "Allegro-OAM-L is a foundation-model release in the strictly local Allegro E(3)-equivariant architecture (mir-group), pretrained on OMat24 and fine-tuned on sAlex + MPtrj (the OAM mixture) and benchmarked on Matbench Discovery.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2607.28461",
+      "edgeNotes": "arXiv 2607.28461 (2026-07-30) presents foundation models in the Allegro architecture; nequip.net/matbench-discovery list Allegro-OAM-L. Same group (mir-group/Kozinsky) that authored Allegro. Snippet-level; direct pages blocked by network policy."
+    },
+    {
+      "from": "pet_oam_xl",
+      "to": "nequip_oam",
+      "label": "OAM peers",
+      "dashed": true,
+      "description": "PET-OAM-XL and NequIP-OAM are contemporaneous foundation models trained on the same OMat24 + sAlex + MPtrj (OAM) data mixture and compared on the Matbench Discovery leaderboard, from different groups (lab-cosmo vs mir-group).",
+      "edgeConfidence": "probable",
+      "edgeNotes": "Both use the OAM (OMat24 + sAlex + MPtrj) training recipe and appear on Matbench Discovery; peer/benchmark link, not a descent."
     },
     {
       "from": "nequip",
