@@ -5459,6 +5459,39 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation.",
   },
+  {
+    id: "tip",
+    type: "node",
+    category: "Transformer",
+    label: "TIP",
+    year: 2026,
+    author: "Nam et al. (MIT / Meta FAIR)",
+    x: 9060,
+    y: 150,
+    desc:
+      "Extends a static-energy interatomic potential to a temperature- and pressure-conditioned Gibbs free-energy model, with thermodynamic responses from automatic differentiation. TIP[UMA] yields a crystal's equation of state and phase transitions from one evaluation.",
+    paperUrl: "https://arxiv.org/abs/2608.14502",
+    isNew: true,
+    coverage: ["crystalline materials", "alloys"],
+    useCases: ["finite-temperature phase stability", "equation of state", "phase diagrams", "high-throughput thermodynamics"],
+    properties: ["energy", "forces", "stress"],
+    maintenance: "experimental",
+    lastReviewed: "2026-08-19",
+    trainingData: ["UMA-derived free energies (quasi-harmonic to MD fidelity)"],
+    tags: ["thermodynamic", "Gibbs free energy", "finite-temperature", "phase diagram", "UMA-based", "automatic differentiation"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "inherits the base potential's coverage (TIP[UMA]: ~89 elements)",
+    entityType: "architecture",
+    architectureFamily: "TIP (thermodynamic interatomic potential)",
+    isFoundationModel: false,
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2608.14502"],
+    lastVerifiedDate: "2026-08-19",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -5476,6 +5509,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "pet", to: "petmad", label: "MAD pretraining", description: "PET-MAD applies the Massive Atomic Diversity training recipe to the Point Edge Transformer architecture; PET supplies the unconstrained-equivariance graph-transformer backbone.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2503.14118", edgeNotes: "Abstract/snippet-level: multiple sources (arXiv 2503.14118, PyPI, lab-cosmo GitHub README, Nature Commun.) state PET-MAD is \"based on the Point Edge Transformer (PET) model\" (unconstrained transformer graph NN) trained on the MAD dataset; same COSMO/Ceriotti lab. Direct architectural descent." },
   { from: "eqv2", to: "esen", label: "Smooth PES" , description: "eSEN is an equivariant GNN focused on producing a smooth, energy-conserving PES for stable MD; it sits in the same Meta FAIR equivariant lineage as Equiformer V2 but the abstract emphasises smoothness/expressivity rather than naming Equiformer V2 as a parent.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/html/2502.12147v1" },
   { from: "esen", to: "uma", label: "Backbone" , description: "UMA is a Mixture-of-Linear-Experts foundation model built on the eSEN equivariant backbone; the UMA paper explicitly identifies eSEN as the underlying architecture.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2506.23971", edgeNotes: "Verified 2026-06-11 (abstract-level): the UMA paper states the architecture is based on eSEN." },
+  { from: "uma", to: "tip", label: "Free energy", description: "TIP wraps a static-energy universal potential in a thermodynamically consistent Gibbs free-energy model; the demonstrated implementation TIP[UMA] uses UMA as the underlying potential, trained on free energies from quasi-harmonic to MD fidelity.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2608.14502", edgeNotes: "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy." },
   { from: "gemnet", to: "jmp", label: "GemNet-OC backbone", description: "JMP uses a GemNet-OC backbone shared across all training datasets — GemNet-OC supplies the architecture; JMP supplies the joint pretraining strategy on top.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2310.16802", edgeNotes: "Abstract/snippet-level: JMP paper (arXiv 2310.16802) explicitly trains one shared GemNet-OC backbone jointly on OC20/OC22/ANI-1x/Transition-1x with per-dataset heads. Architecture = GemNet-OC; contribution = joint pretraining. Matches current desc." },
   { from: "jmp", to: "uma", label: "Multi-task", dashed: true , description: "JMP demonstrated joint multi-domain pretraining across OC20/OC22/ANI-1x/Transition-1x and is widely framed as the precursor to UMA's universal multi-dataset foundation model.", edgeConfidence: "probable", edgeNotes: "Same FAIR/CMU core authors (Wood, Kitchin, Ulissi, Zitnick) on both JMP (2310.16802) and UMA (2506.23971); JMP = multi-task/multi-domain pretraining, UMA = same group's universal multi-dataset model carrying that concept forward. Abstract/snippet-level; no single source states \"based on\" outright, and backbones differ (GemNet-OC vs eSEN/MoLE)." },
 
