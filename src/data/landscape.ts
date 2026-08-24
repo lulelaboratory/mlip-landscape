@@ -5459,6 +5459,65 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-07-23 auto-update: arXiv ID 2607.17129 ('STEP: Spin Tensor Equivariant Potential for Data-Efficient Learning of Magnetic Potential Energy Surfaces', submitted 2026-07-19), title, abstract and first author (Yuanqing Gao; 4 authors total) corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read and the full author list is only partially confirmed (author recorded as 'Gao et al.'). No public code repository found at review time (paperUrl only). Demonstrated on monolayer CrI3; broader element coverage and frameworks/license left unset pending confirmation.",
   },
+  {
+    id: "dpa4c",
+    type: "node",
+    trainedDatasets: ["omat24", "matpes", "omol25"],
+    category: "Equivariant",
+    label: "DPA4C",
+    year: 2026,
+    author: "Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang",
+    x: 8780,
+    y: 150,
+    desc:
+      "Compact, strictly local and compressible equivariant complement to DPA4, co-designing the network with fused-CUDA compressed operators for empirical-potential-speed universal MD. Five variants span OMat24/MatPES/OMol25; the largest nears MACE-Omat accuracy at ~100x throughput.",
+    githubUrl: "https://github.com/deepmodeling/deepmd-kit",
+    paperUrl: "https://arxiv.org/abs/2608.19041",
+    isNew: true,
+    coverage: ["general materials", "inorganic crystals", "organic molecules"],
+    useCases: ["large-scale molecular dynamics", "high-throughput materials simulation", "universal MLIP"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["LAMMPS", "ASE", "PyTorch"],
+    license: "LGPL-3.0",
+    maintenance: "active",
+    lastReviewed: "2026-08-24",
+    trainingData: ["OMat24", "MatPES", "OMol25"],
+    tags: ["equivariant", "compact", "compressible", "CUDA", "high-throughput", "large-scale MD", "charge conditioning", "spin", "foundation model", "DeePMD"],
+    supportsCharges: true,
+    supportsSpins: true,
+    elementsCovered: "all elements spanned by the OMat24 / MatPES / OMol25 training data",
+    equivariance: "constrained",
+    architecture: "gnn",
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2608.19041",
+      "https://github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0",
+      "https://github.com/deepmodeling/deepmd-kit",
+    ],
+    lastVerifiedDate: "2026-08-24",
+    verifiedBy: "llm_assisted",
+    entityType: "model_family",
+    architectureFamily: "Deep Potential (DPA) / SE(3)-equivariant",
+    trainingScope: "universal_foundation",
+    isFoundationModel: true,
+    hasFoundationVariant: true,
+    foundationModelEvidence:
+      "Universal MLIP whose five variants span the chemistry of the OMat24 and MatPES materials datasets and the OMol25 molecular dataset, released in DeePMD-kit v3.2.0 as the compact, high-throughput complement to DPA4 (arXiv 2608.19041).",
+    datasetEvidence:
+      "arXiv 2608.19041 states the five DPA4C variants span the chemistry of the materials datasets OMat24 and MatPES and the molecular dataset OMol25.",
+    accuracyEvidence:
+      "Developer-reported (arXiv 2608.19041 abstract, surfaced via web search; direct arXiv fetch egress-blocked): the largest of five variants approaches the accuracy of the MACE-Omat models, and the most compact variant reduces the energy, force and stress errors of the fastest existing universal MLIP by 61.4%, 48.1% and 34.3%. No independent benchmark tier assessed.",
+    speedEvidence:
+      "Developer-reported (arXiv 2608.19041 abstract, via web search): the largest variant reaches ~2 orders of magnitude higher measured throughput than MACE-Omat at comparable accuracy; the most compact runs at 1.92x the fastest existing universal MLIP's saturated throughput; all five variants run multimillion-atom MD on a single GPU and 2.048 billion atoms on 1,024 NVIDIA V100 GPUs at 83.3-91.2% weak-scaling efficiency.",
+    chargeSpinEvidence:
+      "The DeePMD-kit v3.2.0 release describes DPA4C with 'native-spin support' and 'charge/multiplicity conditioning' (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, checked 2026-08-24).",
+    licenseEvidence:
+      "DPA4C is released within DeePMD-kit (from v3.2.0), which is licensed LGPL-3.0 (github.com/deepmodeling/deepmd-kit).",
+    benchmarkContext:
+      "Accuracy-throughput frontier across OMat24/MatPES/OMol25 chemistry, compared against MACE-Omat and the fastest existing universal MLIPs.",
+    evidenceNotes:
+      "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -5789,6 +5848,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "dpa3", to: "dpa4", label: "+SE(3) equivariance", description: "DPA4 is the next-generation Deep Potential successor to DPA-3 from the same DeepModeling team, replacing DPA-3's invariant Line Graph Series message passing with an SE(3)-equivariant EMFA (Edge-conditioned, Multi-Focus, Attention) SO(2)-equivariant convolution plus Lebedev-grid projection that preserves SO(3)-equivariance in the nonlinearity to machine precision.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2606.02419", edgeNotes: "Abstract-level: DPA4 paper (arXiv 2606.02419) explicitly calls DPA3 \"its predecessor\" (~10x training efficiency vs DPA3; DPA4-Air vs DPA3-L24). Same DeepModeling/OpenLAM team. DPA-3 uses invariant Line Graph Series (LiGS); DPA4 adds SE(3)-equiv EMFA SO(2) conv + Lebedev projection. Label and description accurate." },
   { from: "escn", to: "dpa4", label: "SO(2) convolution", dashed: true, description: "DPA4's EMFA SO(2)-equivariant convolution sits in the eSCN lineage that reduces SO(3) tensor-product convolutions to SO(2) by aligning to a common rotation axis, adding low-rank edge–node products, multi-focus message nonlinearity, and envelope-gated attention to push down the cost of high-degree equivariant message passing.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2606.02419", edgeNotes: "Abstract-level: DPA4's headline \"EMFA SO(2) Convolution\" reduces SO(3) tensor products to SO(2) via axis alignment — the exact eSCN (Passaro & Zitnick 2023) mechanism; adds low-rank edge-node product, multi-focus nonlinearity, envelope-gated attention. Matches on-graph desc." },
   { from: "esen", to: "dpa4", label: "Pareto frontier", dashed: true, description: "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: DPA4 (DeepModeling OpenLAM, DPA-family, EMFA SO(2) convolution) only uses eSEN-30M-MP as a Matbench Discovery baseline it outperforms. Benchmark comparison, not architectural descent; DPA4 descends from DPA1-3, not eSEN." },
+  { from: "dpa4", to: "dpa4c", label: "Compact / compressible", description: "DPA4C is the compact and compressible degree-wise member of the DPA4 family from the same DeepModeling team, with its own strictly local one-hop architecture rather than a compressed DPA4 checkpoint; compression is an additional deployment path via fused-CUDA operators for empirical-potential-speed, billion-atom-scale MD, and it adds native-spin and charge/multiplicity conditioning.", edgeConfidence: "verified", edgeSource: "https://github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0", edgeNotes: "DeePMD-kit v3.2.0 (2026-08-19) adds DPA4C alongside DPA4; arXiv 2608.19041 presents it as the compact, high-throughput member of the DPA4 line. Same DeepModeling group/authors (Han Wang, Linfeng Zhang, Duo Zhang et al.). Direct sibling within the DPA4 family. Label reworded from \"Compressed\" per curator review on PR #85: DPA4C is a compact/compressible family member with a distinct one-hop local architecture, not merely DPA4 after weight/model compression." },
 
   // 2026 — TECE (Tensor Edge Cluster Expansion with Radial Rotary Attention)
   { from: "tace", to: "tece", label: "Edge cluster expansion", edgeConfidence: "verified", edgeSource: "https://github.com/xvzemin/tace", description: "TECE is the direct successor to TACE from the same author (Zemin Xu): it moves the tensor cluster expansion from atoms onto edges via an Edge Complex Product Basis (Generalized Asymmetric Contraction) and adds Radial Rotary Complex Attention. The github.com/xvzemin/tace framework references both TACE/TECE and cites arXiv 2607.10664, with foundation checkpoints at xvzemin/tace-foundations." },
