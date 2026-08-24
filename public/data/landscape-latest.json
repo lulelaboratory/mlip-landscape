@@ -9412,11 +9412,11 @@
     {
       "from": "dpa4",
       "to": "dpa4c",
-      "label": "Compressed",
-      "description": "DPA4C is the compact, strictly local and compressible complement to DPA4 from the same DeepModeling team, co-designing the DPA architecture with fused-CUDA compressed operators for empirical-potential-speed, billion-atom-scale MD while adding native-spin and charge/multiplicity conditioning.",
+      "label": "Compact / compressible",
+      "description": "DPA4C is the compact and compressible degree-wise member of the DPA4 family from the same DeepModeling team, with its own strictly local one-hop architecture rather than a compressed DPA4 checkpoint; compression is an additional deployment path via fused-CUDA operators for empirical-potential-speed, billion-atom-scale MD, and it adds native-spin and charge/multiplicity conditioning.",
       "edgeConfidence": "verified",
       "edgeSource": "https://github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0",
-      "edgeNotes": "DeePMD-kit v3.2.0 (2026-08-19) adds DPA4C alongside DPA4; arXiv 2608.19041 presents it as the high-throughput compressed member of the DPA4 line. Same DeepModeling group/authors (Han Wang, Linfeng Zhang, Duo Zhang et al.). Direct sibling/successor within the DPA4 family."
+      "edgeNotes": "DeePMD-kit v3.2.0 (2026-08-19) adds DPA4C alongside DPA4; arXiv 2608.19041 presents it as the compact, high-throughput member of the DPA4 line. Same DeepModeling group/authors (Han Wang, Linfeng Zhang, Duo Zhang et al.). Direct sibling within the DPA4 family. Label reworded from \"Compressed\" per curator review on PR #85: DPA4C is a compact/compressible family member with a distinct one-hop local architecture, not merely DPA4 after weight/model compression."
     },
     {
       "from": "tace",
