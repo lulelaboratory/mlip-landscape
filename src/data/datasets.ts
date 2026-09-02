@@ -240,6 +240,16 @@ export const DATASETS: DatasetEntry[] = [
     domain: ["molecules"],
     verificationStatus: "needs_review",
   },
+  {
+    datasetId: "umof",
+    name: "uMOF (Universal MOF dataset)",
+    aliases: ["uMOF", "uMOF dataset", "Universal MOF"],
+    domain: ["metal-organic frameworks", "materials"],
+    paperUrl: "https://arxiv.org/abs/2608.28100",
+    notes:
+      "r2SCAN-D4 DFT dataset for metal-organic frameworks: 85,524 configurations spanning 19,950 unique frameworks and 79 elements, covering empty and gas-loaded structures, geometry optimizations, equations of state, and finite-temperature MD (arXiv 2608.28100).",
+    verificationStatus: "partially_verified",
+  },
 ];
 
 export const DATASET_BY_ID: ReadonlyMap<string, DatasetEntry> = new Map(

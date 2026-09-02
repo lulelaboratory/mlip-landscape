@@ -4397,6 +4397,135 @@
       "foundationModelEvidence": "Multi-head MACE foundation model unifying molecular, surface, and inorganic crystal chemistry across 89 elements (arXiv 2510.25380; HuggingFace mace-foundations/mace-mh-1)."
     },
     {
+      "id": "umof_mh",
+      "type": "node",
+      "trainedDatasets": [
+        "umof"
+      ],
+      "hasMultipleHeads": true,
+      "category": "Equivariant",
+      "label": "uMOF-MH",
+      "year": 2026,
+      "author": "UC Berkeley (uMOF)",
+      "x": 9060,
+      "y": 150,
+      "desc": "MOF-specialized universal MLIP fine-tuned from the multi-head MACE-MH-1 foundation model on the uMOF dataset (r2SCAN-D4; 85,524 configs, 19,950 frameworks, 79 elements). Targets metal-organic framework molecular modeling — gas adsorption enthalpies, adsorption isotherms and finite-temperature dynamics — outperforming MOF-specialized baselines on dynamics-sensitive properties.",
+      "paperUrl": "https://arxiv.org/abs/2608.28100",
+      "isNew": true,
+      "coverage": [
+        "metal-organic frameworks",
+        "gas adsorption"
+      ],
+      "useCases": [
+        "MOF molecular modeling",
+        "gas adsorption / storage"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-09-02",
+      "trainingData": [
+        "uMOF"
+      ],
+      "tags": [
+        "equivariant",
+        "MACE",
+        "multi-head",
+        "metal-organic frameworks",
+        "fine-tuned"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "79 elements (uMOF r2SCAN-D4 dataset coverage)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "numElements": 79,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2608.28100"
+      ],
+      "lastVerifiedDate": "2026-09-02",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "arXiv 2608.28100 (uMOF, UC Berkeley, submitted 2026-08-28) introduces two universal MLIPs for MOFs — uMOF-MH and uMOF-POLAR — fine-tuned from two architecturally distinct MACE foundation models on the uMOF r2SCAN-D4 dataset (85,524 configs / 19,950 frameworks / 79 elements). uMOF-MH corresponds to the multi-head MACE-MH-1 base. A dedicated public code repository was not located at review time; githubUrl left absent rather than guessed.",
+      "entityType": "trained_model",
+      "architectureFamily": "MACE / ACE",
+      "trainingScope": "domain_specific"
+    },
+    {
+      "id": "umof_polar",
+      "type": "node",
+      "trainedDatasets": [
+        "umof"
+      ],
+      "category": "Equivariant",
+      "label": "uMOF-POLAR",
+      "year": 2026,
+      "author": "UC Berkeley (uMOF)",
+      "x": 9060,
+      "y": 320,
+      "desc": "MOF-specialized universal MLIP fine-tuned from the polarisable-electrostatic MACE-POLAR-1 foundation model on the uMOF dataset (r2SCAN-D4; 85,524 configs, 19,950 frameworks, 79 elements). Adds long-range electrostatics to metal-organic framework molecular modeling — gas adsorption enthalpies via Widom insertion, adsorption isotherms and finite-temperature dynamics.",
+      "paperUrl": "https://arxiv.org/abs/2608.28100",
+      "isNew": true,
+      "coverage": [
+        "metal-organic frameworks",
+        "gas adsorption",
+        "non-covalent interactions"
+      ],
+      "useCases": [
+        "MOF molecular modeling",
+        "gas adsorption / storage"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-09-02",
+      "trainingData": [
+        "uMOF"
+      ],
+      "tags": [
+        "equivariant",
+        "MACE",
+        "polarisable",
+        "long-range-electrostatics",
+        "metal-organic frameworks",
+        "fine-tuned"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "elementsCovered": "79 elements (uMOF r2SCAN-D4 dataset coverage)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": true,
+      "numElements": 79,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2608.28100"
+      ],
+      "lastVerifiedDate": "2026-09-02",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "arXiv 2608.28100 (uMOF, UC Berkeley, submitted 2026-08-28) introduces uMOF-MH and uMOF-POLAR, fine-tuned from two architecturally distinct MACE foundation models on the uMOF r2SCAN-D4 dataset. uMOF-POLAR corresponds to the polarisable-electrostatic MACE-POLAR-1 base (charge/spin-aware, long-range). A dedicated public code repository was not located at review time; githubUrl left absent rather than guessed.",
+      "entityType": "trained_model",
+      "architectureFamily": "MACE / ACE",
+      "trainingScope": "domain_specific"
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -9467,6 +9596,34 @@
       "description": "STEP's Center-Environment Tensor Product and higher-order tensor channels sit in the E(3)/SO(3)-equivariant spherical-tensor lineage pioneered by Tensor Field Networks, here extended to spin degrees of freedom with feature-level time-reversal symmetrization for magnetic potential energy surfaces.",
       "edgeConfidence": "speculative",
       "edgeNotes": "Abstract-level (2026-07-23): family link via equivariant tensor-product machinery; STEP (arXiv 2607.17129) is spin-augmented. No explicit descent claim, kept speculative."
+    },
+    {
+      "from": "mace_mh1",
+      "to": "umof_mh",
+      "label": "MOF fine-tune",
+      "description": "uMOF-MH is fine-tuned from the multi-head MACE-MH-1 foundation model on the uMOF r2SCAN-D4 dataset to specialize it for metal-organic framework molecular modeling.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2608.28100",
+      "edgeNotes": "Abstract-level (uMOF, arXiv 2608.28100, submitted 2026-08-28): the paper fine-tunes two architecturally distinct MACE foundation models on the uMOF dataset; uMOF-MH corresponds to the multi-head MACE-MH-1 base. Direct fine-tune lineage stated at abstract level."
+    },
+    {
+      "from": "mace_polar1",
+      "to": "umof_polar",
+      "label": "MOF fine-tune",
+      "description": "uMOF-POLAR is fine-tuned from the polarisable-electrostatic MACE-POLAR-1 foundation model on the uMOF r2SCAN-D4 dataset, adding long-range electrostatics to metal-organic framework molecular modeling.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2608.28100",
+      "edgeNotes": "Abstract-level (uMOF, arXiv 2608.28100, submitted 2026-08-28): uMOF-POLAR corresponds to the polarisable MACE-POLAR-1 base among the two MACE foundation models fine-tuned on the uMOF dataset. Direct fine-tune lineage stated at abstract level."
+    },
+    {
+      "from": "umof_mh",
+      "to": "umof_polar",
+      "label": "uMOF sibling models",
+      "dashed": true,
+      "description": "uMOF-MH and uMOF-POLAR are the two MOF-specialized MLIPs released together in the uMOF paper, fine-tuned from architecturally distinct MACE foundation models (multi-head vs polarisable-electrostatic) on the same uMOF dataset.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2608.28100",
+      "edgeNotes": "Same paper (arXiv 2608.28100) releases both as a pair; sibling relationship, not descent — kept dashed."
     }
   ]
 }
