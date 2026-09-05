@@ -241,6 +241,16 @@ export const DATASETS: DatasetEntry[] = [
     verificationStatus: "needs_review",
   },
   {
+    datasetId: "opengem26",
+    name: "OpenGEM26 (Open Generated Ensemble of Molecules 2026)",
+    aliases: ["OpenGEM26", "OpenGEM-26", "Open Generated Ensemble of Molecules"],
+    domain: ["molecules"],
+    paperUrl: "https://arxiv.org/abs/2607.21369",
+    notes:
+      "~200k unique organic molecules and 4.4M conformations over H, C, N, O, S, Cl with up to ten heavy atoms, at wB97X-D/Def2-SVP and Def2-TZVP with dispersion corrections; records full geometry-optimization trajectories, so it contains many non-equilibrium structures and spans a broader conformational range than QM9 (arXiv 2607.21369).",
+    verificationStatus: "partially_verified",
+  },
+  {
     datasetId: "umof",
     name: "uMOF (Universal MOF dataset)",
     aliases: ["uMOF", "uMOF dataset", "Universal MOF"],
