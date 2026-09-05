@@ -114,9 +114,20 @@ const prettyTier = (v: string) => v.replace(/_/g, " ");
 // absent are excluded when the axis is active and are NEVER coerced to false
 // (per the no-silent-claims rule). Driving the state, URL round-trip,
 // matching, and panel from one list keeps adding axes a one-line change.
+//
+// `mode` picks the control the panel renders, and follows the data rather
+// than taste. "bipolar" axes have both values populated (attention: 37 true /
+// 87 false, long-range: 20 / 101), so "no" is a real query and the axis needs
+// three states — yes, no, and unfiltered. "flag" axes only ever carry `true`
+// (foundation variant 6, multiple heads 3, MoE 4, uncertainty 2, denoising 0);
+// their "no" matches nothing at all, so they render as a single switch meaning
+// "only show models flagged with this". A switch must never be read as
+// asserting `false` for the models it hides — most of them are simply
+// unreviewed.
 const BOOL_FILTER_AXES = [
   {
     key: "usesAttention",
+    mode: "bipolar" as const,
     label: "Attention",
     param: "att",
     tooltip: "The architecture is attention-based.",
@@ -124,6 +135,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "longRange",
+    mode: "bipolar" as const,
     label: "Long-range",
     param: "long",
     tooltip: "Explicitly handles long-range electrostatics / Ewald summation.",
@@ -131,6 +143,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "hasFoundationVariant",
+    mode: "flag" as const,
     label: "Foundation variant",
     param: "foundation",
     tooltip:
@@ -139,6 +152,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "hasDenoisingPretraining",
+    mode: "flag" as const,
     label: "Denoising pretraining",
     param: "denoise",
     tooltip:
@@ -147,6 +161,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "hasMultipleHeads",
+    mode: "flag" as const,
     label: "Multiple heads",
     param: "heads",
     tooltip:
@@ -155,6 +170,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "hasMultipleExperts",
+    mode: "flag" as const,
     label: "Mixture of experts",
     param: "moe",
     tooltip: "Uses a mixture-of-experts (MoE) / multiple-expert design.",
@@ -162,6 +178,7 @@ const BOOL_FILTER_AXES = [
   },
   {
     key: "hasUncertaintyEstimates",
+    mode: "flag" as const,
     label: "Uncertainty",
     param: "uncertainty",
     tooltip: "Provides uncertainty / error estimates on its predictions.",
@@ -343,11 +360,79 @@ const isLayoutMode = (value: string | null): value is LayoutMode =>
 
 // Timeline layout constants — drives the "Tree of Life" view that places
 // cards along a horizontal year axis with vertical lanes per category.
-const TIMELINE_YEAR_WIDTH = 360; // pixels per year
-const TIMELINE_LANE_HEIGHT = 130; // vertical spacing between cards in a lane
+// The timeline resolves down to months in the years that need it. Placing
+// every model of a year in one column made recent years unreadable: 2026
+// alone holds ~56 models, so its Equivariant lane became a ~34-card vertical
+// stack several thousand pixels tall.
+//
+// Splitting *every* year into months is the obvious fix but a bad one: it
+// stretches the canvas to ~10:1, and because the view auto-fits, the cards
+// end up smaller than before. Instead a year is broken into month columns
+// only once one of its lanes would otherwise need more than
+// TIMELINE_YEAR_SPLIT_SUBCOLS sub-columns on its own — today that is 2026
+// and nothing else, and 2027 will split itself when it fills up. Months with
+// no releases are not given a column at all, so quiet stretches cost nothing.
+const TIMELINE_MONTH_STEP = 190; // x step per stacked sub-column (CARD_WIDTH + gap)
+const TIMELINE_MAX_STACK = 5; // cards stacked vertically before a new sub-column
+const TIMELINE_YEAR_SPLIT_SUBCOLS = 2; // sub-columns a lane may fill before its year splits
+// Cards render considerably taller than the nominal CARD_HEIGHT of 72: the
+// category badge plus a wrapped title puts them at 98-118px in practice. The
+// row step has to clear the tallest card or every stacked pair overlaps, so
+// this is deliberately generous rather than derived from CARD_HEIGHT.
+const TIMELINE_LANE_ROW_HEIGHT = 130; // vertical spacing between stacked cards
+const TIMELINE_YEAR_GAP = 56; // blank gutter between adjacent years
 const TIMELINE_TOP = 100; // top padding above the first lane
 const TIMELINE_LEFT = 120; // left padding before the first year tick
-const TIMELINE_AXIS_HEIGHT = 60; // reserved space at the top for the axis
+const TIMELINE_AXIS_HEIGHT = 76; // reserved space at the top for the axis
+
+const TIMELINE_MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const;
+
+const TIMELINE_BAND_HEADER = 34; // vertical mode: header strip above each band
+const TIMELINE_VERTICAL_LEFT = 16; // vertical mode: left inset (no axis gutter needed)
+const TIMELINE_VERTICAL_TOP = 24; // vertical mode: top inset (no axis band above)
+
+// Which way time runs. Horizontal is the desktop tree-of-life (time → x, one
+// lane per family). Vertical is the phone layout: time → y, newest first,
+// because a 390px-wide screen cannot hold four lanes side by side.
+type TimelineOrientation = "horizontal" | "vertical";
+
+// One bucket of the timeline: either a real month (month 1-12) or the
+// "month unknown" bucket (month 0) that leads each year. Horizontal mode uses
+// x/width; vertical mode uses y/height.
+type TimelineColumn = {
+  year: number;
+  month: number; // 0 = whole year, or "month unknown" inside a split year
+  x: number;
+  width: number;
+  y: number;
+  height: number;
+  count: number; // models in this column (all lanes)
+  split: boolean; // whether this column's year is broken out into months
+};
+
+// Publication month, derived from a modern arXiv id (YYMM.NNNNN) in paperUrl.
+//
+// The curated `year` field stays authoritative for horizontal placement: for
+// 16 catalogue entries the arXiv preprint year differs from the curated year
+// (MACE-MH-1 is `year: 2026` but arXiv 2510 = Oct 2025), usually because the
+// curator recorded the release/publication year rather than the preprint. So
+// the arXiv month only refines a card *within* the year the curator assigned;
+// when the two years disagree the month is treated as unknown rather than
+// silently moving the card into a different year.
+function timelineMonth(node: ModelNode): number | null {
+  const url = node.paperUrl;
+  if (!url) return null;
+  const m = /arxiv\.org\/(?:abs|pdf)\/(\d{2})(\d{2})\.\d{4,5}/i.exec(url);
+  if (!m) return null;
+  const year = 2000 + Number(m[1]);
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  if (year !== node.year) return null;
+  return month;
+}
 
 // Deterministic force-directed layout. Seeded with a category-clustered
 // grid so the four families fan out into distinct quadrants, then refined
@@ -611,16 +696,31 @@ function computeForcePositions(
   return out;
 }
 
-// Timeline ("Tree of Life") layout — places cards along a horizontal year
-// axis with one lane per category. Within a year, cards in the same lane
-// stack vertically so multiple-per-year releases stay readable. The output
-// uses top-left coordinates (matching the rest of the layout pipeline).
+// Timeline ("Tree of Life") layout — places cards along a time axis with one
+// lane per category (horizontal) or as newest-first time bands (vertical).
+// The output uses top-left coordinates, matching the rest of the pipeline.
 function computeTimelinePositions(
   modelNodes: ModelNode[],
-): { positions: Record<string, Vec2>; minYear: number; maxYear: number } {
+  orientation: TimelineOrientation = "horizontal",
+  bandColumns = 2,
+): {
+  positions: Record<string, Vec2>;
+  minYear: number;
+  maxYear: number;
+  columns: TimelineColumn[];
+  totalWidth: number;
+  orientation: TimelineOrientation;
+} {
   const positions: Record<string, Vec2> = {};
   if (modelNodes.length === 0) {
-    return { positions, minYear: 0, maxYear: 0 };
+    return {
+      positions,
+      minYear: 0,
+      maxYear: 0,
+      columns: [],
+      totalWidth: 0,
+      orientation,
+    };
   }
 
   const years = modelNodes.map((n) => n.year);
@@ -638,113 +738,310 @@ function computeTimelinePositions(
     Descriptor: 3,
   };
 
-  // Group by (lane, year) so we can stack within a single cell. Sort by
-  // a stable key (label) so the order is deterministic across reloads.
-  const buckets = new Map<string, ModelNode[]>();
+  // A year is split into months only when it is crowded enough that one lane
+  // would otherwise run past TIMELINE_YEAR_SPLIT_SUBCOLS sub-columns.
+  const splitYears = new Set<number>();
+  {
+    const laneYear = new Map<string, number>();
+    for (const n of modelNodes) {
+      const k = `${laneIndex[n.category]}|${n.year}`;
+      laneYear.set(k, (laneYear.get(k) ?? 0) + 1);
+    }
+    const limit = TIMELINE_YEAR_SPLIT_SUBCOLS * TIMELINE_MAX_STACK;
+    for (const [k, count] of laneYear) {
+      if (count > limit) splitYears.add(Number(k.split("|")[1]));
+    }
+  }
+
+  const cellKey = (lane: number, year: number, month: number) =>
+    `${lane}|${year}|${month}`;
+  const cells = new Map<string, ModelNode[]>();
   for (const n of modelNodes) {
-    const key = `${laneIndex[n.category]}|${n.year}`;
-    (buckets.get(key) ?? buckets.set(key, []).get(key)!).push(n);
+    const month = splitYears.has(n.year) ? timelineMonth(n) ?? 0 : 0;
+    const key = cellKey(laneIndex[n.category], n.year, month);
+    (cells.get(key) ?? cells.set(key, []).get(key)!).push(n);
   }
-  for (const list of buckets.values()) list.sort((a, b) => a.label.localeCompare(b.label));
+  for (const list of cells.values()) list.sort((a, b) => a.label.localeCompare(b.label));
 
-  // Track the maximum stack depth in each lane so lanes that need more
-  // vertical room get extra spacing.
-  const laneStackMax: number[] = lanes.map(() => 1);
-  for (const [key, list] of buckets) {
+  const columns: TimelineColumn[] = [];
+
+  // ---------------------------------------------------------------------
+  // Vertical: phones are tall and narrow, so time runs top → bottom with the
+  // newest work first (you open the page on what shipped this month, not on
+  // 2007). Each time bucket is a band; inside a band the cards wrap across
+  // the few columns that fit, ordered by lane so families stay together.
+  // Lane identity is carried by the badge on each card rather than by a
+  // spatial lane, which simply cannot fit four lanes across a 390px screen.
+  // ---------------------------------------------------------------------
+  if (orientation === "vertical") {
+    const cols = Math.max(1, bandColumns);
+    const left = TIMELINE_VERTICAL_LEFT;
+    let yCursor = TIMELINE_VERTICAL_TOP;
+    for (let year = maxYear; year >= minYear; year -= 1) {
+      const split = splitYears.has(year);
+      // Newest first: December → January, then the "month unknown" bucket,
+      // which is the oldest-sorting slot of its year in the horizontal view.
+      const months = split ? [...Array(12).keys()].map((m) => 12 - m).concat(0) : [0];
+      let yearStarted = false;
+      for (const month of months) {
+        const cards = lanes.flatMap(
+          (_, lane) => cells.get(cellKey(lane, year, month)) ?? [],
+        );
+        if (cards.length === 0) continue;
+        if (!yearStarted) {
+          if (columns.length > 0) yCursor += TIMELINE_YEAR_GAP;
+          yearStarted = true;
+        }
+        const bandTop = yCursor + TIMELINE_BAND_HEADER;
+        cards.forEach((n, i) => {
+          positions[n.id] = {
+            x: left + (i % cols) * TIMELINE_MONTH_STEP,
+            y: bandTop + Math.floor(i / cols) * TIMELINE_LANE_ROW_HEIGHT,
+          };
+        });
+        const rows = Math.ceil(cards.length / cols);
+        const height = TIMELINE_BAND_HEADER + rows * TIMELINE_LANE_ROW_HEIGHT;
+        columns.push({
+          year,
+          month,
+          x: left,
+          width: cols * TIMELINE_MONTH_STEP,
+          y: yCursor,
+          height,
+          count: cards.length,
+          split,
+        });
+        yCursor += height;
+      }
+    }
+    return {
+      positions,
+      minYear,
+      maxYear,
+      columns,
+      totalWidth: cols * TIMELINE_MONTH_STEP,
+      orientation,
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Horizontal: time runs left → right, one lane per architecture family.
+  // ---------------------------------------------------------------------
+  let xCursor = TIMELINE_LEFT;
+  for (let year = minYear; year <= maxYear; year += 1) {
+    const split = splitYears.has(year);
+    let yearStarted = false;
+    // month 0 leads the year: the whole year for an unsplit year, or the
+    // "month unknown" bucket for a split one.
+    for (let month = 0; month <= 12; month += 1) {
+      if (!split && month > 0) break;
+      let maxLane = 0;
+      let count = 0;
+      for (let lane = 0; lane < lanes.length; lane += 1) {
+        const n = cells.get(cellKey(lane, year, month))?.length ?? 0;
+        maxLane = Math.max(maxLane, n);
+        count += n;
+      }
+      if (maxLane === 0) continue;
+      // Open a gutter before each year (but not before the first column on
+      // the canvas) so year boundaries read clearly and the lineage edges
+      // crossing them have somewhere to breathe.
+      if (!yearStarted) {
+        if (columns.length > 0) xCursor += TIMELINE_YEAR_GAP;
+        yearStarted = true;
+      }
+      const subCols = Math.ceil(maxLane / TIMELINE_MAX_STACK);
+      const width = subCols * TIMELINE_MONTH_STEP;
+      columns.push({ year, month, x: xCursor, width, y: 0, height: 0, count, split });
+      xCursor += width;
+    }
+  }
+
+  // Lane heights follow the deepest stack each lane actually uses (capped at
+  // TIMELINE_MAX_STACK), so a lane that never stacks stays a single row.
+  const laneRows: number[] = lanes.map(() => 1);
+  for (const [key, list] of cells) {
     const lane = Number(key.split("|")[0]);
-    laneStackMax[lane] = Math.max(laneStackMax[lane], list.length);
+    laneRows[lane] = Math.max(
+      laneRows[lane],
+      Math.min(list.length, TIMELINE_MAX_STACK),
+    );
   }
 
-  // Compute lane Y origin from running heights so denser lanes get more
-  // vertical space than sparse lanes.
   const laneTop: number[] = [];
   let yCursor = TIMELINE_TOP + TIMELINE_AXIS_HEIGHT;
   for (let i = 0; i < lanes.length; i += 1) {
     laneTop.push(yCursor);
-    yCursor += TIMELINE_LANE_HEIGHT * laneStackMax[i] + 40;
+    yCursor += TIMELINE_LANE_ROW_HEIGHT * laneRows[i] + 40;
   }
 
-  for (const [key, list] of buckets) {
-    const [laneStr, yearStr] = key.split("|");
+  const columnX = new Map<string, number>();
+  for (const c of columns) columnX.set(`${c.year}|${c.month}`, c.x);
+
+  for (const [key, list] of cells) {
+    const [laneStr, yearStr, monthStr] = key.split("|");
     const lane = Number(laneStr);
-    const year = Number(yearStr);
-    const baseX = TIMELINE_LEFT + (year - minYear) * TIMELINE_YEAR_WIDTH;
+    const baseX = columnX.get(`${yearStr}|${monthStr}`);
+    if (baseX === undefined) continue;
     list.forEach((n, idx) => {
-      // Stack cards vertically within a (lane, year) cell.
-      const yOffset = idx * TIMELINE_LANE_HEIGHT;
+      // Fill top-to-bottom, then spill right into the next sub-column.
+      const subCol = Math.floor(idx / TIMELINE_MAX_STACK);
+      const row = idx % TIMELINE_MAX_STACK;
       positions[n.id] = {
-        x: baseX,
-        y: laneTop[lane] + yOffset,
+        x: baseX + subCol * TIMELINE_MONTH_STEP,
+        y: laneTop[lane] + row * TIMELINE_LANE_ROW_HEIGHT,
       };
     });
   }
 
-  return { positions, minYear, maxYear };
+  return {
+    positions,
+    minYear,
+    maxYear,
+    columns,
+    totalWidth: xCursor - TIMELINE_LEFT,
+    orientation,
+  };
 }
 
-// Decorative axis drawn in the timeline layout: one major tick per year
-// across the full year span, plus 11 light minor ticks per year so the
-// month resolution requested for "Tree of Life" comparisons is visible.
+// Label for one timeline bucket: the year, plus the month when that year has
+// been broken out. The "month unknown" bucket names no month rather than
+// implying January.
+function timelineColumnLabel(c: TimelineColumn): string {
+  if (!c.split) return String(c.year);
+  if (c.month === 0) return `${c.year} · month unknown`;
+  return `${c.year} · ${TIMELINE_MONTH_LABELS[c.month - 1]}`;
+}
+
+// Axis for the timeline layout. Horizontal draws a bold year band with month
+// labels beneath it; vertical draws a sticky-looking header above each time
+// band, since on a phone the axis is the running order of the page itself.
 function TimelineAxis({
-  minYear,
-  maxYear,
+  columns,
+  orientation,
   bottom,
 }: {
-  minYear: number;
-  maxYear: number;
+  columns: TimelineColumn[];
+  orientation: TimelineOrientation;
   bottom: number;
 }) {
-  if (!Number.isFinite(minYear) || !Number.isFinite(maxYear)) return null;
-  const yearCount = maxYear - minYear;
-  const totalWidth = yearCount * TIMELINE_YEAR_WIDTH + TIMELINE_YEAR_WIDTH;
-  const axisY = TIMELINE_TOP + 30;
-  const axisBottom = Math.max(bottom + 60, axisY + 200);
-  const ticks: React.ReactNode[] = [];
-  for (let y = minYear; y <= maxYear; y += 1) {
-    const x = TIMELINE_LEFT + (y - minYear) * TIMELINE_YEAR_WIDTH + CARD_WIDTH / 2;
-    ticks.push(
+  if (columns.length === 0) return null;
+
+  if (orientation === "vertical") {
+    const last = columns[columns.length - 1];
+    return (
       <div
-        key={`year-${y}`}
+        className="absolute pointer-events-none"
+        style={{
+          left: 0,
+          top: 0,
+          width: TIMELINE_VERTICAL_LEFT + last.width + CARD_WIDTH,
+          height: last.y + last.height + 60,
+          zIndex: 0,
+        }}
+      >
+        {columns.map((c) => (
+          <div
+            key={`band-${c.year}-${c.month}`}
+            className="absolute pointer-events-none select-none"
+            style={{ left: c.x, top: c.y + 6, width: c.width }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[0.9em] font-bold text-slate-500 dark:text-slate-300 tracking-wide whitespace-nowrap">
+                {timelineColumnLabel(c)}
+              </span>
+              <span className="h-px flex-1 bg-slate-300/70 dark:bg-slate-600/70" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const axisY = TIMELINE_TOP + 46;
+  const axisBottom = Math.max(bottom + 60, axisY + 200);
+  const lastCol = columns[columns.length - 1];
+  const totalWidth = lastCol.x + lastCol.width - TIMELINE_LEFT;
+
+  // Group columns into year spans so the year label can sit centred above
+  // all of that year's months.
+  const yearSpans = new Map<number, { start: number; end: number }>();
+  for (const c of columns) {
+    const span = yearSpans.get(c.year);
+    if (span) span.end = c.x + c.width;
+    else yearSpans.set(c.year, { start: c.x, end: c.x + c.width });
+  }
+
+  const marks: React.ReactNode[] = [];
+
+  for (const [year, span] of yearSpans) {
+    marks.push(
+      <div
+        key={`year-${year}`}
         className="absolute pointer-events-none select-none"
-        style={{ left: x - 60, top: axisY - 28, width: 120 }}
+        style={{ left: span.start, top: axisY - 44, width: span.end - span.start }}
       >
         <div className="text-center text-[1.25em] font-bold text-slate-500 dark:text-slate-300 tracking-widest">
-          {y}
+          {year}
         </div>
       </div>,
     );
-    // Vertical guideline beneath the year label.
-    ticks.push(
+    // Bracket under the year label spanning its months.
+    marks.push(
       <div
-        key={`guide-${y}`}
-        className="absolute pointer-events-none border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
-        style={{
-          left: x,
-          top: axisY,
-          height: axisBottom - axisY,
-        }}
+        key={`ybar-${year}`}
+        className="absolute pointer-events-none bg-slate-300/70 dark:bg-slate-600/70"
+        style={{ left: span.start + 4, top: axisY - 14, width: Math.max(span.end - span.start - 8, 2), height: 2 }}
       />,
     );
-    // Minor ticks for months within this year (11 between major ticks).
-    if (y < maxYear) {
-      for (let m = 1; m < 12; m += 1) {
-        const mx = x + (m / 12) * TIMELINE_YEAR_WIDTH;
-        ticks.push(
-          <div
-            key={`m-${y}-${m}`}
-            className="absolute pointer-events-none"
-            style={{
-              left: mx,
-              top: axisY,
-              width: 1,
-              height: m % 6 === 0 ? 14 : 8,
-              background: "rgba(100,116,139,0.25)",
-            }}
-          />,
-        );
-      }
-    }
+    // Solid separator at the start of each year.
+    marks.push(
+      <div
+        key={`ysep-${year}`}
+        className="absolute pointer-events-none border-l border-slate-300 dark:border-slate-700"
+        style={{ left: span.start, top: axisY - 14, height: axisBottom - axisY + 14 }}
+      />,
+    );
   }
+
+  for (const c of columns) {
+    const key = `${c.year}-${c.month}`;
+    // An unsplit year is a single column already labelled by its year band,
+    // so it gets no second label underneath.
+    if (!c.split) continue;
+    const label = c.month === 0 ? "—" : TIMELINE_MONTH_LABELS[c.month - 1];
+    marks.push(
+      <div
+        key={`mon-${key}`}
+        className="absolute pointer-events-none select-none"
+        style={{ left: c.x, top: axisY + 6, width: Math.max(c.width, CARD_WIDTH) }}
+        title={
+          c.month === 0
+            ? `${c.year} — publication month unknown`
+            : `${c.year}-${TIMELINE_MONTH_LABELS[c.month - 1]}`
+        }
+      >
+        <div
+          className={
+            c.month === 0
+              ? "text-center text-[0.875em] font-medium text-slate-400/70 dark:text-slate-500/70"
+              : "text-center text-[0.875em] font-semibold text-slate-500 dark:text-slate-400 tracking-wide"
+          }
+        >
+          {label}
+        </div>
+      </div>,
+    );
+    // Dashed guide beneath a month that actually has releases.
+    marks.push(
+      <div
+        key={`guide-${key}`}
+        className="absolute pointer-events-none border-l border-dashed border-slate-200/70 dark:border-slate-800/70"
+        style={{ left: c.x + CARD_WIDTH / 2, top: axisY + 24, height: axisBottom - axisY - 24 }}
+      />,
+    );
+  }
+
   return (
     <div
       className="absolute pointer-events-none"
@@ -760,14 +1057,14 @@ function TimelineAxis({
       <div
         className="absolute"
         style={{
-          left: TIMELINE_LEFT + CARD_WIDTH / 2 - 8,
+          left: TIMELINE_LEFT - 8,
           top: axisY,
-          width: yearCount * TIMELINE_YEAR_WIDTH + 16,
+          width: totalWidth + 16,
           height: 2,
           background: "rgba(100,116,139,0.45)",
         }}
       />
-      {ticks}
+      {marks}
     </div>
   );
 }
@@ -1020,11 +1317,14 @@ export default function MLIPExplorer() {
   const [fontScale, setFontScale] = useState<number>(DEFAULT_FONT_SCALE);
   const [citationCopied, setCitationCopied] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
-  const [layout, setLayout] = useState<LayoutMode>("layered");
+  const [layout, setLayout] = useState<LayoutMode>("timeline");
   // Phase 5 graph cleanup: connections and edge labels are OFF by default so
   // the landscape opens clean; selecting a model still reveals its own edges.
   const [edgeLabelsVisible, setEdgeLabelsVisible] = useState(false);
-  const [showConnections, setShowConnections] = useState(false);
+  // null = the visitor has never touched the toggle, so the sensible default
+  // follows the layout. An explicit choice is remembered and always wins.
+  const [connectionsPref, setConnectionsPref] = useState<boolean | null>(null);
+  const showConnections = connectionsPref ?? layout === "timeline";
   const [showUnverifiedEdges, setShowUnverifiedEdges] = useState(false);
   const [hoveredEdgeIdx, setHoveredEdgeIdx] = useState<number | null>(null);
   const [forceOverrides, setForceOverrides] = useState<Record<string, Vec2>>({});
@@ -1127,8 +1427,8 @@ export default function MLIPExplorer() {
     if (labels === "off") setEdgeLabelsVisible(false);
     if (labels === "on") setEdgeLabelsVisible(true);
     const connections = window.localStorage.getItem(SHOW_CONNECTIONS_STORAGE_KEY);
-    if (connections === "on") setShowConnections(true);
-    if (connections === "off") setShowConnections(false);
+    if (connections === "on") setConnectionsPref(true);
+    if (connections === "off") setConnectionsPref(false);
     const unverified = window.localStorage.getItem(UNVERIFIED_EDGES_STORAGE_KEY);
     if (unverified === "on") setShowUnverifiedEdges(true);
     if (unverified === "off") setShowUnverifiedEdges(false);
@@ -1158,7 +1458,7 @@ export default function MLIPExplorer() {
   };
 
   const updateShowConnections = (next: boolean) => {
-    setShowConnections(next);
+    setConnectionsPref(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(SHOW_CONNECTIONS_STORAGE_KEY, next ? "on" : "off");
     }
@@ -1372,9 +1672,43 @@ export default function MLIPExplorer() {
     const modelItems = nodes.filter(
       (n): n is ModelNode => n.type === "node",
     );
-    return computeTimelinePositions(modelItems);
-  }, [nodes]);
+    // Phones get the vertical, newest-first timeline: four lanes side by
+    // side simply do not fit a 390px screen, and a tall scroll is the native
+    // shape of the device.
+    const orientation: TimelineOrientation =
+      deviceType === "mobile" ? "vertical" : "horizontal";
+    const bandColumns = Math.max(
+      2,
+      Math.min(3, Math.floor(viewport.width / 200)),
+    );
+    return computeTimelinePositions(modelItems, orientation, bandColumns);
+  }, [nodes, deviceType, viewport.width]);
   const timelinePositions = timelineLayout.positions;
+
+  // How many models each facet option would match, over the whole catalogue
+  // rather than the current selection. Labels the options, and — more
+  // usefully — lets the panel drop facets nothing can match: "denoising
+  // pretraining" is recorded on 0 of 128 models, so it only ever added a row
+  // to a panel that is already too long.
+  const facetCounts = useMemo(() => {
+    const counts: Record<string, Record<string, number>> = {};
+    const bump = (axis: string, value: string) => {
+      const byValue = (counts[axis] ??= {});
+      byValue[value] = (byValue[value] ?? 0) + 1;
+    };
+    for (const n of nodes) {
+      if (n.type !== "node") continue;
+      const m = n as ModelNode;
+      if (m.equivariance) bump("equivariance", m.equivariance);
+      if (m.architecture) bump("architecture", m.architecture);
+      for (const a of BOOL_FILTER_AXES) {
+        const v = a.get(m);
+        if (v === true) bump(a.key, "yes");
+        else if (v === false) bump(a.key, "no");
+      }
+    }
+    return counts;
+  }, [nodes]);
 
   // How many columns each wrapped block in the layered layout should
   // hold before spilling onto the next row. Tuned to land the
@@ -1483,13 +1817,16 @@ export default function MLIPExplorer() {
     // make sure the auto-fit + the SVG viewBox include that header area
     // so the year labels aren't clipped at the top of the canvas.
     if (layout === "timeline") {
-      minX = Math.min(minX, 0);
-      minY = Math.min(minY, TIMELINE_TOP - 20);
+      const vertical = timelineLayout.orientation === "vertical";
+      minX = Math.min(minX, vertical ? 0 : 0);
+      // Horizontal reserves the year/month axis band above the first lane;
+      // vertical labels each band inline, so it only needs a small inset.
+      minY = Math.min(minY, vertical ? 0 : TIMELINE_TOP - 20);
       maxY = maxY + 20;
     }
 
     return { minX, minY, maxX, maxY };
-  }, [positionedModels, layout]);
+  }, [positionedModels, layout, timelineLayout.orientation]);
 
   const graphWidth = bounds.maxX - bounds.minX;
   const graphHeight = bounds.maxY - bounds.minY;
@@ -1504,10 +1841,15 @@ export default function MLIPExplorer() {
   const availableWidthWithSidebar = Math.max(viewport.width - sidebarSpace - 32, 320);
   const availableHeight = Math.max(viewport.height - HEADER_HEIGHT, 320);
 
+  // The vertical timeline is deliberately taller than any screen — it is a
+  // scrolling feed, not a diagram to take in at once. Fitting its height would
+  // shrink the cards to nothing, so it fits width only and the reader scrolls.
+  const fitsWidthOnly = layout === "timeline" && timelineLayout.orientation === "vertical";
+
   useEffect(() => {
     const widthScale = availableWidth / (graphWidth + CANVAS_PADDING * 2);
     const heightScale = availableHeight / (graphHeight + CANVAS_PADDING * 2);
-    const fitScale = Math.min(widthScale, heightScale);
+    const fitScale = fitsWidthOnly ? widthScale : Math.min(widthScale, heightScale);
     const nextBase = Math.max(MIN_BASE_SCALE, Math.min(MAX_BASE_SCALE, fitScale));
     setBaseScale(nextBase);
     // Switching layouts changes graphWidth/graphHeight, which fires this
@@ -1516,7 +1858,7 @@ export default function MLIPExplorer() {
     // previous layout.
     setUserScale(1);
     setUserPan({ x: 0, y: 0 });
-  }, [availableHeight, availableWidth, graphHeight, graphWidth]);
+  }, [availableHeight, availableWidth, graphHeight, graphWidth, fitsWidthOnly]);
 
   const basePan = useMemo(() => {
     const paddedWidth = graphWidth + CANVAS_PADDING * 2;
@@ -1525,10 +1867,15 @@ export default function MLIPExplorer() {
     const graphPixelHeight = paddedHeight * baseScale;
 
     const centerX = (availableWidth - graphPixelWidth) / 2 - bounds.minX * baseScale + CANVAS_PADDING * baseScale;
-    const centerY = (availableHeight - graphPixelHeight) / 2 - bounds.minY * baseScale + CANVAS_PADDING * baseScale;
+    // Vertical timeline: pin to the top so the page opens on the newest
+    // models. Centring a graph taller than the viewport would drop the reader
+    // somewhere in the middle of the catalogue's history.
+    const centerY = fitsWidthOnly
+      ? -bounds.minY * baseScale + CANVAS_PADDING * baseScale
+      : (availableHeight - graphPixelHeight) / 2 - bounds.minY * baseScale + CANVAS_PADDING * baseScale;
 
     return { x: centerX, y: centerY };
-  }, [availableHeight, availableWidth, baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth]);
+  }, [availableHeight, availableWidth, baseScale, bounds.minX, bounds.minY, graphHeight, graphWidth, fitsWidthOnly]);
 
   const effectiveScale = baseScale * userScale;
   const pan = { x: basePan.x + userPan.x, y: basePan.y + userPan.y };
@@ -2143,9 +2490,28 @@ export default function MLIPExplorer() {
       edge: Edge,
       idx: number,
     ): { path: string; labelX: number; labelY: number } | null => {
-      const fromNode = positionedModels.find((n) => n.id === edge.from);
-      const toNode = positionedModels.find((n) => n.id === edge.to);
+      let fromNode = positionedModels.find((n) => n.id === edge.from);
+      let toNode = positionedModels.find((n) => n.id === edge.to);
       if (!fromNode || !toNode) return null;
+
+      // On the timeline the x axis *is* time, so an arrow drawn right-to-left
+      // contradicts the axis and reads as an error. Reverse those — but only
+      // where reversing asserts nothing false: dashed links are peer/sibling
+      // relations with no inherent direction, and two cards in the same year
+      // are ordered arbitrarily within it (the "month unknown" bucket leads
+      // the year, so a dated card can sit to the right of its own ancestor).
+      // A solid edge between different years is a real lineage claim; if that
+      // points backwards the data and the axis genuinely disagree, so it is
+      // left visibly backwards instead of being silently flipped.
+      if (
+        layout === "timeline" &&
+        toNode.x < fromNode.x &&
+        (edge.dashed || fromNode.year === toNode.year)
+      ) {
+        const swap = fromNode;
+        fromNode = toNode;
+        toNode = swap;
+      }
 
       if (layout === "force" || layout === "timeline") {
         // Connect edges to the actual card border (rectangle exit point)
@@ -3216,8 +3582,8 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 so users can read which year each column corresponds to. */}
             {layout === "timeline" && (
               <TimelineAxis
-                minYear={timelineLayout.minYear}
-                maxYear={timelineLayout.maxYear}
+                columns={timelineLayout.columns}
+                orientation={timelineLayout.orientation}
                 bottom={bounds.maxY}
               />
             )}
@@ -3569,7 +3935,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                           : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/60"
                       }`}
                     >
-                      Layered (default)
+                      Layered
                     </button>
                     <button
                       type="button"
@@ -3630,12 +3996,105 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   )}
                   {layout === "timeline" && (
                     <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
-                      Tree-of-life view: cards are placed left-to-right by
-                      year (older → newer), grouped into one lane per
-                      architecture family. Minor ticks mark months.
+                      {timelineLayout.orientation === "vertical" ? (
+                        <>
+                          Tree-of-life view: newest first, scrolling back in
+                          time. A crowded year breaks out into months —
+                          2026&nbsp;·&nbsp;Aug, 2026&nbsp;·&nbsp;Jul … — while
+                          quieter years stay one band. Each card&apos;s badge
+                          gives its architecture family. Cards whose
+                          publication month isn&apos;t known sit in that
+                          year&apos;s{" "}
+                          <span className="font-semibold">month unknown</span>{" "}
+                          band.
+                        </>
+                      ) : (
+                        <>
+                          Tree-of-life view: cards run left-to-right in time
+                          (older → newer), one lane per architecture family. A
+                          crowded year breaks out into month columns —
+                          2026-Jan, 2026-Feb … — while quieter years stay a
+                          single column. Within a busy month, cards whose
+                          publication month isn&apos;t known sit in the{" "}
+                          <span className="font-semibold">—</span> column
+                          leading that year.
+                        </>
+                      )}
                     </p>
                   )}
                 </div>
+                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
+                  <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">
+                    View
+                  </div>
+                  {[
+                    {
+                      key: "connections",
+                      label: "Show connections",
+                      on: showConnections,
+                      set: updateShowConnections,
+                      hint: "Draw the lineage links between models.",
+                    },
+                    // The edge sub-options only mean anything once links are
+                    // drawn, so they stay folded away until then.
+                    ...(showConnections
+                      ? [
+                          {
+                            key: "unverified",
+                            label: "Include unverified edges",
+                            on: showUnverifiedEdges,
+                            set: updateShowUnverifiedEdges,
+                            hint: "Also draw probable / speculative links (faded and dashed).",
+                          },
+                          {
+                            key: "edgeLabels",
+                            label: "Show edge labels",
+                            on: edgeLabelsVisible,
+                            set: updateEdgeLabelsVisible,
+                            hint: "Label each link with the relationship it encodes.",
+                          },
+                        ]
+                      : []),
+                  ].map((row) => (
+                    <button
+                      key={row.key}
+                      type="button"
+                      role="switch"
+                      aria-checked={row.on}
+                      aria-label={row.label}
+                      title={row.hint}
+                      onClick={() => row.set(!row.on)}
+                      className="flex w-full items-center justify-between gap-2 py-1.5 text-left"
+                    >
+                      <span className="text-[0.6875em] font-medium text-slate-600 dark:text-slate-300 truncate">
+                        {row.label}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={`relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full transition ${
+                          row.on
+                            ? "bg-blue-200 dark:bg-blue-900"
+                            : "bg-slate-200 dark:bg-slate-700"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-[14px] w-[14px] rounded-full shadow-sm transition-transform ${
+                            row.on
+                              ? "translate-x-[16px] bg-blue-600 dark:bg-blue-400"
+                              : "translate-x-[2px] bg-white dark:bg-slate-400"
+                          }`}
+                        />
+                      </span>
+                    </button>
+                  ))}
+                  <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
+                    Connections default to on in the timeline, where the lineage
+                    is the whole point, and off in the other layouts. Only
+                    source-verified links are drawn unless you include the
+                    unverified ones. Selecting a model always reveals its own.
+                  </p>
+                </div>
+
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[0.6875em] md:text-[0.625em] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -3677,6 +4136,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         axis: "equivariance" as const,
                         label: "Equivariance",
                         values: EQUIVARIANCE_VALUES as readonly string[],
+                        kind: "chips" as "chips" | "switch",
                         tooltip:
                           "Symmetry handling baked into the architecture (constrained / learnt / invariant).",
                       },
@@ -3684,67 +4144,131 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                         axis: "architecture" as const,
                         label: "Architecture",
                         values: ARCHITECTURE_VALUES as readonly string[],
+                        kind: "chips" as "chips" | "switch",
                         tooltip:
                           "Model family: hand-crafted descriptor vs graph neural network.",
                       },
                       ...BOOL_FILTER_AXES.map((a) => ({
                         axis: a.key,
                         label: a.label,
-                        values: ["yes", "no"] as readonly string[],
+                        // A "flag" axis only ever carries `true`, so it offers
+                        // one switch rather than a yes/no pair whose "no" would
+                        // match nothing.
+                        values: (a.mode === "flag"
+                          ? ["yes"]
+                          : ["yes", "no"]) as readonly string[],
+                        kind: (a.mode === "flag" ? "switch" : "chips") as
+                          | "chips"
+                          | "switch",
                         tooltip: a.tooltip,
                       })),
                     ]
-                  ).map(({ axis, label, values, tooltip }) => (
-                    <div key={axis} className="mb-2 last:mb-0">
-                      <div
-                        className="inline-flex items-center gap-1 text-[0.625em] font-semibold text-slate-500 dark:text-slate-400 mb-1 capitalize cursor-help"
-                        title={tooltip}
-                      >
-                        {label}
-                        <HelpCircle
-                          size={10}
-                          aria-hidden="true"
-                          className="opacity-50"
-                        />
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {values.map((value) => {
-                          const set = tagFilters[axis] as Set<string>;
-                          const active = set.has(value);
-                          return (
-                            <button
-                              key={value}
-                              type="button"
-                              aria-pressed={active}
-                              onClick={() => {
-                                setTagFilters((prev) => {
-                                  const next = new Set(prev[axis] as Set<string>);
-                                  if (next.has(value)) next.delete(value);
-                                  else next.add(value);
-                                  return {
-                                    ...prev,
-                                    [axis]: next,
-                                  } as typeof prev;
-                                });
-                              }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.6875em] font-semibold border transition capitalize ${
-                                active
-                                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:bg-blue-500 dark:border-blue-500 dark:ring-blue-700"
-                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  )
+                    // Drop facets nothing in the catalogue can match.
+                    .filter(({ axis, values }) =>
+                      values.some((v) => (facetCounts[axis]?.[v] ?? 0) > 0),
+                    )
+                    .map(({ axis, label, values, tooltip, kind }) => {
+                      const set = tagFilters[axis] as Set<string>;
+                      const toggle = (value: string) =>
+                        setTagFilters((prev) => {
+                          const next = new Set(prev[axis] as Set<string>);
+                          if (next.has(value)) next.delete(value);
+                          else next.add(value);
+                          return { ...prev, [axis]: next } as typeof prev;
+                        });
+                      const on = set.has("yes");
+                      // A 32x18 track is far too small to hit on a phone, so
+                      // the whole row is the control: the label and the track
+                      // sit inside one full-width button.
+                      if (kind === "switch") {
+                        return (
+                          <button
+                            key={axis}
+                            type="button"
+                            role="switch"
+                            aria-checked={on}
+                            aria-label={`Only show models with ${label.toLowerCase()} (${
+                              facetCounts[axis]?.yes ?? 0
+                            })`}
+                            title={tooltip}
+                            onClick={() => toggle("yes")}
+                            className="flex w-full items-center justify-between gap-2 py-1.5 text-left"
+                          >
+                            <span className="inline-flex items-center gap-1 text-[0.6875em] font-medium text-slate-600 dark:text-slate-300">
+                              {label}
+                              <HelpCircle
+                                size={10}
+                                aria-hidden="true"
+                                className="opacity-40 shrink-0"
+                              />
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className={`relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full transition ${
+                                on
+                                  ? "bg-blue-200 dark:bg-blue-900"
+                                  : "bg-slate-200 dark:bg-slate-700"
                               }`}
                             >
-                              {active && (
-                                <Check size={10} aria-hidden="true" className="-ml-0.5" />
-                              )}
-                              {/* "gnn" is an acronym — render upper-case (the
-                                  `capitalize` class would otherwise show "Gnn"). */}
-                              {value === "gnn" ? "GNN" : value}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                              <span
+                                className={`inline-block h-[14px] w-[14px] rounded-full shadow-sm transition-transform ${
+                                  on
+                                    ? "translate-x-[16px] bg-blue-600 dark:bg-blue-400"
+                                    : "translate-x-[2px] bg-white dark:bg-slate-400"
+                                }`}
+                              />
+                            </span>
+                          </button>
+                        );
+                      }
+                      return (
+                        <div
+                          key={axis}
+                          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 py-[3px]"
+                        >
+                          <span
+                            className="inline-flex items-center gap-1 text-[0.6875em] font-medium text-slate-600 dark:text-slate-300 cursor-help shrink-0"
+                            title={tooltip}
+                          >
+                            <span>{label}</span>
+                            <HelpCircle
+                              size={10}
+                              aria-hidden="true"
+                              className="opacity-40 shrink-0"
+                            />
+                          </span>
+                          <span className="flex gap-1 shrink-0">
+                            {values.map((value) => {
+                              const active = set.has(value);
+                              const count = facetCounts[axis]?.[value] ?? 0;
+                              return (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  aria-pressed={active}
+                                  onClick={() => toggle(value)}
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[0.625em] font-semibold border transition capitalize ${
+                                    active
+                                      ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500"
+                                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  }`}
+                                >
+                                  {/* "gnn" is an acronym — render upper-case
+                                      (`capitalize` would give "Gnn"). */}
+                                  {value === "gnn" ? "GNN" : value}
+                                  <span
+                                    className={active ? "opacity-70" : "opacity-45"}
+                                  >
+                                    {count}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </span>
+                        </div>
+                      );
+                    })}
                   <p className="text-[0.625em] mt-1 text-slate-400 dark:text-slate-500 leading-snug">
                     Hover a tag name for its meaning. &ldquo;Yes&rdquo;/&ldquo;no&rdquo;
                     match only verified values; models whose value is unknown or
@@ -3830,56 +4354,6 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                       </li>
                     ))}
                   </ul>
-                </div>
-
-                <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3 space-y-2">
-                  <label
-                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={showConnections}
-                      onChange={(e) => updateShowConnections(e.target.checked)}
-                      aria-label="Show connections between models on the landscape graph"
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
-                    />
-                    Show connections
-                  </label>
-                  {showConnections && (
-                    <label
-                      className="flex items-center gap-2 pl-6 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={showUnverifiedEdges}
-                        onChange={(e) =>
-                          updateShowUnverifiedEdges(e.target.checked)
-                        }
-                        aria-label="Also show unverified (probable or speculative) connections"
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
-                      />
-                      Include unverified edges
-                    </label>
-                  )}
-                  <label
-                    className="flex items-center gap-2 text-[0.75em] md:text-[0.6875em] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={edgeLabelsVisible}
-                      onChange={(e) => updateEdgeLabelsVisible(e.target.checked)}
-                      aria-label="Show edge labels on the landscape graph"
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-800"
-                    />
-                    Show edge labels
-                  </label>
-                  <p className="text-[0.625em] text-slate-400 dark:text-slate-500 leading-snug">
-                    Connections are off by default for a clean view; the
-                    default view shows source-verified links only. Selecting a
-                    model always reveals its own connections (unverified ones
-                    are faded / dashed), and hovering an edge shows its
-                    relationship.
-                  </p>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
