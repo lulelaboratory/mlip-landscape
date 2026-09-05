@@ -343,11 +343,62 @@ const isLayoutMode = (value: string | null): value is LayoutMode =>
 
 // Timeline layout constants — drives the "Tree of Life" view that places
 // cards along a horizontal year axis with vertical lanes per category.
-const TIMELINE_YEAR_WIDTH = 360; // pixels per year
-const TIMELINE_LANE_HEIGHT = 130; // vertical spacing between cards in a lane
+// The timeline resolves down to months in the years that need it. Placing
+// every model of a year in one column made recent years unreadable: 2026
+// alone holds ~56 models, so its Equivariant lane became a ~34-card vertical
+// stack several thousand pixels tall.
+//
+// Splitting *every* year into months is the obvious fix but a bad one: it
+// stretches the canvas to ~10:1, and because the view auto-fits, the cards
+// end up smaller than before. Instead a year is broken into month columns
+// only once one of its lanes would otherwise need more than
+// TIMELINE_YEAR_SPLIT_SUBCOLS sub-columns on its own — today that is 2026
+// and nothing else, and 2027 will split itself when it fills up. Months with
+// no releases are not given a column at all, so quiet stretches cost nothing.
+const TIMELINE_MONTH_STEP = 190; // x step per stacked sub-column (CARD_WIDTH + gap)
+const TIMELINE_MAX_STACK = 5; // cards stacked vertically before a new sub-column
+const TIMELINE_YEAR_SPLIT_SUBCOLS = 2; // sub-columns a lane may fill before its year splits
+const TIMELINE_LANE_ROW_HEIGHT = 96; // vertical spacing between stacked cards
 const TIMELINE_TOP = 100; // top padding above the first lane
 const TIMELINE_LEFT = 120; // left padding before the first year tick
-const TIMELINE_AXIS_HEIGHT = 60; // reserved space at the top for the axis
+const TIMELINE_AXIS_HEIGHT = 76; // reserved space at the top for the axis
+
+const TIMELINE_MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const;
+
+// One column of the timeline: either a real month (month 1-12) or the
+// "month unknown" bucket (month 0) that leads each year.
+type TimelineColumn = {
+  year: number;
+  month: number; // 0 = whole year, or "month unknown" inside a split year
+  x: number;
+  width: number;
+  count: number; // models in this column (all lanes)
+  split: boolean; // whether this column's year is broken out into months
+};
+
+// Publication month, derived from a modern arXiv id (YYMM.NNNNN) in paperUrl.
+//
+// The curated `year` field stays authoritative for horizontal placement: for
+// 16 catalogue entries the arXiv preprint year differs from the curated year
+// (MACE-MH-1 is `year: 2026` but arXiv 2510 = Oct 2025), usually because the
+// curator recorded the release/publication year rather than the preprint. So
+// the arXiv month only refines a card *within* the year the curator assigned;
+// when the two years disagree the month is treated as unknown rather than
+// silently moving the card into a different year.
+function timelineMonth(node: ModelNode): number | null {
+  const url = node.paperUrl;
+  if (!url) return null;
+  const m = /arxiv\.org\/(?:abs|pdf)\/(\d{2})(\d{2})\.\d{4,5}/i.exec(url);
+  if (!m) return null;
+  const year = 2000 + Number(m[1]);
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  if (year !== node.year) return null;
+  return month;
+}
 
 // Deterministic force-directed layout. Seeded with a category-clustered
 // grid so the four families fan out into distinct quadrants, then refined
@@ -617,10 +668,16 @@ function computeForcePositions(
 // uses top-left coordinates (matching the rest of the layout pipeline).
 function computeTimelinePositions(
   modelNodes: ModelNode[],
-): { positions: Record<string, Vec2>; minYear: number; maxYear: number } {
+): {
+  positions: Record<string, Vec2>;
+  minYear: number;
+  maxYear: number;
+  columns: TimelineColumn[];
+  totalWidth: number;
+} {
   const positions: Record<string, Vec2> = {};
   if (modelNodes.length === 0) {
-    return { positions, minYear: 0, maxYear: 0 };
+    return { positions, minYear: 0, maxYear: 0, columns: [], totalWidth: 0 };
   }
 
   const years = modelNodes.map((n) => n.year);
@@ -638,113 +695,198 @@ function computeTimelinePositions(
     Descriptor: 3,
   };
 
-  // Group by (lane, year) so we can stack within a single cell. Sort by
-  // a stable key (label) so the order is deterministic across reloads.
-  const buckets = new Map<string, ModelNode[]>();
+  // Group by (lane, year, month) so we can stack within a single cell. Sort
+  // by a stable key (label) so the order is deterministic across reloads.
+  // A year is split into months only when it is crowded enough that one lane
+  // would otherwise run past TIMELINE_YEAR_SPLIT_SUBCOLS sub-columns.
+  const splitYears = new Set<number>();
+  {
+    const laneYear = new Map<string, number>();
+    for (const n of modelNodes) {
+      const k = `${laneIndex[n.category]}|${n.year}`;
+      laneYear.set(k, (laneYear.get(k) ?? 0) + 1);
+    }
+    const limit = TIMELINE_YEAR_SPLIT_SUBCOLS * TIMELINE_MAX_STACK;
+    for (const [k, count] of laneYear) {
+      if (count > limit) splitYears.add(Number(k.split("|")[1]));
+    }
+  }
+
+  const cellKey = (lane: number, year: number, month: number) =>
+    `${lane}|${year}|${month}`;
+  const cells = new Map<string, ModelNode[]>();
   for (const n of modelNodes) {
-    const key = `${laneIndex[n.category]}|${n.year}`;
-    (buckets.get(key) ?? buckets.set(key, []).get(key)!).push(n);
+    const month = splitYears.has(n.year) ? timelineMonth(n) ?? 0 : 0;
+    const key = cellKey(laneIndex[n.category], n.year, month);
+    (cells.get(key) ?? cells.set(key, []).get(key)!).push(n);
   }
-  for (const list of buckets.values()) list.sort((a, b) => a.label.localeCompare(b.label));
+  for (const list of cells.values()) list.sort((a, b) => a.label.localeCompare(b.label));
 
-  // Track the maximum stack depth in each lane so lanes that need more
-  // vertical room get extra spacing.
-  const laneStackMax: number[] = lanes.map(() => 1);
-  for (const [key, list] of buckets) {
+  // Emit a column per occupied (year, month), widening it to fit its busiest
+  // lane: a cell needing more than TIMELINE_MAX_STACK cards in one lane
+  // spills into extra sub-columns instead of growing a taller stack. Empty
+  // months get no column, so quiet stretches cost no horizontal space.
+  const columns: TimelineColumn[] = [];
+  let xCursor = TIMELINE_LEFT;
+  for (let year = minYear; year <= maxYear; year += 1) {
+    const split = splitYears.has(year);
+    // month 0 leads the year: the whole year for an unsplit year, or the
+    // "month unknown" bucket for a split one.
+    for (let month = 0; month <= 12; month += 1) {
+      if (!split && month > 0) break;
+      let maxLane = 0;
+      let count = 0;
+      for (let lane = 0; lane < lanes.length; lane += 1) {
+        const n = cells.get(cellKey(lane, year, month))?.length ?? 0;
+        maxLane = Math.max(maxLane, n);
+        count += n;
+      }
+      if (maxLane === 0) continue;
+      const subCols = Math.ceil(maxLane / TIMELINE_MAX_STACK);
+      const width = subCols * TIMELINE_MONTH_STEP;
+      columns.push({ year, month, x: xCursor, width, count, split });
+      xCursor += width;
+    }
+  }
+
+  // Lane heights follow the deepest stack each lane actually uses (capped at
+  // TIMELINE_MAX_STACK), so a lane that never stacks stays a single row.
+  const laneRows: number[] = lanes.map(() => 1);
+  for (const [key, list] of cells) {
     const lane = Number(key.split("|")[0]);
-    laneStackMax[lane] = Math.max(laneStackMax[lane], list.length);
+    laneRows[lane] = Math.max(
+      laneRows[lane],
+      Math.min(list.length, TIMELINE_MAX_STACK),
+    );
   }
 
-  // Compute lane Y origin from running heights so denser lanes get more
-  // vertical space than sparse lanes.
   const laneTop: number[] = [];
   let yCursor = TIMELINE_TOP + TIMELINE_AXIS_HEIGHT;
   for (let i = 0; i < lanes.length; i += 1) {
     laneTop.push(yCursor);
-    yCursor += TIMELINE_LANE_HEIGHT * laneStackMax[i] + 40;
+    yCursor += TIMELINE_LANE_ROW_HEIGHT * laneRows[i] + 40;
   }
 
-  for (const [key, list] of buckets) {
-    const [laneStr, yearStr] = key.split("|");
+  const columnX = new Map<string, number>();
+  for (const c of columns) columnX.set(`${c.year}|${c.month}`, c.x);
+
+  for (const [key, list] of cells) {
+    const [laneStr, yearStr, monthStr] = key.split("|");
     const lane = Number(laneStr);
-    const year = Number(yearStr);
-    const baseX = TIMELINE_LEFT + (year - minYear) * TIMELINE_YEAR_WIDTH;
+    const baseX = columnX.get(`${yearStr}|${monthStr}`);
+    if (baseX === undefined) continue;
     list.forEach((n, idx) => {
-      // Stack cards vertically within a (lane, year) cell.
-      const yOffset = idx * TIMELINE_LANE_HEIGHT;
+      // Fill top-to-bottom, then spill right into the next sub-column.
+      const subCol = Math.floor(idx / TIMELINE_MAX_STACK);
+      const row = idx % TIMELINE_MAX_STACK;
       positions[n.id] = {
-        x: baseX,
-        y: laneTop[lane] + yOffset,
+        x: baseX + subCol * TIMELINE_MONTH_STEP,
+        y: laneTop[lane] + row * TIMELINE_LANE_ROW_HEIGHT,
       };
     });
   }
 
-  return { positions, minYear, maxYear };
+  return { positions, minYear, maxYear, columns, totalWidth: xCursor - TIMELINE_LEFT };
 }
 
-// Decorative axis drawn in the timeline layout: one major tick per year
-// across the full year span, plus 11 light minor ticks per year so the
-// month resolution requested for "Tree of Life" comparisons is visible.
+// Two-tier axis for the timeline layout: a bold year band across the top and
+// month labels beneath it, matching the variable-width month columns produced
+// by computeTimelinePositions. Columns are only as wide as their contents
+// need, so a busy month (2026-03) reads as a wide block and a quiet one
+// collapses to a thin spacer.
 function TimelineAxis({
-  minYear,
-  maxYear,
+  columns,
   bottom,
 }: {
-  minYear: number;
-  maxYear: number;
+  columns: TimelineColumn[];
   bottom: number;
 }) {
-  if (!Number.isFinite(minYear) || !Number.isFinite(maxYear)) return null;
-  const yearCount = maxYear - minYear;
-  const totalWidth = yearCount * TIMELINE_YEAR_WIDTH + TIMELINE_YEAR_WIDTH;
-  const axisY = TIMELINE_TOP + 30;
+  if (columns.length === 0) return null;
+
+  const axisY = TIMELINE_TOP + 46;
   const axisBottom = Math.max(bottom + 60, axisY + 200);
-  const ticks: React.ReactNode[] = [];
-  for (let y = minYear; y <= maxYear; y += 1) {
-    const x = TIMELINE_LEFT + (y - minYear) * TIMELINE_YEAR_WIDTH + CARD_WIDTH / 2;
-    ticks.push(
+  const lastCol = columns[columns.length - 1];
+  const totalWidth = lastCol.x + lastCol.width - TIMELINE_LEFT;
+
+  // Group columns into year spans so the year label can sit centred above
+  // all of that year's months.
+  const yearSpans = new Map<number, { start: number; end: number }>();
+  for (const c of columns) {
+    const span = yearSpans.get(c.year);
+    if (span) span.end = c.x + c.width;
+    else yearSpans.set(c.year, { start: c.x, end: c.x + c.width });
+  }
+
+  const marks: React.ReactNode[] = [];
+
+  for (const [year, span] of yearSpans) {
+    marks.push(
       <div
-        key={`year-${y}`}
+        key={`year-${year}`}
         className="absolute pointer-events-none select-none"
-        style={{ left: x - 60, top: axisY - 28, width: 120 }}
+        style={{ left: span.start, top: axisY - 44, width: span.end - span.start }}
       >
         <div className="text-center text-[1.25em] font-bold text-slate-500 dark:text-slate-300 tracking-widest">
-          {y}
+          {year}
         </div>
       </div>,
     );
-    // Vertical guideline beneath the year label.
-    ticks.push(
+    // Bracket under the year label spanning its months.
+    marks.push(
       <div
-        key={`guide-${y}`}
-        className="absolute pointer-events-none border-l border-dashed border-slate-300/70 dark:border-slate-700/70"
-        style={{
-          left: x,
-          top: axisY,
-          height: axisBottom - axisY,
-        }}
+        key={`ybar-${year}`}
+        className="absolute pointer-events-none bg-slate-300/70 dark:bg-slate-600/70"
+        style={{ left: span.start + 4, top: axisY - 14, width: Math.max(span.end - span.start - 8, 2), height: 2 }}
       />,
     );
-    // Minor ticks for months within this year (11 between major ticks).
-    if (y < maxYear) {
-      for (let m = 1; m < 12; m += 1) {
-        const mx = x + (m / 12) * TIMELINE_YEAR_WIDTH;
-        ticks.push(
-          <div
-            key={`m-${y}-${m}`}
-            className="absolute pointer-events-none"
-            style={{
-              left: mx,
-              top: axisY,
-              width: 1,
-              height: m % 6 === 0 ? 14 : 8,
-              background: "rgba(100,116,139,0.25)",
-            }}
-          />,
-        );
-      }
-    }
+    // Solid separator at the start of each year.
+    marks.push(
+      <div
+        key={`ysep-${year}`}
+        className="absolute pointer-events-none border-l border-slate-300 dark:border-slate-700"
+        style={{ left: span.start, top: axisY - 14, height: axisBottom - axisY + 14 }}
+      />,
+    );
   }
+
+  for (const c of columns) {
+    const key = `${c.year}-${c.month}`;
+    // An unsplit year is a single column already labelled by its year band,
+    // so it gets no second label underneath.
+    if (!c.split) continue;
+    const label = c.month === 0 ? "—" : TIMELINE_MONTH_LABELS[c.month - 1];
+    marks.push(
+      <div
+        key={`mon-${key}`}
+        className="absolute pointer-events-none select-none"
+        style={{ left: c.x, top: axisY + 6, width: Math.max(c.width, CARD_WIDTH) }}
+        title={
+          c.month === 0
+            ? `${c.year} — publication month unknown`
+            : `${c.year}-${TIMELINE_MONTH_LABELS[c.month - 1]}`
+        }
+      >
+        <div
+          className={
+            c.month === 0
+              ? "text-center text-[0.875em] font-medium text-slate-400/70 dark:text-slate-500/70"
+              : "text-center text-[0.875em] font-semibold text-slate-500 dark:text-slate-400 tracking-wide"
+          }
+        >
+          {label}
+        </div>
+      </div>,
+    );
+    // Dashed guide beneath a month that actually has releases.
+    marks.push(
+      <div
+        key={`guide-${key}`}
+        className="absolute pointer-events-none border-l border-dashed border-slate-200/70 dark:border-slate-800/70"
+        style={{ left: c.x + CARD_WIDTH / 2, top: axisY + 24, height: axisBottom - axisY - 24 }}
+      />,
+    );
+  }
+
   return (
     <div
       className="absolute pointer-events-none"
@@ -760,14 +902,14 @@ function TimelineAxis({
       <div
         className="absolute"
         style={{
-          left: TIMELINE_LEFT + CARD_WIDTH / 2 - 8,
+          left: TIMELINE_LEFT - 8,
           top: axisY,
-          width: yearCount * TIMELINE_YEAR_WIDTH + 16,
+          width: totalWidth + 16,
           height: 2,
           background: "rgba(100,116,139,0.45)",
         }}
       />
-      {ticks}
+      {marks}
     </div>
   );
 }
@@ -3216,8 +3358,7 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                 so users can read which year each column corresponds to. */}
             {layout === "timeline" && (
               <TimelineAxis
-                minYear={timelineLayout.minYear}
-                maxYear={timelineLayout.maxYear}
+                columns={timelineLayout.columns}
                 bottom={bounds.maxY}
               />
             )}
@@ -3630,9 +3771,14 @@ Describe the issue (broken link, outdated description, missing metadata, incorre
                   )}
                   {layout === "timeline" && (
                     <p className="mt-2 text-[0.6875em] leading-snug text-slate-500 dark:text-slate-400">
-                      Tree-of-life view: cards are placed left-to-right by
-                      year (older → newer), grouped into one lane per
-                      architecture family. Minor ticks mark months.
+                      Tree-of-life view: cards run left-to-right in time
+                      (older → newer), one lane per architecture family. A
+                      crowded year breaks out into month columns — 2026-Jan,
+                      2026-Feb … — while quieter years stay a single column.
+                      Within a busy month, cards whose publication month
+                      isn&apos;t known sit in the{" "}
+                      <span className="font-semibold">—</span> column leading
+                      that year.
                     </p>
                   )}
                 </div>
