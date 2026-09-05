@@ -358,7 +358,12 @@ const isLayoutMode = (value: string | null): value is LayoutMode =>
 const TIMELINE_MONTH_STEP = 190; // x step per stacked sub-column (CARD_WIDTH + gap)
 const TIMELINE_MAX_STACK = 5; // cards stacked vertically before a new sub-column
 const TIMELINE_YEAR_SPLIT_SUBCOLS = 2; // sub-columns a lane may fill before its year splits
-const TIMELINE_LANE_ROW_HEIGHT = 96; // vertical spacing between stacked cards
+// Cards render considerably taller than the nominal CARD_HEIGHT of 72: the
+// category badge plus a wrapped title puts them at 98-118px in practice. The
+// row step has to clear the tallest card or every stacked pair overlaps, so
+// this is deliberately generous rather than derived from CARD_HEIGHT.
+const TIMELINE_LANE_ROW_HEIGHT = 130; // vertical spacing between stacked cards
+const TIMELINE_YEAR_GAP = 56; // blank gutter between adjacent years
 const TIMELINE_TOP = 100; // top padding above the first lane
 const TIMELINE_LEFT = 120; // left padding before the first year tick
 const TIMELINE_AXIS_HEIGHT = 76; // reserved space at the top for the axis
@@ -730,6 +735,7 @@ function computeTimelinePositions(
   let xCursor = TIMELINE_LEFT;
   for (let year = minYear; year <= maxYear; year += 1) {
     const split = splitYears.has(year);
+    let yearStarted = false;
     // month 0 leads the year: the whole year for an unsplit year, or the
     // "month unknown" bucket for a split one.
     for (let month = 0; month <= 12; month += 1) {
@@ -742,6 +748,13 @@ function computeTimelinePositions(
         count += n;
       }
       if (maxLane === 0) continue;
+      // Open a gutter before each year (but not before the first column on
+      // the canvas) so year boundaries read clearly and the lineage edges
+      // crossing them have somewhere to breathe.
+      if (!yearStarted) {
+        if (columns.length > 0) xCursor += TIMELINE_YEAR_GAP;
+        yearStarted = true;
+      }
       const subCols = Math.ceil(maxLane / TIMELINE_MAX_STACK);
       const width = subCols * TIMELINE_MONTH_STEP;
       columns.push({ year, month, x: xCursor, width, count, split });
@@ -2285,9 +2298,28 @@ export default function MLIPExplorer() {
       edge: Edge,
       idx: number,
     ): { path: string; labelX: number; labelY: number } | null => {
-      const fromNode = positionedModels.find((n) => n.id === edge.from);
-      const toNode = positionedModels.find((n) => n.id === edge.to);
+      let fromNode = positionedModels.find((n) => n.id === edge.from);
+      let toNode = positionedModels.find((n) => n.id === edge.to);
       if (!fromNode || !toNode) return null;
+
+      // On the timeline the x axis *is* time, so an arrow drawn right-to-left
+      // contradicts the axis and reads as an error. Reverse those — but only
+      // where reversing asserts nothing false: dashed links are peer/sibling
+      // relations with no inherent direction, and two cards in the same year
+      // are ordered arbitrarily within it (the "month unknown" bucket leads
+      // the year, so a dated card can sit to the right of its own ancestor).
+      // A solid edge between different years is a real lineage claim; if that
+      // points backwards the data and the axis genuinely disagree, so it is
+      // left visibly backwards instead of being silently flipped.
+      if (
+        layout === "timeline" &&
+        toNode.x < fromNode.x &&
+        (edge.dashed || fromNode.year === toNode.year)
+      ) {
+        const swap = fromNode;
+        fromNode = toNode;
+        toNode = swap;
+      }
 
       if (layout === "force" || layout === "timeline") {
         // Connect edges to the actual card border (rectangle exit point)
