@@ -4838,6 +4838,73 @@
       "evidenceNotes": "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation. 2026-09-05 re-verification during PR consolidation: title, submission date (2026-08-14) and the full author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli) re-confirmed; still no public code repository found, so githubUrl remains absent."
     },
     {
+      "id": "ecenet",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "ECENet",
+      "year": 2026,
+      "author": "THGLab (UC Berkeley)",
+      "x": 9620,
+      "y": 320,
+      "desc": "SO(3)-equivariant interatomic potential that carries per-edge, SO(2)-equivariant features and passes SO(3)-equivariant messages through the nodes, trading full SO(3) tensor products for cheaper per-edge SO(2) operations. An optional Latent Ewald Summation (LES) module adds long-range electrostatics from predicted latent charges.",
+      "githubUrl": "https://github.com/THGLab/ecenet",
+      "isNew": true,
+      "coverage": [
+        "inorganic crystals",
+        "organic molecules"
+      ],
+      "useCases": [
+        "materials MD",
+        "molecular property prediction"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-09-13",
+      "trainingData": [
+        "MPtrj",
+        "SPICE",
+        "rMD17",
+        "MD22"
+      ],
+      "tags": [
+        "equivariant",
+        "SO(2) convolution",
+        "message passing",
+        "long-range"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "~89 elements (MPtrj); molecular subsets (SPICE, rMD17, MD22)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": true,
+      "trainedDatasets": [
+        "mptrj",
+        "spice",
+        "md17",
+        "md22"
+      ],
+      "entityType": "architecture",
+      "architectureFamily": "ECENet",
+      "isFoundationModel": "unknown",
+      "verificationStatus": "unverified",
+      "verifiedSources": [
+        "https://github.com/THGLab/ecenet"
+      ],
+      "lastVerifiedDate": "2026-09-13",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-09-13 auto-update: public GitHub repository github.com/THGLab/ecenet (THGLab, UC Berkeley) confirmed via direct fetch (arXiv/HF egress-blocked this session). README describes ECENet as 'an SO(3)-equivariant interatomic potential (MLIP)' that 'uses per-edge, SO(2)-equivariant features and passes SO(3)-equivariant messages through the nodes.' Repo documents training/testing on rMD17, MD22, SPICE (10 elements) and MPtrj (~89 elements)/WBM-Matbench-Discovery, with an optional Latent Ewald Summation (LES) add-on module for long-range electrostatics from predicted latent charges. License is BSD-3-Clause (LICENSE file); the optional LES dependency is CC BY-NC 4.0. Associated preprint stated as 'in preparation' — no arXiv ID or DOI available at review time, so verificationStatus is 'unverified' (repo confirmed, but no peer-reviewed/preprint source read). supportsCharges/supportsSpins left null: LES predicts latent charges as an output for electrostatics rather than documenting total-charge or spin conditioning as an input. Category recorded as Equivariant; positioned near the recent equivariant/foundation additions (x=9620, y=320)."
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -9849,6 +9916,24 @@
       "description": "DPA4 benchmarks directly against the eSEN-30M-MP baseline on Matbench Discovery: the 2.76 M-parameter DPA4-Air exceeds eSEN-30M-MP accuracy with 10.9× fewer parameters and 42.9× less training compute, redefining the accuracy–cost Pareto frontier for SE(3)-equivariant foundation MLIPs.",
       "edgeConfidence": "speculative",
       "edgeNotes": "Abstract/snippet-level: DPA4 (DeepModeling OpenLAM, DPA-family, EMFA SO(2) convolution) only uses eSEN-30M-MP as a Matbench Discovery baseline it outperforms. Benchmark comparison, not architectural descent; DPA4 descends from DPA1-3, not eSEN."
+    },
+    {
+      "from": "escn",
+      "to": "ecenet",
+      "label": "SO(2) features",
+      "dashed": true,
+      "description": "ECENet carries per-edge, SO(2)-equivariant features and passes SO(3)-equivariant messages through the nodes, sitting in the eSCN lineage that reduces expensive SO(3) tensor-product convolutions to cheaper SO(2) operations by aligning each edge to a common rotation axis.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Repo-level (2026-09-13): ECENet's README states it uses per-edge SO(2)-equivariant features, the same SO(3)->SO(2) reduction introduced by eSCN (Passaro & Zitnick 2023); the repo does not cite eSCN by name and the preprint is 'in preparation', so this is a conceptual (dashed/speculative) link, not confirmed architectural descent."
+    },
+    {
+      "from": "nequip",
+      "to": "ecenet",
+      "label": "Equivariant messages",
+      "dashed": true,
+      "description": "ECENet passes SO(3)-equivariant messages between nodes to build SO(3)-invariant energies, following the equivariant message-passing paradigm established by NequIP.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Repo-level (2026-09-13): conceptual link to the NequIP equivariant message-passing lineage inferred from ECENet's README description ('passes SO(3)-equivariant messages through the nodes'); not an explicitly cited dependency."
     },
     {
       "from": "dpa4",
