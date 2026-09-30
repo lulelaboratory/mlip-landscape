@@ -5815,6 +5815,48 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention.",
   },
+  {
+    id: "alignn2",
+    type: "node",
+    category: "Invariant",
+    label: "ALIGNN 2.0",
+    year: 2026,
+    author: "Kamal Choudhary et al. (NIST / Johns Hopkins)",
+    x: 3460,
+    y: 750,
+    desc:
+      "Dependency-free, native-PyTorch reimplementation of the Atomistic Line Graph Neural Network that unifies scalar, spectral, tensorial, per-atom and force-field prediction behind one graph. Its LAMMPS/OpenMM-compatible ALIGNN-FF spans 89 elements.",
+    githubUrl: "https://github.com/atomgptlab/alignn",
+    paperUrl: "https://arxiv.org/abs/2609.19487",
+    isNew: true,
+    coverage: ["general materials", "inorganic crystals"],
+    useCases: ["materials property prediction", "force fields", "spectra prediction", "large-scale molecular dynamics"],
+    properties: ["energy", "forces", "stress"],
+    frameworks: ["ASE", "PyTorch", "LAMMPS"],
+    maintenance: "active",
+    lastReviewed: "2026-09-30",
+    trainingData: ["JARVIS-DFT"],
+    tags: ["invariant", "line graph", "directional", "pure PyTorch", "force field", "spectra", "unified"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "89 elements (ALIGNN-FF force-field variant)",
+    equivariance: "invariant",
+    architecture: "gnn",
+    usesAttention: false,
+    entityType: "architecture",
+    architectureFamily: "ALIGNN / line-graph GNN",
+    trainingScope: "unknown",
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2609.19487",
+      "https://github.com/atomgptlab/alignn",
+    ],
+    lastVerifiedDate: "2026-09-30",
+    verifiedBy: "llm_assisted",
+    isFoundationModel: false,
+    evidenceNotes:
+      "2026-09-30 auto-update: arXiv ID 2609.19487 ('ALIGNN 2.0: A Unified Line-Graph Neural Network Framework for Materials Screening, Force Fields, Inverse Design, Spectroscopy, and Microscopy', submitted 2026-09-16) and the public repo github.com/atomgptlab/alignn corroborated by a direct GitHub fetch and multiple independent web-search passes; the repository header cites arXiv:2609.19487 and confirms a dependency-free native-PyTorch (no DGL) reimplementation of ALIGNN that builds the line graph and its batching from scratch and unifies scalar/spectral/tensorial/per-atom/force-field prediction behind one cached graph. ALIGNN-FF (LAMMPS pair_alignn / OpenMM) is reported to cover 89 elements and to match leading universal potentials on Matbench-Discovery and CHIPS-FF at a fraction of the parameters. Maintained by atomgptlab (lead K. Choudhary, Johns Hopkins; funded NIST-MGI/CHIPS). Direct arXiv/HuggingFace fetch was blocked by network egress policy, so quantitative benchmark figures come from abstract/README text surfaced via search and GitHub rather than the full paper. supportsCharges/supportsSpins set false: ALIGNN 2.0 predicts per-atom charges and magnetic moments as outputs but does not condition on total charge/spin; trainingScope left unknown pending confirmation of the released force-field checkpoints' training corpus.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -6174,4 +6216,5 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "trace", label: "ACE family", dashed: true, description: "MACE and TRACE are sibling ACE-based potentials: MACE constructs higher-body-order messages from the ACE basis via equivariant message passing, while TRACE keeps ACE density correlations local and replaces inter-atomic message passing with cross-attention over fixed neighbour features.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: both build many-body interactions on the ACE density-correlation basis; TRACE explicitly avoids passing learned state between atoms (attention over fixed features), contrasting MACE's message passing. Sibling-only under ACE, no evidence TRACE descends from MACE." },
   // TIP (2026): thermodynamic free-energy layer over a universal potential
   { from: "uma", to: "tip", label: "Free energy", description: "TIP wraps a static-energy universal potential in a thermodynamically consistent Gibbs free-energy model; the demonstrated implementation TIP[UMA] uses UMA as the underlying potential, trained on free energies from quasi-harmonic to MD fidelity.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2608.14502", edgeNotes: "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy." },
+  { from: "alignn", to: "alignn2", label: "Unified rewrite", description: "ALIGNN 2.0 is a dependency-free native-PyTorch reimplementation of ALIGNN by the same NIST/JARVIS group, rebuilding the atomic + line-graph message passing from scratch and unifying property, spectral, tensorial, per-atom and force-field (ALIGNN-FF) prediction behind a single graph.", edgeConfidence: "verified", edgeSource: "https://github.com/atomgptlab/alignn", edgeNotes: "Direct GitHub fetch (github.com/atomgptlab/alignn) and arXiv:2609.19487 (submitted 2026-09-16) confirm ALIGNN 2.0 as the same-group successor to ALIGNN (arXiv:2106.01829): a pure-PyTorch, DGL-free rewrite of the line-graph architecture that unifies property + force-field prediction. Direct arXiv fetch egress-blocked; corroborated at abstract/README level." },
 ];
