@@ -4838,6 +4838,64 @@
       "evidenceNotes": "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation. 2026-09-05 re-verification during PR consolidation: title, submission date (2026-08-14) and the full author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli) re-confirmed; still no public code repository found, so githubUrl remains absent."
     },
     {
+      "id": "branchip",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "BranchIP",
+      "year": 2026,
+      "author": "Laura Zichi, Gil Harari, et al. (Harvard)",
+      "x": 9900,
+      "y": 150,
+      "desc": "Learned adaptive equivariant-computation framework: a fully-learned dynamic router, trained with a distillation loss, routes features through tensor-product layers under exact energy conservation. Implemented in Allegro ('Branchlegro') for up to 2.4x speedup at 2.6x less memory.",
+      "paperUrl": "https://arxiv.org/abs/2610.02013",
+      "isNew": true,
+      "coverage": [
+        "heterogeneous catalysis",
+        "solid-acid electrolytes"
+      ],
+      "useCases": [
+        "accelerated equivariant MLIP inference",
+        "memory-efficient MLIP",
+        "catalysis MD",
+        "solid-acid electrolyte MD"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "PyTorch"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-10-03",
+      "tags": [
+        "equivariant",
+        "adaptive computation",
+        "tensor product",
+        "distillation",
+        "dynamic routing",
+        "Allegro",
+        "efficient"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "dataset-dependent (inherits the base Allegro potential's coverage)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "entityType": "architecture",
+      "architectureFamily": "Allegro / E(3)-equivariant (adaptive tensor-product routing)",
+      "trainingScope": "unknown",
+      "isFoundationModel": false,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.02013"
+      ],
+      "lastVerifiedDate": "2026-10-03",
+      "verifiedBy": "llm_assisted",
+      "speedEvidence": "Developer-reported (arXiv 2610.02013 abstract, surfaced via multiple web-search passes; direct arXiv/mirror fetch egress-blocked): BranchIP accelerates MLIPs across model sizes by up to 2.4x while reducing memory usage by up to 2.6x, evaluated on a heterogeneous-catalysis system and a proton-conducting solid-acid electrolyte. No independent benchmark assessed; speedTier left unset.",
+      "evidenceNotes": "2026-10-03 auto-update: arXiv ID 2610.02013 ('BranchIP: Learning Adaptive Equivariant Computation for Interatomic Potentials', submitted 2026-10-01), title, the BranchIP naming and lead authors (Laura Zichi, Gil Harari; Harvard, with further co-authors not fully resolved) corroborated across multiple independent web-search passes. Direct arXiv/ar5iv/Semantic Scholar/HF fetch blocked by network egress policy, so the full text and author list were not read. BranchIP is a single-model framework for learned adaptive tensor-product computation: a fully-learned dynamic router trained with a distillation objective that smoothly routes features through tensor-product layers while obeying exact energy conservation; the paper implements it in the Allegro architecture (termed 'Branchlegro'), hence entityType architecture and the Allegro lineage edge. No dedicated public code repository found at review time (searched; the related mir-group/allegro and mir-group/nequip repos are the base framework, not BranchIP-specific), so githubUrl is left absent rather than guessed. supportsCharges/supportsSpins left null (unknown — depends on the base potential); elementsCovered dataset-dependent. speedEvidence records the developer-reported 2.4x speedup / 2.6x memory reduction; speedTier not set pending independent benchmarking."
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -8279,6 +8337,15 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://github.com/mir-group/allegro",
       "edgeNotes": "Abstract/snippet-level: same group (mir-group/Kozinsky), shared authors incl. NequIP lead Batzner; Allegro is a NequIP-framework extension that drops message passing for strict locality while keeping E(3)-equivariant tensor products. arXiv 2204.05249."
+    },
+    {
+      "from": "allegro",
+      "to": "branchip",
+      "label": "Adaptive TP",
+      "description": "BranchIP adds a learned adaptive tensor-product-computation layer on top of Allegro's E(3)-equivariant backbone, routing features through tensor products via a distillation-trained dynamic router under exact energy conservation; the paper's reference implementation ('Branchlegro') is built in Allegro.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2610.02013",
+      "edgeNotes": "Abstract/snippet-level (arXiv 2610.02013, surfaced via web search; direct fetch egress-blocked): BranchIP is implemented in the equivariant MLIP Allegro, termed Branchlegro. Direct architectural extension of Allegro."
     },
     {
       "from": "nequip",
