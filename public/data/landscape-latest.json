@@ -6970,6 +6970,63 @@
       "isFoundationModel": false
     },
     {
+      "id": "nemora",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "NEMORA",
+      "year": 2026,
+      "author": "Kaplan, Varner, Willett, de Pablo",
+      "x": 9620,
+      "y": 320,
+      "desc": "Neural equivariant extension of the Fast Multipole Method: learns E(3)-equivariant expansion and translation operators on an adaptive spatial hierarchy with learned tensor charges, adding long-range interactions to short-range MLIP backbones in linear time and memory.",
+      "paperUrl": "https://arxiv.org/abs/2610.10776",
+      "isNew": true,
+      "coverage": [
+        "long-range systems",
+        "general materials",
+        "organic molecules"
+      ],
+      "useCases": [
+        "long-range MLIP",
+        "electrostatics-aware MD",
+        "large-scale atomistic simulation"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "trainingData": [
+        "non-local benchmark datasets"
+      ],
+      "tags": [
+        "equivariant",
+        "long-range",
+        "fast multipole method",
+        "equivariant charges",
+        "linear-scaling"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "—",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": true,
+      "numElements": null,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.10776",
+        "https://arxiv.org/html/2610.10776"
+      ],
+      "lastVerifiedDate": "2026-10-12",
+      "verifiedBy": "llm_assisted",
+      "entityType": "architecture",
+      "architectureFamily": "equivariant multipole / Fast Multipole Method (E(3), long-range)",
+      "trainingScope": "unknown",
+      "evidenceNotes": "Confirmed via arXiv 2610.10776 ('NEMORA: Neural Equivariant Multipole Operators for Long-Range Atomistic Learning', submitted 7 Oct 2026) by Jay L. Kaplan, Samuel Varner, Rebecca Willett, and Juan J. de Pablo. NEMORA is a neural equivariant extension of the Fast Multipole Method: it replaces scalar source charges with learned equivariant tensor charges and the analytical expansion/translation operators with learnable E(3)-equivariant counterparts on an adaptive spatial hierarchy, evaluating in linear time and memory and augmenting both symmetry-constrained and unconstrained short-range backbones (reported force/energy error reductions of >1 and up to ~3 orders of magnitude on non-local benchmarks; not independently reproduced). Author institutions not independently confirmed (Willett & de Pablo associated with University of Chicago); no public GitHub repository located at verification time, so githubUrl is omitted rather than guessed. Architecture entry; numElements null; capability axes left null/unknown where unstated. Abstract/snippet-level.",
+      "isFoundationModel": false
+    },
+    {
       "id": "nemp",
       "type": "node",
       "category": "Equivariant",
@@ -9625,6 +9682,24 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://github.com/lab-cosmo/lorem-jax",
       "edgeNotes": "Abstract/snippet-level: LOREM (arXiv 2507.19382, TMLR 2026) authored by Ceriotti's EPFL lab-cosmo group; code at github.com/lab-cosmo/lorem-jax, same org as lab-cosmo/pet-mad. Genuine same-lab sibling, not architectural descent (PET=unconstrained transformer vs LOREM=equivariant GNN)."
+    },
+    {
+      "from": "equiewald",
+      "to": "nemora",
+      "label": "Long-range equivariant MLIP",
+      "dashed": true,
+      "description": "Sibling learned-long-range equivariant MLIPs from different groups (not a lineage): EquiEwald embeds an Ewald-inspired reciprocal-space pathway inside SO(3)-equivariant message passing, while NEMORA learns E(3)-equivariant Fast Multipole Method expansion/translation operators in real space on an adaptive spatial hierarchy. Both replace fixed-cutoff locality with a learned long-range mechanism.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level: EquiEwald (arXiv 2603.18389, Mar 2026, reciprocal-space Ewald) vs NEMORA (arXiv 2610.10776, Oct 2026, learned equivariant FMM). Disjoint authors; shared 'learned long-range for equivariant MLIPs' theme only, no cited descent."
+    },
+    {
+      "from": "lorem",
+      "to": "nemora",
+      "label": "Equivariant charges",
+      "dashed": true,
+      "description": "Conceptual peers using equivariant (tensor) charges for long-range physics: LOREM propagates equivariant charges through real-space long-range message passing (e3x/jax-pme), while NEMORA learns equivariant tensor charges inside a neural Fast Multipole Method. Both move beyond scalar-charge long-range schemes.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level: LOREM (arXiv 2507.19382, COSMO/EPFL) and NEMORA (arXiv 2610.10776, Kaplan/Varner/Willett/de Pablo) independently use equivariant/tensor charges for long-range interactions; different groups and mechanisms (message passing vs multipole operators), thematic sibling only, no cited lineage."
     },
     {
       "from": "nequip",
