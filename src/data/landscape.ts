@@ -5815,6 +5815,43 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention.",
   },
+  {
+    id: "nemora",
+    type: "node",
+    category: "Equivariant",
+    label: "NEMORA",
+    year: 2026,
+    author: "Kaplan, Varner, Willett, de Pablo",
+    x: 9620,
+    y: 320,
+    desc:
+      "Learned equivariant generalization of the Fast Multipole Method: replaces the FMM analytic multipole expansion and translation operators with learned equivariant operators on an adaptive spatial hierarchy, giving linear-time long-range corrections to short-range MLIP backbones.",
+    githubUrl: "https://github.com/JayLKap/nemora",
+    paperUrl: "https://arxiv.org/abs/2610.10776",
+    isNew: true,
+    coverage: ["long-range systems", "large-scale systems"],
+    useCases: ["long-range MLIP", "electrostatics-aware MD", "large-scale atomistic simulation"],
+    properties: ["energy", "forces"],
+    maintenance: "experimental",
+    lastReviewed: "2026-10-13",
+    tags: ["equivariant", "long-range", "multipole", "fast multipole method", "linear scaling"],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered: "—",
+    equivariance: "constrained",
+    architecture: "gnn",
+    longRange: true,
+    numElements: null,
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2610.10776"],
+    lastVerifiedDate: "2026-10-13",
+    verifiedBy: "llm_assisted",
+    entityType: "architecture",
+    architectureFamily: "equivariant Fast Multipole Method (learned multipole operators)",
+    isFoundationModel: false,
+    evidenceNotes:
+      "2026-10-13 auto-update: arXiv ID 2610.10776 ('NEMORA: Neural Equivariant Multipole Operators for Long-Range Atomistic Learning', submitted 2026-10-07), title, authors (Jay L. Kaplan, Samuel Varner, Rebecca Willett, Juan J. de Pablo) and method name NEMORA corroborated across multiple independent web-search passes. NEMORA is a learned equivariant extension of the Fast Multipole Method that generalizes the FMM analytic multipole expansion and translation operators to learned equivariant counterparts on an adaptive spatial hierarchy, evaluating long-range interactions in linear time/memory as a correction to short-range MLIP backbones (MACE by default). Direct arXiv/HF fetch was blocked by network egress policy, so claims come from search-surfaced abstract text rather than the full paper; quantitative error-reduction and scaling figures left unset to avoid presenting unverified numbers as ground truth. githubUrl points to the authors' announced repository (github.com/JayLKap/nemora), stated in the paper as 'released upon publication'; it was not confirmable as live this session, so it is not listed in verifiedSources. Institutional affiliations not confirmed from retrieved snippets. supportsCharges/supportsSpins/numElements left null (unknown); maintenance set 'experimental' pending the code release. Architecture entry; trainingScope left unset.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -6174,4 +6211,7 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "trace", label: "ACE family", dashed: true, description: "MACE and TRACE are sibling ACE-based potentials: MACE constructs higher-body-order messages from the ACE basis via equivariant message passing, while TRACE keeps ACE density correlations local and replaces inter-atomic message passing with cross-attention over fixed neighbour features.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: both build many-body interactions on the ACE density-correlation basis; TRACE explicitly avoids passing learned state between atoms (attention over fixed features), contrasting MACE's message passing. Sibling-only under ACE, no evidence TRACE descends from MACE." },
   // TIP (2026): thermodynamic free-energy layer over a universal potential
   { from: "uma", to: "tip", label: "Free energy", description: "TIP wraps a static-energy universal potential in a thermodynamically consistent Gibbs free-energy model; the demonstrated implementation TIP[UMA] uses UMA as the underlying potential, trained on free energies from quasi-harmonic to MD fidelity.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2608.14502", edgeNotes: "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy." },
+  // NEMORA (2026): learned equivariant Fast Multipole Method for long-range corrections
+  { from: "mace", to: "nemora", label: "Long-range FMM correction", dashed: true, description: "NEMORA attaches a learned equivariant Fast Multipole Method to a short-range MLIP backbone — MACE by default — adding linear-time long-range interactions on top of the MACE E(3)-equivariant message-passing potential rather than replacing it.", edgeConfidence: "probable", edgeNotes: "Abstract/snippet-level (arXiv 2610.10776, submitted 2026-10-07): NEMORA is described as a long-range correction evaluated on top of a short-range backbone with MACE as the default; MACE is the carrier potential, not an architectural ancestor. Direct arXiv fetch blocked by egress policy." },
+  { from: "lorem", to: "nemora", label: "Long-range equivariant MLIP", dashed: true, description: "Sibling long-range equivariant approaches from different groups: LOREM propagates equivariant charges through long-range message passing, while NEMORA learns equivariant multipole-expansion and translation operators in a Fast Multipole Method hierarchy. Both target orientation-dependent long-range physics beyond the short-range cutoff; no shared architecture or lineage.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: LOREM (arXiv 2507.19382, COSMO/EPFL, equivariant charges) and NEMORA (arXiv 2610.10776, learned equivariant FMM) are independent long-range equivariant methods with distinct mechanisms. Thematic sibling link only; no citation-as-basis found." },
 ];
