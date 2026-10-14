@@ -8230,6 +8230,70 @@
       "licenseEvidence": "DPA4C is released within DeePMD-kit (from v3.2.0), which is licensed LGPL-3.0 (github.com/deepmodeling/deepmd-kit).",
       "benchmarkContext": "Accuracy-throughput frontier across OMat24/MatPES/OMol25 chemistry, compared against MACE-Omat and the fastest existing universal MLIPs.",
       "evidenceNotes": "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention."
+    },
+    {
+      "id": "flashcart",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "FlashCart",
+      "year": 2026,
+      "author": "Zaverkin et al.",
+      "x": 9620,
+      "y": 320,
+      "desc": "Equivariant interatomic potential built on fast Cartesian tensor products: products are written in independent Cartesian components, simplified symbolically, and emitted as fused Triton GPU kernels, with higher-order correlations built by repeated feature multiplication compressed to a fixed width. On SPICE-MACE-OFF a 5.6M-parameter model reportedly beats a 189M-parameter transformer at ~10x faster inference.",
+      "githubUrl": "https://github.com/inm-leibniz/flashcart",
+      "paperUrl": "https://arxiv.org/abs/2610.06409",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "biomolecular systems"
+      ],
+      "useCases": [
+        "biomolecular MD",
+        "fast equivariant force field"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "maintenance": "active",
+      "lastReviewed": "2026-10-14",
+      "trainingData": [
+        "SPICE-MACE-OFF"
+      ],
+      "tags": [
+        "equivariant",
+        "Cartesian tensors",
+        "Triton kernels",
+        "message passing"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "SPICE-MACE-OFF organic/biomolecular chemistry (H, C, N, O, F, P, S, Cl, Br, I)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "numElements": 10,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.06409",
+        "https://github.com/inm-leibniz/flashcart",
+        "https://pypi.org/project/flashcart/"
+      ],
+      "lastVerifiedDate": "2026-10-14",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "Cartesian-tensor equivariant message passing",
+      "trainingScope": "domain_specific",
+      "speedEvidence": "Developer-reported (arXiv 2610.06409 abstract + repo README, surfaced via web search; direct arXiv/HF fetch egress-blocked): a 5.6M-parameter FlashCart model achieves ~10x faster inference than a 189M-parameter transformer baseline on SPICE-MACE-OFF. No independent benchmark tier assessed.",
+      "accuracyEvidence": "Developer-reported (arXiv 2610.06409 abstract): the 5.6M-parameter FlashCart model reportedly attains lower energy and force errors than the 189M-parameter transformer baseline on SPICE-MACE-OFF. No independent benchmark assessed.",
+      "trainedDatasets": [
+        "spice"
+      ],
+      "evidenceNotes": "2026-10-14 auto-update: arXiv ID 2610.06409 ('FlashCart: Fast Cartesian Tensor Products for Equivariant Interatomic Potentials', submitted 2026-10-05, cs.LG; authors Viktor Zaverkin, Payman Goodarzi, Sergey V. Sukhomlinov, Davit Hovhannisyan, Roland Aydin, Martin H. Müser, Mathias Niepert) and the public repo github.com/inm-leibniz/flashcart (created 2026-10-05, README read directly via raw.githubusercontent.com) confirm an equivariant interatomic potential whose Cartesian tensor products are derived symbolically and run as generated Triton kernels, with a PyPI package (flashcart v0.1.0). Builds on Zaverkin et al. 2024 irreducible Cartesian-tensor message passing (arXiv 2405.14253). Direct arXiv PDF / HuggingFace fetch was egress-blocked, so quantitative speed/accuracy figures come from search-surfaced abstract text. supportsCharges/supportsSpins left null (SPICE-MACE-OFF is neutral closed-shell organics; no charge/spin conditioning described). numElements/elementsCovered reflect the MACE-OFF element set of the SPICE-MACE-OFF benchmark."
     }
   ],
   "groups": [
@@ -10008,6 +10072,24 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "tace",
+      "to": "flashcart",
+      "label": "Cartesian tensors",
+      "dashed": true,
+      "description": "FlashCart and TACE are sibling equivariant potentials built on Cartesian-tensor representations rather than spherical-harmonic Clebsch-Gordan machinery: TACE uses an irreducible-Cartesian-tensor ACE expansion, while FlashCart derives its Cartesian tensor products symbolically and runs them as fused Triton kernels.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level (2026-10-14): both sit in the Cartesian-tensor equivariant family (FlashCart builds on Zaverkin et al. 2024 irreducible Cartesian-tensor message passing, arXiv 2405.14253; TACE on irreducible-Cartesian-tensor ACE). Shared family inference, no cited descent between them — kept speculative/dashed. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "mace_off",
+      "to": "flashcart",
+      "label": "SPICE-MACE-OFF baseline",
+      "dashed": true,
+      "description": "FlashCart's reference model is trained and benchmarked on SPICE-MACE-OFF — the SPICE subset used to train MACE-OFF — reporting lower energy/force errors and ~10x faster inference than a large transformer baseline on that organic/biomolecular chemistry.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level (2026-10-14): data/benchmark link, not architectural descent — FlashCart (arXiv 2610.06409) uses the SPICE-MACE-OFF dataset associated with MACE-OFF. Kept speculative/dashed. Direct arXiv fetch blocked by network egress policy."
     }
   ]
 }
