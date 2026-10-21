@@ -5815,6 +5815,95 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention.",
   },
+  {
+    id: "dpa4c_lr",
+    type: "node",
+    category: "Equivariant",
+    label: "DPA4C-LR",
+    year: 2026,
+    author: "Yicheng Chen et al. (Peichen Zhong group, National University of Singapore)",
+    x: 9620,
+    y: 320,
+    desc:
+      "Long-range, electrical-response extension of the DPA4C backbone: it analytically splits long-range electrostatics and Born effective charges into a global electrostatics step plus strictly local derivatives of learned latent charges, keeping equivariant MLIPs spatially decomposable. Scales to 5.2M atoms on 4 GPUs.",
+    paperUrl: "https://arxiv.org/abs/2610.23643",
+    isNew: true,
+    coverage: ["liquid water", "relaxor ferroelectrics", "solid electrolytes", "semiconductor interfaces"],
+    useCases: ["long-range electrostatics", "field-dependent infrared spectra", "ferroelectric polarization", "ionic conductivity", "interfacial thermal transport", "large-scale distributed MD"],
+    properties: ["energy", "forces", "stress", "dipole"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-10-21",
+    trainingData: ["energies and forces (dataset not specified in abstract); demonstrated on water, Pb(Mg1/3Nb2/3)O3, Li0.9NbO0.9Cl4.1, Si/diamond interfaces"],
+    tags: ["equivariant", "long-range", "electrostatics", "particle-mesh Ewald", "Born effective charges", "electrical response", "latent charges", "DPA4C", "nvalchemi", "distributed MD"],
+    supportsCharges: true,
+    supportsSpins: null,
+    elementsCovered: "inherits DPA4C backbone coverage; demonstrated on H/O, Pb/Mg/Nb/O, Li/Nb/O/Cl, Si/C",
+    equivariance: "constrained",
+    architecture: "gnn",
+    longRange: true,
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2610.23643"],
+    lastVerifiedDate: "2026-10-21",
+    verifiedBy: "llm_assisted",
+    entityType: "trained_model",
+    architectureFamily: "Deep Potential (DPA) / DPA4C",
+    trainingScope: "multi_domain",
+    isFoundationModel: false,
+    chargeSpinEvidence:
+      "arXiv 2610.23643 abstract: trained on energies and forces, DPA4C-LR accurately infers Born effective charges (BECs) and models the electrical/field response of materials (field-dependent IR spectra of water; relaxor polarization).",
+    speedEvidence:
+      "Developer-reported (arXiv 2610.23643 abstract): the long-range formulation preserves spatial decomposability and scales to 5.2 million atoms on four GPUs at approximately twice the computational cost of its short-range DPA4C backbone.",
+    accuracyEvidence:
+      "Developer-reported (arXiv 2610.23643 abstract): reproduces the field-dependent IR spectra of water, recovers the slim polarization hysteresis of relaxor Pb(Mg1/3Nb2/3)O3, and predicts a room-temperature field-driven ionic conductivity of 6.8±0.7 mS/cm in amorphous Li0.9NbO0.9Cl4.1. No independent benchmark tier assessed.",
+    evidenceNotes:
+      "2026-10-21 auto-update: arXiv:2610.23643v1 'Scalable long-range machine learning interatomic potentials with electrical response for atomistic material modeling' (announce type 'new', cond-mat.mtrl-sci, 2026-10-19). Title and the full abstract — which names the model 'DPA4C-LR' built on the DPA4C backbone and implemented on NVIDIA's nvalchemi platform — were confirmed verbatim from the official arXiv RSS announcement feed mirrored on GitHub (iopwsy/arXiv_cond-mat data/2026-10-19.md and ehijano/rss_fetch rss_data/cond-mat.mtrl-sci/2026-10-19_cond-mat.mtrl-sci.xml). Author list (Yicheng Chen, Xiaoyun Yu, Hyejeong Song, Xintian Wang, Zihui Li, Zixi Xia, Junmin Chen, Peichen Zhong; NUS) is from web search and not re-confirmed against the RSS dc:creator field. Direct arXiv/Semantic-Scholar fetch was blocked by session network egress policy, so quantitative figures come from the abstract text rather than the full paper. No public code repository located; the paper states implementation on the nvalchemi (NVIDIA ALCHEMI) platform. supportsSpins/usesAttention left unset to avoid guessing which DPA4C-backbone capabilities the long-range variant retains.",
+  },
+  {
+    id: "tersoff_nn",
+    type: "node",
+    category: "Descriptor",
+    label: "Tersoff-NN",
+    year: 2026,
+    author: "Nishimura, Kubota, Takematsu, Hirai, Watanabe (Waseda University)",
+    x: 4020,
+    y: 550,
+    desc:
+      "Hybrid silicon potential that keeps the classical Tersoff analytic radial terms and cutoff but learns the environment-dependent bond-order factor with compact neural networks. Physical constraints keep it dynamically stable; ~4-12x faster than Behler-Parrinello NN potentials on 32k-atom systems.",
+    paperUrl: "https://arxiv.org/abs/2610.15591",
+    isNew: true,
+    coverage: ["silicon"],
+    useCases: ["silicon molecular dynamics", "liquid and amorphous Si", "Si surface reconstruction", "melt-quench simulation"],
+    properties: ["energy", "forces"],
+    frameworks: ["LAMMPS"],
+    maintenance: "experimental",
+    lastReviewed: "2026-10-21",
+    trainingData: ["custom Si DFT dataset of ~16,874 configurations (crystal, liquid, Si(111) surface)"],
+    tags: ["descriptor", "Tersoff", "bond-order", "hybrid potential", "neural network", "silicon", "LAMMPS", "physics-constrained"],
+    supportsCharges: false,
+    supportsSpins: false,
+    elementsCovered: "Si",
+    equivariance: "invariant",
+    architecture: "descriptor",
+    usesAttention: false,
+    longRange: false,
+    numElements: 1,
+    verificationStatus: "partially_verified",
+    verifiedSources: ["https://arxiv.org/abs/2610.15591", "https://zenodo.org/records/23290766"],
+    lastVerifiedDate: "2026-10-21",
+    verifiedBy: "llm_assisted",
+    entityType: "trained_model",
+    architectureFamily: "Tersoff-NN",
+    trainingScope: "single_system",
+    isFoundationModel: false,
+    speedTier: "fast",
+    speedEvidence:
+      "Developer-reported (arXiv 2610.15591 abstract): on 32,768-atom systems Tersoff-NN runs 4-12x faster than the Behler-Parrinello-type NN potentials tested in the study, while retaining the analytic Tersoff radial form.",
+    accuracyEvidence:
+      "Developer-reported (arXiv 2610.15591 abstract): closely reproduces ab initio radial and angular distributions of liquid Si, the equilibrium diamond-Si structure and qualitative energetic trends among crystalline phases, and retains characteristic Si surface reconstruction motifs excluded from training.",
+    evidenceNotes:
+      "2026-10-21 auto-update: arXiv:2610.15591 'Tersoff-NN: Hybrid Machine-Learned Bond-Order Extension of the Tersoff Potential' (v1 announce type 'new', physics.chem-ph, 2026-10-14; v2 2026-10-19). Title, authors (Yusuke Nishimura, Sho Kubota, Kotaro Takematsu, Kentaro Hirai, Takanobu Watanabe; Waseda University) and the full abstract were confirmed verbatim from the official arXiv RSS announcement feed mirrored on GitHub (ehijano/rss_fetch rss_data/physics.chem-ph/2026-10-14_physics.chem-ph.xml and iopwsy/arXiv_cond-mat data/2026-10-19.md) and from the curated atomistic-simulation-paper-feed (mcox3406). Direct arXiv/Zenodo fetch was blocked by session network egress policy. Code, trained models and a reference Si dataset are archived on Zenodo ('Tersoff-NN — Software, Trained Models, and Reference Dataset for Silicon', zenodo.org/records/23290766, with LAMMPS implementation; record surfaced via web search but not directly fetched); no GitHub repository was located, so githubUrl is omitted.",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -6174,4 +6263,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "trace", label: "ACE family", dashed: true, description: "MACE and TRACE are sibling ACE-based potentials: MACE constructs higher-body-order messages from the ACE basis via equivariant message passing, while TRACE keeps ACE density correlations local and replaces inter-atomic message passing with cross-attention over fixed neighbour features.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: both build many-body interactions on the ACE density-correlation basis; TRACE explicitly avoids passing learned state between atoms (attention over fixed features), contrasting MACE's message passing. Sibling-only under ACE, no evidence TRACE descends from MACE." },
   // TIP (2026): thermodynamic free-energy layer over a universal potential
   { from: "uma", to: "tip", label: "Free energy", description: "TIP wraps a static-energy universal potential in a thermodynamically consistent Gibbs free-energy model; the demonstrated implementation TIP[UMA] uses UMA as the underlying potential, trained on free energies from quasi-harmonic to MD fidelity.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2608.14502", edgeNotes: "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy." },
+  // DPA4C-LR (2026): long-range electrostatics + electrical response on the DPA4C backbone
+  { from: "dpa4c", to: "dpa4c_lr", label: "Long-range + electrical response", description: "DPA4C-LR extends the DPA4C equivariant backbone with long-range electrostatics and electrical-response modeling: it analytically separates long-range electrostatic forces and Born effective charges into a global electrostatics calculation and strictly local derivatives of learned latent charges, preserving DPA4C's spatial decomposability for distributed, multimillion-atom MD.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2610.23643", edgeNotes: "Abstract-level (arXiv:2610.23643v1, 2026-10-19): the abstract states the framework is 'Implemented as DPA4C-LR' and scales 'at approximately twice the computational cost of its short-range backbone' — i.e. DPA4C. Confirmed verbatim from the arXiv RSS announcement feed mirrored on GitHub (iopwsy/arXiv_cond-mat, ehijano/rss_fetch). Direct arXiv fetch blocked by network egress policy." },
+  // Tersoff-NN (2026): hybrid Tersoff + NN bond-order silicon potential
+  { from: "bpnn", to: "tersoff_nn", label: "vs Behler-Parrinello NN", dashed: true, description: "Tersoff-NN is a hybrid silicon potential that retains the analytic Tersoff radial terms while learning the bond-order factor with compact neural networks; it is benchmarked directly against Behler-Parrinello-type NN potentials, reporting comparable accuracy with 4-12x higher speed and improved dynamical stability from the physics-constrained form.", edgeConfidence: "probable", edgeSource: "https://arxiv.org/abs/2610.15591", edgeNotes: "Abstract-level (arXiv:2610.15591, 2026-10-14): Tersoff-NN explicitly compares against Behler-Parrinello-type NN potentials (4-12x faster on 32,768-atom systems) and contrasts with an atom-centered bond-order NN for dynamical stability. Relationship is a methodological baseline/contrast, not descent — kept probable/dashed. Confirmed verbatim from the arXiv RSS announcement feed mirrored on GitHub (ehijano/rss_fetch, iopwsy/arXiv_cond-mat); direct arXiv fetch egress-blocked." },
 ];
