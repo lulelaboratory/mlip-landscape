@@ -4838,6 +4838,76 @@
       "evidenceNotes": "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation. 2026-09-05 re-verification during PR consolidation: title, submission date (2026-08-14) and the full author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli) re-confirmed; still no public code repository found, so githubUrl remains absent."
     },
     {
+      "id": "tuga_ff",
+      "type": "node",
+      "category": "Transformer",
+      "label": "Tuga-FF",
+      "year": 2026,
+      "author": "De Breuck, Marques et al. (Ruhr University Bochum)",
+      "x": 9620,
+      "y": 320,
+      "desc": "Pressure-transferable universal ML potential: a graph-transformer backbone with a Taylor energy head giving conservative forces and stress, trained on MP and MatPES. Released with the WBM-MatPES high-pressure benchmark; ~13.6 meV/atom energy MAE at ambient, ~21 at 150 GPa.",
+      "githubUrl": "https://github.com/ppdebreuck/tuga-ff",
+      "paperUrl": "https://arxiv.org/abs/2610.14891",
+      "isNew": true,
+      "coverage": [
+        "inorganic materials",
+        "high-pressure phases"
+      ],
+      "useCases": [
+        "molecular dynamics",
+        "high-pressure materials",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "license": "MIT",
+      "maintenance": "experimental",
+      "lastReviewed": "2026-10-26",
+      "trainingData": [
+        "Materials Project",
+        "MatPES",
+        "WBM-MatPES (benchmark)"
+      ],
+      "tags": [
+        "graph transformer",
+        "universal",
+        "pressure-transferable",
+        "MatPES",
+        "conservative"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "MP/MatPES coverage (periodic-table-spanning; exact set unconfirmed)",
+      "architecture": "gnn",
+      "usesAttention": true,
+      "entityType": "trained_model",
+      "architectureFamily": "Tuga-FF",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "arXiv:2610.14891 titles the work 'Pressure-transferable universal machine-learning potentials ... Tuga-FF' and releases general-purpose checkpoints (v1-mp, v1-matpes-3d, v1-matpes-all) trained on the periodic-table-spanning MP and MatPES datasets for broad materials simulation.",
+      "accuracyEvidence": "arXiv:2610.14891 abstract reports Tuga-FF reaching the lowest ambient-pressure energy error in the WBM-MatPES benchmark (~13.6 meV/atom) and ~21 meV/atom at 150 GPa; corroborated across independent web-search passes.",
+      "datasetEvidence": "Trained on Materials Project relaxations (v1-mp checkpoint) and MatPES (v1-matpes-3d / v1-matpes-all checkpoints); WBM-MatPES (~182k structures recomputed with MatPES settings, test sets at six pressures up to 150 GPa) is the released evaluation benchmark (arXiv:2610.14891).",
+      "licenseEvidence": "MIT license declared in the ppdebreuck/tuga-ff GitHub repository.",
+      "trainedDatasets": [
+        "matpes"
+      ],
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.14891",
+        "https://github.com/ppdebreuck/tuga-ff"
+      ],
+      "lastVerifiedDate": "2026-10-26",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-10-26 auto-update: arXiv ID 2610.14891 ('Pressure-transferable universal machine-learning potentials: the WBM-MatPES benchmark and Tuga-FF', De Breuck, da Silva, Loew, Botti, Marques), title, abstract (graph-transformer backbone + Taylor energy head, conservative E/F/stress, ambient ~13.6 meV/atom and ~21 meV/atom at 150 GPa, WBM-MatPES benchmark of ~182k structures) and the public repo github.com/ppdebreuck/tuga-ff (MIT, ASE TugaFFCalculator, checkpoints v1-mp/v1-matpes-3d/v1-matpes-all) corroborated across independent web-search passes and a README fetch; direct arXiv fetch blocked by network egress policy, so full text was not read. supportsCharges/supportsSpins left null (not documented); elementsCovered left as MP/MatPES coverage since no explicit element list was confirmed."
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -10008,6 +10078,24 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "orb",
+      "to": "tuga_ff",
+      "label": "Non-equivariant uMLIP",
+      "dashed": true,
+      "description": "Sibling non-equivariant universal materials potentials: Orb-v3 uses a non-equivariant graph-network backbone, while Tuga-FF uses a graph-transformer backbone (energy from interatomic distances and angles). Both predict conservative energy/forces/stress for broad inorganic materials rather than enforcing built-in equivariance.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level (2026-10-26): peer non-equivariant universal MLIPs for materials from different groups; no descent or citation-as-basis claimed, kept speculative/dashed. Direct arXiv fetch blocked by egress policy."
+    },
+    {
+      "from": "uma",
+      "to": "tuga_ff",
+      "label": "Universal materials FM",
+      "dashed": true,
+      "description": "Peer universal materials foundation potentials trained on large DFT datasets: Meta FAIR's UMA spans OC20/OMat24/OMol25 with a Mixture-of-Linear-Experts backbone, while Tuga-FF trains a graph transformer on MP + MatPES and adds explicit high-pressure (WBM-MatPES) transferability. Parallel efforts, not a lineage.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/snippet-level (2026-10-26): both are universal materials foundation potentials from different labs/architectures/datasets; conceptual/benchmark-peer link only, no shared architecture or descent. Direct arXiv fetch blocked by egress policy."
     }
   ]
 }
