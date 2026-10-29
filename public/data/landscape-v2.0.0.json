@@ -8230,6 +8230,141 @@
       "licenseEvidence": "DPA4C is released within DeePMD-kit (from v3.2.0), which is licensed LGPL-3.0 (github.com/deepmodeling/deepmd-kit).",
       "benchmarkContext": "Accuracy-throughput frontier across OMat24/MatPES/OMol25 chemistry, compared against MACE-Omat and the fastest existing universal MLIPs.",
       "evidenceNotes": "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention."
+    },
+    {
+      "id": "anysolv",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "AnySolv",
+      "year": 2026,
+      "author": "Anton Z. Ni, Joonho Lee (Harvard)",
+      "x": 9900,
+      "y": 150,
+      "desc": "Implicit-solvation correction that adds a solvent-conditioned energy (ΔE) and force (ΔF) term on top of any gas-phase potential without retraining it. A per-system solvent embedding over continuous Minnesota descriptors generalises across 179 solvents.",
+      "githubUrl": "https://github.com/Ant-on-knee/anysolv",
+      "paperUrl": "https://arxiv.org/abs/2610.17226",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "solution-phase chemistry",
+        "reaction intermediates"
+      ],
+      "useCases": [
+        "implicit solvation",
+        "solvation free energies",
+        "reaction mechanism screening",
+        "solution-phase MD"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "experimental",
+      "lastReviewed": "2026-10-29",
+      "trainingData": [
+        "~1.4M DFT-SMD solvation energies/forces across 36 solvents (incl. charged, open-shell and transition-state solutes)"
+      ],
+      "tags": [
+        "implicit solvation",
+        "solvent correction",
+        "solution-phase",
+        "mixture-of-experts",
+        "UMA-based",
+        "equivariant",
+        "message passing"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "molecular / organic solutes (not explicitly enumerated; solute chemistry inherits the base UMA potential)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "entityType": "trained_model",
+      "architectureFamily": "eSEN / eSCN equivariant GNN (UMA-based) + solvent-embedding correction",
+      "trainingScope": "domain_specific",
+      "isFoundationModel": false,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.17226",
+        "https://github.com/Ant-on-knee/anysolv"
+      ],
+      "lastVerifiedDate": "2026-10-29",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-10-29 auto-update: arXiv ID 2610.17226 ('Solvating machine-learning interatomic potentials for solution-phase chemistry', submitted 2026-10-12) and authors Anton Z. Ni & Joonho Lee corroborated across multiple web-search passes; the public repo github.com/Ant-on-knee/anysolv (MIT-licensed inference code) was fetched and its README read. AnySolv (formerly AniSolv) predicts a solvation energy correction ΔE (eV) and force correction ΔF (eV/Å) added to a gas-phase potential (vacuum returns exactly zero). Two checkpoints ship: `model_moe`, a 64-expert MoE eSCNMDMoeBackbone (~291M params) initialised from Meta's UMA uma-s-1p2 and distributed on Hugging Face under the FAIR Chemistry License v1, and `model_compact`, a dense GNN (~6.4M params) trained from scratch and bundled in-repo under MIT. Both use a per-system solvent embedding + output gate. Trained/validated on 36 solvents; all 179 Minnesota Solvent Descriptor Database solvents supported via continuous descriptors. supportsCharges/supportsSpins left null: training covered charged and open-shell solutes but the README/abstract do not document charge/spin conditioning as model inputs for the solvation correction. elementsCovered not enumerated in the repo. Direct arXiv fetch blocked by network egress policy, so quantitative benchmark figures were not read from the full paper."
+    },
+    {
+      "id": "dpa4c_lr",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "DPA4C-LR",
+      "year": 2026,
+      "author": "Yicheng Chen, Xiaoyun Yu, Hyejeong Song, Xintian Wang et al. (Peichen Zhong group, NUS)",
+      "x": 9620,
+      "y": 320,
+      "desc": "Long-range extension of DPA4C: a charge head on the shared descriptor feeds a reciprocal-space Ewald/PME term trained jointly with the short-range model, adding electrical response—Born effective charges and external-field MD—at ~2x the backbone cost.",
+      "githubUrl": "https://github.com/AM3GroupHub/deepmd-lr",
+      "paperUrl": "https://arxiv.org/abs/2610.23643",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "aqueous / periodic systems",
+        "slabs & interfaces"
+      ],
+      "useCases": [
+        "long-range electrostatics",
+        "electrical response",
+        "large-scale MD",
+        "Born effective charges"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "experimental",
+      "lastReviewed": "2026-10-29",
+      "trainingData": [
+        "energies + forces (latent long-range charge model learned without explicit charge labels; Born tensors calibrated against DFPT)"
+      ],
+      "tags": [
+        "long-range",
+        "electrostatics",
+        "Ewald",
+        "PME",
+        "charge head",
+        "electrical response",
+        "Born charges",
+        "DPA4C",
+        "DeePMD",
+        "equivariant"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": null,
+      "elementsCovered": "inherits the DPA4C backbone's coverage (demonstrated on periodic water and the 6,144-atom GB10 benchmark)",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "longRange": true,
+      "entityType": "architecture",
+      "architectureFamily": "Deep Potential (DPA) / SE(3)-equivariant + long-range electrostatics",
+      "isFoundationModel": "unknown",
+      "chargeSpinEvidence": "A charge network on the shared DPA4C descriptor feeds a reciprocal-space Ewald/PME term (from nvalchemi-toolkit-ops) trained jointly with the short-range model; it infers Born effective charges and supports MD in an external electric field, with Born-tensor scale/sign calibrated against DFPT labels (github.com/AM3GroupHub/deepmd-lr README, read 2026-10-29; arXiv 2610.23643).",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2610.23643",
+        "https://github.com/AM3GroupHub/deepmd-lr"
+      ],
+      "lastVerifiedDate": "2026-10-29",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-10-29 auto-update: arXiv ID 2610.23643 ('Scalable long-range machine learning interatomic potentials with electrical response for atomistic material modeling', submitted 2026-10-16) corroborated across multiple web-search passes; the public repo github.com/AM3GroupHub/deepmd-lr (MIT) was fetched and its README read. DeePMD-lr is a long-range electrostatics plugin for DPA4C in DeePMD-kit: a charge head on the shared DPA4C descriptor plus a reciprocal-space Ewald/PME term, trained jointly with the short-range model (registers as type 'dp_lr', works with deepmd-kit==3.2.0; handles non-periodic, 3D-periodic and slab-with-dipole-correction systems). README-reported results: 4.9x force-RMSE improvement over the local baseline on periodic water and 13.7x faster MD on a 6,144-atom GB10 benchmark; the paper reports scaling to 5.2M atoms on four GPUs at ~2x the short-range backbone's cost and inference of Born effective charges and field-dependent IR spectra of water. Leading authors and the NUS / Peichen Zhong-group affiliation appeared across search passes but the full author list was not read from arXiv directly (egress-blocked); supportsSpins left null (not documented in the LR plugin) and isFoundationModel left 'unknown' since the paper demonstrates the long-range method rather than a new universal foundation checkpoint. Added as a distinct node (not folded into dpa4c) because it introduces long-range electrostatics and electrical response absent from the short-range DPA4C entry, with its own paper and repo."
     }
   ],
   "groups": [
@@ -10008,6 +10143,42 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "uma",
+      "to": "anysolv",
+      "label": "Solvation correction",
+      "description": "AnySolv's preferred checkpoint is a 64-expert MoE eSCN backbone initialised from Meta's UMA (uma-s-1p2); it learns a solvent-conditioned ΔE/ΔF correction added on top of the gas-phase UMA potential rather than replacing it.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://github.com/Ant-on-knee/anysolv",
+      "edgeNotes": "README (read 2026-10-29): `model_moe` is an eSCNMDMoeBackbone initialised from UMA uma-s-1p2 and distributed as a UMA derivative under the FAIR Chemistry License; the repo asks users to also cite the UMA paper (arXiv 2506.23971). Direct trained-on-top-of lineage. arXiv 2610.17226."
+    },
+    {
+      "from": "spookynet",
+      "to": "anysolv",
+      "label": "Solvent conditioning",
+      "dashed": true,
+      "description": "Both condition an equivariant potential on an external chemical environment, but along different axes: SpookyNet embeds total charge/spin as global state, whereas AnySolv embeds the solvent via continuous Minnesota descriptors to add an implicit-solvation energy/force correction.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Conceptual peer link (external-condition embedding); no descent claimed, kept speculative/dashed. arXiv 2610.17226."
+    },
+    {
+      "from": "dpa4c",
+      "to": "dpa4c_lr",
+      "label": "Long-range electrostatics",
+      "description": "DPA4C-LR adds a charge head on the shared DPA4C descriptor plus a reciprocal-space Ewald/PME term trained jointly with the short-range DPA4C model, extending it to long-range electrostatics and electrical response (Born effective charges, external-field MD).",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://github.com/AM3GroupHub/deepmd-lr",
+      "edgeNotes": "README (read 2026-10-29): DeePMD-lr is 'a charge head on the shared DPA4C descriptor and a reciprocal-space Ewald/PME term from nvalchemi-toolkit-ops, trained jointly with the short-range model', registering as type 'dp_lr' on deepmd-kit==3.2.0. Direct extension of the DPA4C backbone. arXiv 2610.23643."
+    },
+    {
+      "from": "equiewald",
+      "to": "dpa4c_lr",
+      "label": "Ewald message passing",
+      "dashed": true,
+      "description": "Sibling equivariant potentials that restore long-range physics through a reciprocal-space Ewald summation: EquiEwald adds Ewald reciprocal-space message passing to an e3nn-style backbone, while DPA4C-LR bolts a charge-model Ewald/PME term onto the DPA4C descriptor.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Conceptual peer link via reciprocal-space Ewald long-range electrostatics; no descent claimed, kept speculative/dashed. arXiv 2610.23643."
     }
   ]
 }
