@@ -5815,6 +5815,62 @@ export const INITIAL_NODES: AnyNode[] = [
     evidenceNotes:
       "2026-08-24 auto-update: arXiv ID 2608.19041 ('Universal Machine-learning Molecular Dynamics at the Speed of Empirical Potentials', submitted 2026-08-19), title, authors (Tiancheng Li, Jianming Xue, Linfeng Zhang, Duo Zhang, Han Wang) and model name DPA4C corroborated across multiple independent web-search passes. The public DeePMD-kit v3.2.0 release notes (github.com/deepmodeling/deepmd-kit/releases/tag/v3.2.0, published 2026-08-19) confirm DPA4C as a 'compact, strictly local and compressible model optimized for high-throughput and large-scale molecular dynamics, with graph-native execution, fused CUDA inference, native-spin support, and charge/multiplicity conditioning.' Direct arXiv/ar5iv/HF fetch was blocked by network egress policy, so quantitative accuracy/throughput figures come from search-surfaced abstract text rather than the full paper. numElements/exact element count left unset pending confirmation; usesAttention/longRange left unset to avoid guessing whether the compressed variant retains DPA4's EMFA attention.",
   },
+  {
+    id: "amaro2",
+    type: "node",
+    category: "Equivariant",
+    label: "AMARO v2.0",
+    year: 2026,
+    author: "Mirarchi, Farr, Perez, De Fabritiis (UPF / Acellera)",
+    x: 9620,
+    y: 320,
+    desc:
+      "Unified coarse-grained neural network potential for biomolecular complexes: pairs the O(3)-equivariant TensorNet backbone with a hydrogen-excluding heavy-atom coarse-graining map and implicit solvent, giving one representation across proteins, drug-like ligands and protein-ligand complexes.",
+    githubUrl: "https://github.com/compsciencelab/amaro",
+    paperUrl: "https://arxiv.org/abs/2610.37606",
+    isNew: true,
+    coverage: ["proteins", "drug-like molecules", "protein-ligand complexes"],
+    useCases: [
+      "coarse-grained molecular dynamics",
+      "protein dynamics",
+      "protein-ligand complex simulation",
+    ],
+    properties: ["energy", "forces"],
+    frameworks: ["PyTorch"],
+    maintenance: "experimental",
+    lastReviewed: "2026-11-03",
+    trainingData: [
+      "all-atom MD / molecular-mechanics force labels (incl. Acellera HoloSet protein-ligand conformations)",
+    ],
+    tags: [
+      "coarse-grained",
+      "TensorNet",
+      "O(3)-equivariant",
+      "biomolecular",
+      "implicit solvent",
+      "heavy-atom",
+    ],
+    supportsCharges: null,
+    supportsSpins: null,
+    elementsCovered:
+      "coarse-grained protein/ligand heavy-atom bead types (hydrogens excluded)",
+    equivariance: "constrained",
+    architecture: "gnn",
+    entityType: "trained_model",
+    architectureFamily: "AMARO / TensorNet",
+    trainingScope: "domain_specific",
+    isFoundationModel: false,
+    verificationStatus: "partially_verified",
+    verifiedSources: [
+      "https://arxiv.org/abs/2610.37606",
+      "https://github.com/compsciencelab/amaro",
+      "https://huggingface.co/compsciencelab/AMARO2",
+    ],
+    lastVerifiedDate: "2026-11-03",
+    verifiedBy: "llm_assisted",
+    evidenceNotes:
+      "2026-11-03 auto-update: arXiv ID 2610.37606 ('A unified coarse-grained neural network potential for the dynamics of biomolecular complexes', submitted ~2026-10-27, q-bio.BM), title, authors (Antonio Mirarchi, Stephen E. Farr, Adria Perez, Gianni De Fabritiis; compsciencelab / UPF / Acellera) and the model name AMARO v2.0 corroborated across multiple independent web-search passes. The public code repo github.com/compsciencelab/amaro (built on TorchMD-Net) and the checkpoint page huggingface.co/compsciencelab/AMARO2 confirm the model as a coarse-grained potential that retains heavy atoms, treats solvent implicitly, and unifies proteins, drug-like molecules and their complexes; the AMARO backbone is the O(3)-equivariant TensorNet with a hydrogen-excluding coarse-graining map (arXiv:2409.17852, AMARO v1). Direct arXiv/HF/GitHub fetch was blocked by network egress policy, so the full text/README were not read. supportsCharges/supportsSpins left null and elementsCovered described as coarse-grained bead types since the model operates on heavy-atom beads rather than conditioning on charge/spin; license left unset (v2 checkpoint license listed as to-be-defined at review time, v1 was CC-BY-NC-ND-4.0, not in the SPDX allowlist).",
+  },
 ];
 
 export const INITIAL_EDGES: Edge[] = [
@@ -6174,4 +6230,8 @@ export const INITIAL_EDGES: Edge[] = [
   { from: "mace", to: "trace", label: "ACE family", dashed: true, description: "MACE and TRACE are sibling ACE-based potentials: MACE constructs higher-body-order messages from the ACE basis via equivariant message passing, while TRACE keeps ACE density correlations local and replaces inter-atomic message passing with cross-attention over fixed neighbour features.", edgeConfidence: "speculative", edgeNotes: "Abstract/snippet-level: both build many-body interactions on the ACE density-correlation basis; TRACE explicitly avoids passing learned state between atoms (attention over fixed features), contrasting MACE's message passing. Sibling-only under ACE, no evidence TRACE descends from MACE." },
   // TIP (2026): thermodynamic free-energy layer over a universal potential
   { from: "uma", to: "tip", label: "Free energy", description: "TIP wraps a static-energy universal potential in a thermodynamically consistent Gibbs free-energy model; the demonstrated implementation TIP[UMA] uses UMA as the underlying potential, trained on free energies from quasi-harmonic to MD fidelity.", edgeConfidence: "verified", edgeSource: "https://arxiv.org/abs/2608.14502", edgeNotes: "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy." },
+
+  // AMARO v2.0 (2026): unified coarse-grained biomolecular potential on a TensorNet backbone
+  { from: "painn", to: "amaro2", label: "Cartesian equivariant MPNN", dashed: true, description: "AMARO's backbone is TensorNet, an O(3)-equivariant message-passing network over Cartesian tensor features; it sits in the Cartesian equivariant message-passing lineage pioneered by PaiNN (equivariant scalar/vector message passing), which TensorNet extends to rank-2 Cartesian tensors.", edgeConfidence: "speculative", edgeNotes: "Abstract/repo-level (2026-11-03): github.com/compsciencelab/amaro describes AMARO as built on the O(3)-equivariant TensorNet architecture; TensorNet (Simeon & De Fabritiis) is a Cartesian-tensor equivariant MPNN in the PaiNN lineage. Family/representation link, not a stated descent — kept speculative. Full text not read (egress-blocked)." },
+  { from: "fennix_bio1", to: "amaro2", label: "Biomolecular MLIP peers", dashed: true, description: "Concurrent 2026 neural-network potentials aimed at biomolecular simulation from different directions: FeNNix-Bio1 is an all-atom equivariant biomolecular potential, while AMARO v2.0 is a coarse-grained heavy-atom potential with implicit solvent unifying proteins, ligands and their complexes. Parallel efforts rather than a descent.", edgeConfidence: "speculative", edgeNotes: "Abstract-level (2026-11-03): both are 2026 biomolecular-simulation MLIPs; no source states descent, kept speculative/dashed. AMARO v2.0 = arXiv 2610.37606." },
 ];
