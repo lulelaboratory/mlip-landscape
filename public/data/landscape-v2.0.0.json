@@ -4838,6 +4838,76 @@
       "evidenceNotes": "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation. 2026-09-05 re-verification during PR consolidation: title, submission date (2026-08-14) and the full author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli) re-confirmed; still no public code repository found, so githubUrl remains absent."
     },
     {
+      "id": "facto",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "FACTO",
+      "year": 2026,
+      "author": "Liu et al.",
+      "x": 9900,
+      "y": 150,
+      "desc": "Atom-centered equivariant foundation MLIP that confines evolving state and dense channel mixing to atoms while expressing neighbor interactions as fully fusible reductions, with custom aggregation kernels and tensor-core FP32 emulation; the FACTO-OAM variants advance the accuracy-throughput Pareto frontier on Matbench Discovery.",
+      "paperUrl": "https://arxiv.org/abs/2611.03276",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic solids"
+      ],
+      "useCases": [
+        "universal MLIP",
+        "large-scale MD",
+        "high-throughput screening"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-11-14",
+      "trainingData": [
+        "OAM (OMat24 + MPtrj + sAlex, per FACTO-OAM naming)"
+      ],
+      "trainedDatasets": [
+        "omat24",
+        "mptrj",
+        "salex"
+      ],
+      "tags": [
+        "equivariant",
+        "atom-centered",
+        "tensor operator",
+        "foundation model",
+        "Pareto efficient"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "all elements covered by OMat24 / MPTrj (~89 elements)",
+      "numElements": 89,
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "entityType": "trained_model",
+      "architectureFamily": "FACTO (fast atom-centered tensor operator)",
+      "trainingScope": "universal_foundation",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "arXiv 2611.03276 ('FACTO: fast atom-centered tensor operator for accurate and efficient foundational machine-learned interatomic potentials', submitted 2026-11-02) introduces FACTO as an atom-centered equivariant architecture and reports four FACTO-OAM foundation variants with top-tier performance by overall rank sum among 46 fully-scored models on Matbench Discovery, plus state-of-the-art stability on MLIP Arena and competitive MatCalc structural/elastic predictions (author-reported abstract, not independently verified).",
+      "accuracyTier": "high",
+      "accuracyEvidence": "Abstract (arXiv 2611.03276) reports the four FACTO-OAM variants ranking top-tier by overall rank sum among 46 models with complete scores on Matbench Discovery, state-of-the-art stability under extreme heating/compression on MLIP Arena, and strong structural/elastic predictions on MatCalc. Author-reported; direct benchmark pages not fetched (network egress policy).",
+      "speedTier": "fast",
+      "speedEvidence": "Abstract (arXiv 2611.03276) frames FACTO as a 'fast'/'efficient' architecture that expresses neighbor interactions as fully fusible reductions, uses custom aggregation kernels and tensor-core FP32 emulation, and advances the accuracy-throughput Pareto frontier. Author-reported throughput claims; no independent benchmark read.",
+      "inferenceCost": "low",
+      "benchmarkContext": "Matbench Discovery (rank sum, 46 fully-scored models), MLIP Arena stability, MatCalc structural/elastic/thermal — FACTO-OAM variants, author-reported",
+      "chargeSpinEvidence": "No charge- or spin-conditioning is described in the FACTO abstract; it is an OAM-trained (inorganic materials) energy/forces/stress foundation potential, so supportsCharges / supportsSpins recorded false by analogy with the other OAM foundation potentials. Not independently confirmed against the full paper.",
+      "datasetEvidence": "trainedDatasets (omat24 + mptrj + salex) inferred from the 'FACTO-OAM' variant naming: across this catalogue and Matbench Discovery the '-OAM' suffix denotes the OMat24 pretrain + MPtrj + sAlex fine-tune mixture (same as NequIP-OAM / Allegro-OAM). Exact fine-tune recipe not read from the full paper.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2611.03276"
+      ],
+      "lastVerifiedDate": "2026-11-14",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-11-14 auto-update: arXiv ID 2611.03276 ('FACTO: fast atom-centered tensor operator for accurate and efficient foundational machine-learned interatomic potentials', submitted 2026-11-02), title, abstract and author list (Siyuan Liu, Chang Han, Sheng Gong, Yanping Yang, Tianze Zheng, Yu Xia, Kuang Yu, Shenzhen Xu, Wen Yan; recorded as 'Liu et al.') corroborated across multiple independent web-search passes. Direct fetch of arXiv / Hugging Face / Matbench Discovery blocked by network egress policy, so the full paper was not read. No public code repository found at review time (searched GitHub for a FACTO potential repo under the authors / ByteDance Seed / DeepModeling; the github.com/meta-pytorch/FACTO and bdemirb/FACTO hits are an unrelated PyTorch operator-testing framework) — paperUrl only, githubUrl absent. Affiliation (probable ByteDance Seed, from the author list) not confirmed in-session, so author recorded as 'Liu et al.'. elementsCovered / numElements (~89) and trainedDatasets inferred from the 'FACTO-OAM' OAM training mix, not directly confirmed; accuracy/speed tiers are author-reported abstract claims; frameworks/license left unset pending confirmation."
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -10008,6 +10078,24 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "nequip",
+      "to": "facto",
+      "label": "atom-centered equivariant",
+      "dashed": true,
+      "description": "FACTO is an atom-centered equivariant interatomic potential: it keeps the evolving learned state and dense channel mixing on atoms and treats neighbor interactions as equivariant reductions, placing it in the same E(3)-equivariant tensor-product message-passing lineage pioneered by NequIP (rather than as a direct code descendant).",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Conceptual lineage inferred from the FACTO abstract (arXiv 2611.03276) describing an 'atom-centered equivariant architecture'; no explicit citation of NequIP read (full paper egress-blocked). Not a verified code-level derivation."
+    },
+    {
+      "from": "nequip_oam",
+      "to": "facto",
+      "label": "OAM foundation cohort",
+      "dashed": true,
+      "description": "FACTO-OAM and NequIP-OAM belong to the same cohort of foundation potentials trained on the OAM mixture (OMat24 pretrain + MPtrj + sAlex fine-tune) and benchmarked head-to-head on Matbench Discovery; FACTO is positioned as advancing the accuracy-throughput Pareto frontier against this family.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Peer/benchmark relationship inferred from the shared '-OAM' training mixture and Matbench Discovery scoring described in the FACTO abstract (arXiv 2611.03276); not a parent-child derivation and the exact FACTO-OAM recipe was not read from the full paper."
     }
   ]
 }
