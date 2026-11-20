@@ -4672,6 +4672,90 @@
       "evidenceNotes": "2026-08-10 auto-update: arXiv 2607.28461 title and author list corroborated across multiple independent web-search passes; the mir-group/allegro README (E(3)-equivariant NequIP-framework extension) and Matbench Discovery model slug (allegro-oam-l-0.1) confirm the Allegro-OAM foundation potential. Direct fetch of arXiv, nequip.net, Zenodo and Matbench Discovery blocked by network egress policy, so the full paper was not read: OAM = OMat24 pretrain + MPtrj/sAlex fine-tune (per model card). Element count recorded as ~89 (OMat24/MPTrj coverage) not directly confirmed; speed/accuracy tiers left unset pending paper read. 2026-09-05 re-verification during PR consolidation: arXiv 2607.28461 title ('Fast and Accurate Foundation Models for Equivariant Machine-Learned Interatomic Potentials') and the OAM recipe (OMat24 ~101M-frame pretrain, fine-tuned on sAlex ~10.5M + MPTrj ~1.5M) re-confirmed, as was the published model page nequip.net/models/mir-group/Allegro-OAM-L:0.1. Charge/spin support recorded false (no charge/spin conditioning in the Allegro OAM potential)."
     },
     {
+      "id": "iann",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "IANN",
+      "year": 2026,
+      "author": "Ai, Qin, Sokaras, Abild-Pedersen, Voss (SLAC)",
+      "x": 3460,
+      "y": 900,
+      "desc": "Unified PyTorch framework for equivariant interatomic NNs (PaiNN, NequIP, MACE, Allegro, EquiformerV2/V3, UMA) behind one data object and trainer, plus its own lightweight FastPot model; ships nine pre-trained PaiNN foundation-model checkpoints across PBE/RPBE/r2SCAN.",
+      "githubUrl": "https://github.com/changzhiai/IANN",
+      "paperUrl": "https://arxiv.org/abs/2611.19793",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "catalysis"
+      ],
+      "useCases": [
+        "unified training framework",
+        "universal MLIP",
+        "fine-tuning",
+        "LAMMPS MD"
+      ],
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS",
+        "PyTorch"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-11-20",
+      "trainingData": [
+        "MPtrj",
+        "sAlex",
+        "OMat24",
+        "MatPES",
+        "OC20",
+        "OC22",
+        "OC25"
+      ],
+      "trainedDatasets": [
+        "mptrj",
+        "salex",
+        "omat24",
+        "matpes",
+        "oc20",
+        "oc22"
+      ],
+      "tags": [
+        "equivariant",
+        "framework",
+        "message-passing",
+        "PaiNN",
+        "foundation model"
+      ],
+      "supportsCharges": false,
+      "supportsSpins": false,
+      "elementsCovered": "periodic-table coverage of the underlying DFT databases (~89 elements for the materials checkpoints: MPtrj / OMat24 / Alexandria / MatPES; plus OC20/22/25 catalysis)",
+      "numElements": 89,
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "entityType": "model_family",
+      "architectureFamily": "IANN framework / PaiNN (E(3)-equivariant scalar-vector message passing)",
+      "trainingScope": "multi_domain",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "arXiv 2611.19793 ('IANN: A Unified Framework for Equivariant InterAtomic Neural Networks with User-Friendly Implementation') and the github.com/changzhiai/IANN README release nine pre-trained PaiNN foundation models at three DFT levels — pbe-mptrj, pbe-salex, pbe-omat24, pbe-matpes, pbe-oc22, rpbe-oc20, rpbe-oc25, r2scan-mptrj, r2scan-matpes — each trained on a single curated DFT database and downloadable from the HuggingFace Hub on first use.",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://arxiv.org/abs/2611.19793",
+        "https://github.com/changzhiai/IANN",
+        "https://pypi.org/project/pyiann/",
+        "https://doi.org/10.5281/zenodo.17809948"
+      ],
+      "lastVerifiedDate": "2026-11-20",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-11-20 auto-update: shallow-cloned github.com/changzhiai/IANN (public, MIT, PyPI pyiann v0.1.3). README and CITATION.cff confirm arXiv:2611.19793 (Changzhi Ai, Xueping Qin, Dimosthenis Sokaras, Frank Abild-Pedersen, Johannes Voss; 2026) and Zenodo DOI 10.5281/zenodo.17809948 (released 2026-09-17). IANN is a unified PyTorch framework implementing PaiNN/NequIP/MACE/Allegro/EquiformerV2/V3/UMA plus its own lightweight native model FastPot, with a shared data object + trainer and ASE/LAMMPS interfaces (code confirms FastPot is not LAMMPS-exportable). It ships nine pre-trained PaiNN foundation-model checkpoints (enumerated in foundationModelEvidence) spanning PBE/RPBE/r2SCAN, each trained on one source database. Direct arXiv/HuggingFace fetch blocked by network egress policy, so the preprint PDF and checkpoint cards were not read in full; element counts and per-model accuracies not independently confirmed (recorded ~89 from the underlying materials databases). trainedDatasets links the registry datasets that exist (mptrj, salex, omat24, matpes, oc20, oc22); OC25 named in trainingData but has no registry entry yet. Charge/spin support recorded false (PaiNN foundation checkpoints carry no charge/spin conditioning). Speed/accuracy tiers left unset pending paper read."
+    },
+    {
       "id": "gptff_mol",
       "type": "node",
       "category": "Transformer",
@@ -10008,6 +10092,35 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "painn",
+      "to": "iann",
+      "label": "PaiNN foundations",
+      "description": "IANN's nine released foundation-model checkpoints and its lightweight native FastPot model sit in PaiNN's scalar/vector E(3)-equivariant message-passing tradition; PaiNN is the architecture behind every one of IANN's pre-trained checkpoints.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://arxiv.org/abs/2611.19793",
+      "edgeNotes": "Repo-level (2026-11-20): cloned github.com/changzhiai/IANN; README states the nine released foundation models are PaiNN checkpoints (pbe/rpbe/r2scan on single databases), and FastPot is IANN's own lightweight model. arXiv:2611.19793. Direct arXiv PDF fetch egress-blocked."
+    },
+    {
+      "from": "mace",
+      "to": "iann",
+      "label": "Reimplemented",
+      "dashed": true,
+      "description": "IANN reimplements MACE's higher-order equivariant message passing as one of the interchangeable engine models under its unified data object and trainer; a framework reimplementation rather than architectural descent.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2611.19793",
+      "edgeNotes": "Repo-level (2026-11-20): IANN README/CITATION list MACE among the architectures (PaiNN/NequIP/MACE/Allegro/EquiformerV2/V3/UMA) exposed behind a single config switch. Reimplementation, not descent — kept probable/dashed."
+    },
+    {
+      "from": "uma",
+      "to": "iann",
+      "label": "Reimplemented",
+      "dashed": true,
+      "description": "IANN reimplements Meta FAIR's UMA universal-model architecture as one of its interchangeable engine models, so UMA-style models can be trained and run through the same framework; a framework reimplementation, not a trained-variant descent.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://arxiv.org/abs/2611.19793",
+      "edgeNotes": "Repo-level (2026-11-20): IANN README/CITATION list UMA (arXiv:2506.23971) among the supported engine models unified behind one trainer. Reimplementation, not descent — kept probable/dashed."
     }
   ]
 }
