@@ -4838,6 +4838,60 @@
       "evidenceNotes": "2026-08-19 auto-update: arXiv ID 2608.14502 ('Universal Thermodynamic Interatomic Potentials for Crystalline Materials', submitted 2026-08-14), title, abstract, author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli; recorded as 'Nam et al. (MIT / Meta FAIR)') and the TIP / TIP[UMA] naming corroborated across multiple independent web-search passes; direct arXiv/mirror fetch blocked by network egress policy, so full text was not read. No public code repository found at review time (searched learningmatter-mit org; paperUrl only). TIP is a thermodynamic modeling layer built on the UMA universal potential (edge uma -> tip); supportsCharges/supportsSpins left null (unknown) since the paper focuses on crystalline thermodynamics rather than charge/spin conditioning. frameworks/license left unset pending confirmation. 2026-09-05 re-verification during PR consolidation: title, submission date (2026-08-14) and the full author list (Juno Nam, Bowen Deng, Xiaochen Du, Luis Barroso-Luque, Benjamin Kurt Miller, Rafael Gomez-Bombarelli) re-confirmed; still no public code repository found, so githubUrl remains absent."
     },
     {
+      "id": "fastpot",
+      "type": "node",
+      "category": "Equivariant",
+      "label": "FastPot",
+      "year": 2026,
+      "author": "Ai et al. (SLAC / SUNCAT)",
+      "x": 9620,
+      "y": 320,
+      "desc": "Lightweight equivariant message-passing model native to the IANN framework: e3nn irreps with Bessel radial and spherical-harmonic angular features and coupled scalar-node / equivariant force-vector updates for fast energy and force prediction.",
+      "githubUrl": "https://github.com/changzhiai/IANN",
+      "paperUrl": "https://arxiv.org/abs/2611.19793",
+      "isNew": true,
+      "coverage": [
+        "materials",
+        "molecules"
+      ],
+      "useCases": [
+        "molecular dynamics",
+        "energy and force prediction"
+      ],
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "maintenance": "experimental",
+      "lastReviewed": "2026-11-25",
+      "tags": [
+        "equivariant",
+        "message passing",
+        "e3nn",
+        "lightweight",
+        "IANN framework"
+      ],
+      "supportsCharges": null,
+      "supportsSpins": null,
+      "elementsCovered": "—",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "entityType": "architecture",
+      "architectureFamily": "IANN / FastPot",
+      "isFoundationModel": "unknown",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://github.com/changzhiai/IANN",
+        "https://arxiv.org/abs/2611.19793",
+        "https://doi.org/10.5281/zenodo.17809948",
+        "https://pypi.org/project/pyiann/"
+      ],
+      "lastVerifiedDate": "2026-11-25",
+      "verifiedBy": "llm_assisted",
+      "evidenceNotes": "2026-11-25 auto-update: cloned the public GitHub repo changzhiai/IANN (MIT license, PyPI 'pyiann' v0.1.3, Zenodo DOI 10.5281/zenodo.17809948, docs at iann.readthedocs.io) and read its source directly. CITATION.cff gives the paper 'IANN: A Unified Framework for Equivariant InterAtomic Neural Networks with User-Friendly Implementation' (Ai, Qin, Sokaras, Abild-Pedersen, Voss; arXiv:2611.19793, DOI 10.48550/arXiv.2611.19793, year 2026). IANN is a framework wrapping PaiNN/NequIP/MACE/EquiformerV2/EquiformerV3/Allegro/UMA plus FastPot, which the README (line ~645) and iann/models/fastpot.py describe as 'IANN's own lightweight model for energy and force prediction'. fastpot.py uses e3nn o3.Irreps, a trainable Bessel radial basis, DimeNet-style polynomial cutoff, spherical-harmonic angular features and coupled scalar-node / equivariant force-vector message passing. Added FastPot as the genuinely novel model from this release (the nine released foundation checkpoints are PaiNN-based, not FastPot, so FastPot's own element coverage/foundation status and charge/spin support are left unknown; elementsCovered '—'). Direct arXiv.org and huggingface.co fetches were blocked by the session network egress policy, so the arXiv full text and HF checkpoints were not read; GitHub repo, license, CITATION.cff, PyPI badge and model source were verified firsthand from the clone."
+    },
+    {
       "id": "mgnn",
       "type": "node",
       "category": "Invariant",
@@ -8590,6 +8644,25 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2508.16067",
       "edgeNotes": "Abstract/snippet-level: Nequix paper (arXiv 2508.16067) explicitly calls itself a \"simplified NequIP design\" with equivariant RMSNorm + Muon optimizer; same Atomic Architects lineage. Direct descent confirmed."
+    },
+    {
+      "from": "painn",
+      "to": "fastpot",
+      "label": "IANN framework",
+      "dashed": true,
+      "description": "FastPot is the lightweight equivariant message-passing model native to the IANN framework. It sits in the same scalar/vector equivariant MPNN tradition that PaiNN popularised (IANN's nine released foundation checkpoints are themselves PaiNN-based), implementing its own e3nn-based scalar-node / force-vector interaction blocks.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://github.com/changzhiai/IANN",
+      "edgeNotes": "2026-11-25: verified firsthand from the cloned changzhiai/IANN repo (MIT, arXiv:2611.19793). iann/models/fastpot.py uses e3nn o3.Irreps with coupled scalar-node and equivariant force-vector updates (PaiNN-style scalar/vector MPNN); IANN also ships PaiNN-based foundation models. No source states FastPot is literally derived from PaiNN, hence probable + dashed — shared tradition, not stated descent."
+    },
+    {
+      "from": "nequip",
+      "to": "fastpot",
+      "label": "e3nn eq.",
+      "dashed": true,
+      "description": "FastPot and the NequIP/e3nn line are sibling equivariant potentials built on e3nn irreps with Bessel radial and spherical-harmonic angular features; FastPot is IANN's own lightweight realization rather than a NequIP derivative.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "2026-11-25: iann/models/fastpot.py imports e3nn (o3.Irreps, spherical harmonics, Bessel basis), the same equivariant toolkit NequIP/MACE use. Parallel e3nn-family sibling, no stated descent — speculative + dashed."
     },
     {
       "from": "bpnn",
