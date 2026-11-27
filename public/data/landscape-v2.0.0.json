@@ -4129,6 +4129,155 @@
       "foundationModelEvidence": "Authors describe it as the first universal neural network potential for molecular excited and ground electronic states (Nature Communications 2026 / ChemRxiv)."
     },
     {
+      "id": "omni_p3x",
+      "type": "node",
+      "category": "Descriptor",
+      "label": "OMNI-P3x",
+      "year": 2026,
+      "author": "Martyka, Jankowska, Dral (Xiamen University)",
+      "x": 5140,
+      "y": 750,
+      "desc": "Universal neural network potential for singlet ground- and excited-state simulations of neutral and charged organic molecules, built on the multi-state all-in-one MS-AIOAIMNet2 architecture and trained across three levels of theory. Targets large-scale computational photochemistry workflows (geometry to UV/vis spectrum) as a TD-DFT replacement, and was used to screen ~234k flavylium derivatives; direct successor to OMNI-P2x.",
+      "githubUrl": "https://github.com/dralgroup/mlatom",
+      "paperUrl": "https://arxiv.org/abs/2611.32133",
+      "isNew": true,
+      "coverage": [
+        "organic molecules",
+        "excited states",
+        "charged molecules"
+      ],
+      "useCases": [
+        "computational photochemistry",
+        "UV/vis spectra",
+        "TD-DFT replacement",
+        "chromophore screening"
+      ],
+      "license": "MIT",
+      "maintenance": "active",
+      "lastReviewed": "2026-11-27",
+      "properties": [
+        "energy",
+        "forces"
+      ],
+      "frameworks": [
+        "ASE"
+      ],
+      "trainingData": [
+        "multi-fidelity QM (three levels of theory)"
+      ],
+      "tags": [
+        "excited states",
+        "photochemistry",
+        "multi-fidelity",
+        "AIMNet2",
+        "charge-aware"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": null,
+      "chargeSpinEvidence": "Paper abstract (arXiv:2611.32133) states OMNI-P3x covers neutral and charged organic molecules; spin-multiplicity conditioning is not confirmed (singlet-focused), so supportsSpins is left unknown.",
+      "elementsCovered": "—",
+      "equivariance": "invariant",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://github.com/dralgroup/mlatom/releases/tag/v3.28.0",
+        "https://arxiv.org/abs/2611.32133"
+      ],
+      "lastVerifiedDate": "2026-11-27",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "AIMNet2 / MS-AIOAIMNet2 (multi-state all-in-one AIMNet2)",
+      "trainingScope": "universal_foundation",
+      "evidenceNotes": "MLatom v3.28.0 release notes (github.com/dralgroup/mlatom, 2026-11-25) list OMNI-P3x as a new universal NNP for ground and singlet excited states, built on the MS-AIOAIMNet2 architecture with ensemble prediction, fine-tuning and three levels of theory; arXiv:2611.32133 (Martyka, Jankowska, Dral, submitted 2026-11-24) 'OMNI-P3x universal neural network potential for large-scale computational photochemistry workflows' reports TD-DFT-level accuracy for neutral and charged organic molecules at a fraction of the cost (weaker on Rydberg-type excitations). Exact element set not stated in retrieved sources; direct arXiv fetch blocked by network egress policy.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "Authors describe OMNI-P3x as a universal neural network potential spanning molecular ground and singlet excited states across multiple quantum-chemical levels of theory (arXiv:2611.32133); the successor to the universal OMNI-P2x excited-state potential."
+    },
+    {
+      "id": "ilmlip",
+      "type": "node",
+      "trainedDatasets": [
+        "omat24",
+        "salex",
+        "mptrj",
+        "matpes",
+        "omol25"
+      ],
+      "category": "Equivariant",
+      "label": "ILMlip",
+      "year": 2026,
+      "author": "Hänseroth & Dreßler",
+      "x": 9620,
+      "y": 320,
+      "desc": "Fast, universal E(3)-equivariant conservative message-passing interatomic potentials, pretrained on large materials and molecular datasets and fine-tunable on system-specific data. Ships XS-XXL model sizes with ASE and LAMMPS MD; the authors report molecular dynamics up to ~10^3x faster than MACE (medium) on a single GPU, trading peak accuracy for speed and broad zero-shot transferability.",
+      "githubUrl": "https://github.com/jhaens/ilmlip",
+      "paperUrl": "https://arxiv.org/abs/2611.33538",
+      "isNew": true,
+      "coverage": [
+        "general materials",
+        "inorganic crystals",
+        "molecules",
+        "solid acids"
+      ],
+      "useCases": [
+        "large-scale MD",
+        "foundation potential",
+        "fine-tuning"
+      ],
+      "license": "PolyForm-Noncommercial-1.0.0",
+      "maintenance": "active",
+      "lastReviewed": "2026-11-27",
+      "properties": [
+        "energy",
+        "forces",
+        "stress"
+      ],
+      "frameworks": [
+        "ASE",
+        "LAMMPS"
+      ],
+      "trainingData": [
+        "OMat24",
+        "sAlex",
+        "MPtrj",
+        "MatPES (PBE, r2SCAN)",
+        "OMol25",
+        "SOLID-ACID-0"
+      ],
+      "tags": [
+        "foundation model",
+        "equivariant",
+        "fast",
+        "universal",
+        "fine-tunable"
+      ],
+      "supportsCharges": true,
+      "supportsSpins": true,
+      "chargeSpinEvidence": "ILMlip GitHub README (github.com/jhaens/ilmlip) states the OMol25-based molecular models cover molecules with charge and spin.",
+      "elementsCovered": "—",
+      "equivariance": "constrained",
+      "architecture": "gnn",
+      "usesAttention": false,
+      "longRange": false,
+      "speedEvidence": "Paper abstract (arXiv:2611.33538) and the GitHub README report MD up to ~10^3x faster than MACE (medium) on a single GPU; speed is the stated design goal (self-reported, abstract-level).",
+      "verificationStatus": "partially_verified",
+      "verifiedSources": [
+        "https://github.com/jhaens/ilmlip",
+        "https://github.com/jhaens/ilmlip-models",
+        "https://arxiv.org/abs/2611.33538",
+        "https://doi.org/10.5281/zenodo.24515567"
+      ],
+      "lastVerifiedDate": "2026-11-27",
+      "verifiedBy": "llm_assisted",
+      "entityType": "trained_model",
+      "architectureFamily": "E(3)-equivariant message-passing (OAM-recipe fast universal potentials)",
+      "trainingScope": "universal_foundation",
+      "evidenceNotes": "GitHub repo github.com/jhaens/ilmlip (verified directly) describes ILMlip as fast universal interatomic potentials pretrained on OMat24, sAlex, MPtrj, MatPES (PBE/r2SCAN), OMol25 and SOLID-ACID-0, with XS-XXL pretrained models, ASE/LAMMPS MD, fine-tuning and single-GPU training-from-scratch, under PolyForm Noncommercial 1.0.0; weights at jhaens/ilmlip-models and Zenodo 10.5281/zenodo.24515567. arXiv:2611.33538 (Jonas Hänseroth, Christian Dreßler, submitted 2026-11-24) 'ILMlip: fast and universal machine-learning interatomic potentials' describes equivariant, conservative message-passing potentials running ~10^3x faster than MACE-medium on one GPU. OMol25-based models cover molecular charge and spin; exact element coverage not stated in retrieved sources. Direct arXiv fetch blocked by network egress policy.",
+      "isFoundationModel": true,
+      "foundationModelEvidence": "ILMlip is presented as a family of fast, universal foundation interatomic potentials pretrained on large multi-domain datasets (OMat24, sAlex, MPtrj, MatPES, OMol25) and fine-tunable to specific systems (arXiv:2611.33538; github.com/jhaens/ilmlip)."
+    },
+    {
       "id": "grace_off",
       "type": "node",
       "category": "Equivariant",
@@ -10008,6 +10157,51 @@
       "edgeConfidence": "verified",
       "edgeSource": "https://arxiv.org/abs/2608.14502",
       "edgeNotes": "Snippet-level (2026-08-19): the TIP paper (arXiv 2608.14502) abstract states the implementation TIP[UMA] uses the universal potential UMA; corroborated across multiple independent web-search passes. Direct arXiv fetch blocked by network egress policy."
+    },
+    {
+      "from": "omni_p2x",
+      "to": "omni_p3x",
+      "label": "Successor",
+      "description": "OMNI-P3x is the direct successor to OMNI-P2x from the same Dral group: both are universal neural network potentials for molecular ground and singlet excited states trained with an all-in-one multi-fidelity strategy, with OMNI-P3x moving to the MS-AIOAIMNet2 backbone, adding neutral/charged coverage, and scaling to large photochemistry workflows.",
+      "edgeConfidence": "verified",
+      "edgeSource": "https://github.com/dralgroup/mlatom/releases/tag/v3.28.0",
+      "edgeNotes": "MLatom v3.28.0 release notes (2026-11-25) list OMNI-P3x as a new universal NNP for ground and singlet excited states; shared authors (Martyka, Jankowska, Dral) and the OMNI/MLatom family with OMNI-P2x. Direct family succession."
+    },
+    {
+      "from": "aimnet2",
+      "to": "omni_p3x",
+      "label": "MS-AIMNet2 backbone",
+      "description": "OMNI-P3x is built on MS-AIOAIMNet2, a multi-state all-in-one extension of the AIMNet2 atoms-in-molecules message-passing network, inheriting its charge-aware message passing and extending it to predict energies, forces and dipoles across multiple electronic states.",
+      "edgeConfidence": "probable",
+      "edgeSource": "https://github.com/dralgroup/mlatom/releases/tag/v3.28.0",
+      "edgeNotes": "MLatom v3.28.0 release notes describe MS-AIOAIMNet2 as 'the architecture behind OMNI-P3x' for multi-state energies/forces/dipoles; AIMNet2 is its single-state progenitor. Release-note level."
+    },
+    {
+      "from": "omni_p1",
+      "to": "omni_p3x",
+      "label": "AIO multi-fidelity lineage",
+      "dashed": true,
+      "description": "OMNI-P3x continues the OMNI all-in-one (AIO) multi-fidelity lineage begun by OMNI-P1, which first learned simultaneously across quantum-chemical levels of theory; OMNI-P3x applies the same multi-fidelity idea across three levels of theory for excited-state photochemistry.",
+      "edgeConfidence": "probable",
+      "edgeNotes": "Family lineage OMNI-P1 (AIO-ANI multi-fidelity) -> OMNI-P2x -> OMNI-P3x, all from the Dral group sharing the all-in-one multi-fidelity training approach; conceptual lineage, kept dashed."
+    },
+    {
+      "from": "nequip_oam",
+      "to": "ilmlip",
+      "label": "OAM-recipe foundation peer",
+      "dashed": true,
+      "description": "ILMlip trains fast universal foundation potentials on the same OMat24 -> MPtrj + sAlex 'OAM' data recipe as NequIP-OAM (its pretrained checkpoints are named OAM-S / Air-OAM), sitting as a speed-oriented equivariant message-passing cousin in the OAM foundation-potential space rather than a direct descendant.",
+      "edgeConfidence": "speculative",
+      "edgeNotes": "Abstract/README-level (arXiv 2611.33538; github.com/jhaens/ilmlip, 2026-11-24): ILMlip pretrains on OMat24/sAlex/MPtrj (+MatPES/OMol25) with OAM-named checkpoints, the same data recipe as the mir-group OAM foundation models; no stated architectural descent, kept speculative. Direct arXiv fetch blocked by egress policy."
+    },
+    {
+      "from": "mace",
+      "to": "ilmlip",
+      "label": "Speed vs MACE",
+      "dashed": true,
+      "description": "ILMlip is an equivariant conservative message-passing potential that uses MACE (medium) as its speed baseline, its abstract reporting molecular dynamics up to ~10^3x faster than MACE-medium on a single GPU at the cost of peak accuracy.",
+      "edgeConfidence": "probable",
+      "edgeNotes": "Abstract-level (arXiv 2611.33538): ILMlip reports ~10^3x faster MD than MACE-medium; shared equivariant message-passing family, benchmark comparison not descent. Direct arXiv fetch blocked by egress policy."
     }
   ]
 }
